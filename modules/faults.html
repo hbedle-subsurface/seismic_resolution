@@ -63,8 +63,8 @@
         <input type="range" id="throw" min="0" max="60" step="1" value="20">
       </div>
       <div class="ctl">
-        <label for="dip">Fault dip <span class="val" id="dipV">65°</span></label>
-        <input type="range" id="dip" min="35" max="90" step="1" value="65">
+        <label for="dip">Fault dip <span class="val" id="dipV">65° normal</span></label>
+        <input type="range" id="dip" min="5" max="175" step="1" value="65">
       </div>
 
       <h2 style="margin-top:20px">The layers</h2>
@@ -212,6 +212,12 @@
         <li><b>Coarsen the acquisition.</b> Push trace spacing to 50 m with a shallow fault dip.
           <span class="ans">The fault plane turns into a staircase. Trace spacing limits lateral detail the
             same way bandwidth limits vertical detail.</span></li>
+        <li><b>Push the dip past 90°.</b> Take it from 65° to 115° and watch the layer model.
+          <span class="ans">The plane now leans the other way, so the block that drops is the footwall
+            rather than the hanging wall and the fault becomes reverse. A normal fault cuts section out at
+            the fault; a reverse fault repeats it, and you can count the doubled beds in the model. On the
+            seismic both look like an offset, which is the problem: sense of slip is a geological
+            interpretation laid on top of what the data actually shows.</span></li>
         <li><b>Thin the beds.</b> Set the thinnest bed to 8 m and the thickest to 20 m, with frequency at 25 Hz.
           <span class="ans">Count the beds in the layer model, then count the reflectors in the seismic below
             it. They no longer match. The beds are below tuning, so the reflectors merge and interfere.
@@ -250,16 +256,25 @@
       reflectivity convolved with a zero-phase Ricker wavelet. The noise is band-limited (random reflectivity
       through the same wavelet) and correlated from trace to trace, so it resembles noise on a migrated section
       rather than static. Signal-to-noise is quoted as reflection-coefficient amplitude over noise RMS.</p>
+    <p>Fault dip runs from 5° to 175°. Below 90° the plane leans one way and the block that drops is the
+      hanging wall, giving a normal fault that omits section. Above 90° the plane leans the other way, the
+      same block is now the footwall, and the fault is reverse and repeats section. Both come out of one
+      construction: the two blocks translate rigidly past each other, and a boundary is drawn wherever it
+      ends up. Reverse faults with large throw at low angles produce heavily repeated sections, which is
+      correct but can look surprising.</p>
     <p>This is a post-migration cartoon. It leaves out fault-plane reflections, tip diffractions, drag folding,
       amplitude changes from juxtaposition, and the smearing that imperfect migration puts on every real fault.
       Those effects make faults easier to see in some settings and harder in others, but none of them removes
       the resolution floor, which is what this module is about.</p>
-    <p>Polarity follows the SEG normal convention used in the United States: an increase in acoustic impedance
-      is a positive reflection coefficient and plots as a peak, which on the default blue-white-red map is red.
-      The layer model is shaded by true impedance, pale for low and dark for high, so a pale-over-dark boundary
-      is an impedance increase and should line up with a red event below it. Switching to reverse polarity
-      flips the seismic and leaves the rock alone, which is the point of the switch. The impedance key in the
-      legend is read from whichever color map is loaded, so it stays correct in grayscale too.</p>
+    <p>The two panels show different quantities, which is worth saying out loud to students. The layer model
+      is shaded by acoustic impedance, a property of the rock: pale for low, dark for high. The seismic is
+      colored by reflection coefficient, a property of the boundary between two rocks, so color appears only
+      where impedance changes and a thick uniform bed is blank in the middle.</p>
+    <p>Polarity follows the SEG normal convention used in the United States: an increase in impedance gives a
+      positive reflection coefficient, which plots as a peak and is red on the default map. So a pale-over-dark
+      boundary in the model should line up with a red event below it. Switching to reverse polarity flips the
+      seismic and leaves the rock alone, which is the point of the switch. The legend swatches are read from
+      whichever color map is loaded, so they stay correct in grayscale too.</p>
     <p>The display is vertically exaggerated, as nearly all seismic displays are. The stat strip gives the fault
       dip as drawn alongside its true dip so you can compare the two. Fault dips read off a section are
       routinely too steep for this reason.</p>
@@ -328,8 +343,24 @@
   const activeXc    = () => (Q.on && Q.hidden ? Q.hidden.xc   : 0.5);
   const activeSeed  = () => (Q.on && Q.hidden ? Q.hidden.seed : S.seed);
   const activeDip   = () => (Q.on && Q.hidden ? Q.hidden.dip  : S.dip);
-  // +1 puts the hanging wall on the right, -1 on the left
-  const activeDir   = () => (Q.on && Q.hidden ? Q.hidden.dir  : 1);
+  // which side of the fault drops: +1 the right-hand block, -1 the left
+  const activeDown  = () => (Q.on && Q.hidden ? Q.hidden.down : 1);
+
+  // Dip runs 5-175 degrees. Past 90 the plane leans the other way, so the block
+  // that drops switches from being the hanging wall to being the footwall, and
+  // the fault becomes reverse. Normal faults cut section out; reverse faults
+  // repeat it. Both fall out of the geometry below without a special case.
+  const faultSense = () => {
+    const d = activeDip();
+    if (Math.abs(d - 90) < 1) return 'vertical';
+    return ((d < 90) === (activeDown() > 0)) ? 'normal' : 'reverse';
+  };
+
+  // True when the block that drops occupies the shallow part of a trace.
+  function downIsEarly() {
+    const leansRight = Math.tan(activeDip() * Math.PI / 180) > 0;
+    return (activeDown() > 0) === leansRight;
+  }
 
   let CACHE = { noiseKey:'' };
 
@@ -359,14 +390,14 @@
   function faultX(t, xcFrac) {
     // planar fault; horizontal position drifts with depth according to the dip
     const tanDip = Math.tan(activeDip() * Math.PI / 180);
-    return xcFrac * SECW + activeDir() * (S.v * (t - TMID) / 2) / tanDip;
+    return xcFrac * SECW + (S.v * (t - TMID) / 2) / tanDip;
   }
 
   // The time at which the fault plane crosses a given trace. Above it the trace
   // is in the hanging wall, below it in the footwall.
   function tCross(x, xcFrac) {
     const tanDip = Math.tan(activeDip() * Math.PI / 180);
-    return TMID + 2 * tanDip * activeDir() * (x - xcFrac * SECW) / S.v;
+    return TMID + 2 * tanDip * (x - xcFrac * SECW) / S.v;
   }
 
   // Which layer a time falls in, in the unfaulted stack.
@@ -386,26 +417,31 @@
   // Testing against the pre-throw position alone is what produced a staircase.
   function spikesAt(x, layers, dtThrow, xcFrac) {
     const tc = tCross(x, xcFrac);
+    const early = downIsEarly();
     // Polarity is a display convention, so it flips the seismic and leaves the
     // rock alone. The layer model always shows true impedance.
     const pol = S.pol === 'reverse' ? -1 : 1;
     const sp = [];
     for (let i = 0; i < layers.length; i++) {
-      const hw = layers[i].t + dtThrow;
-      if (hw < tc) sp.push({ t: hw, r: pol * layers[i].r });
-      else if (layers[i].t > tc) sp.push({ t: layers[i].t, r: pol * layers[i].r });
+      const t0 = layers[i].t, moved = t0 + dtThrow;
+      // in the block that dropped, at its new position
+      if (early ? moved < tc : moved > tc) sp.push({ t: moved, r: pol * layers[i].r });
+      // in the block that stayed put. Not an else: on a reverse fault a
+      // boundary can satisfy both, which is repeated section, and it should
+      // appear twice.
+      if (early ? t0 > tc : t0 < tc) sp.push({ t: t0, r: pol * layers[i].r });
     }
     return sp;
   }
 
-  // The color this display gives a rise in acoustic impedance. Under SEG normal
-  // polarity (the American convention) an impedance increase is a positive
-  // reflection coefficient, so it plots as a peak.
-  function impedanceColors() {
+  // Seismic color shows the reflection coefficient, not impedance itself: red
+  // and blue are a positive and a negative RC. Which one corresponds to an
+  // impedance increase depends on the polarity convention, and the caption
+  // above the section spells that out.
+  function rcColors() {
     const cmap = SEIS.COLORMAPS[S.cmap];
-    const up = S.pol === 'reverse' ? -0.85 : 0.85;
     const rgb = (v) => { const c = cmap(v); return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
-    return { up: rgb(up), down: rgb(-up) };
+    return { pos: rgb(0.85), neg: rgb(-0.85) };
   }
 
   const pickAt = (fy) => Q.pick.top + (Q.pick.bot - Q.pick.top) * fy;
@@ -543,6 +579,7 @@
     const yOf = (t) => rect.y + ((t - T0) / (TEND - T0)) * rect.h;
     const dtThrow = 2 * activeThrow() / S.v;
     const xc = CACHE.xc;
+    const early = downIsEarly();
     const W = Math.round(rect.w);
 
     // One column at a time: hanging-wall stack down to the fault, then the
@@ -553,14 +590,17 @@
       const tc = tCross(xm, xc);
       const marks = [];
       for (let i = 0; i < layers.length; i++) {
-        const hw = layers[i].t + dtThrow;
-        if (hw > T0 && hw < tc) marks.push({ t: hw, lith: i + 1 });
-        if (layers[i].t > Math.max(T0, tc)) marks.push({ t: layers[i].t, lith: i + 1 });
+        const t0 = layers[i].t, moved = t0 + dtThrow;
+        if ((early ? moved < tc : moved > tc) && moved > T0) marks.push({ t: moved, lith: i + 1 });
+        if ((early ? t0 > tc : t0 < tc) && t0 > T0) marks.push({ t: t0, lith: i + 1 });
       }
-      if (tc > T0 && tc < TEND) marks.push({ t: tc, lith: lithAt(tc, layers) });
+      if (tc > T0 && tc < TEND) {
+        marks.push({ t: tc, lith: early ? lithAt(tc, layers) : lithAt(tc - dtThrow, layers) });
+      }
       marks.sort((a, b) => a.t - b.t);
 
-      let lith = tc > T0 ? lithAt(T0 - dtThrow, layers) : lithAt(T0, layers);
+      const t0IsDown = (T0 < tc) === early;
+      let lith = t0IsDown ? lithAt(T0 - dtThrow, layers) : lithAt(T0, layers);
       let yTop = rect.y;
       for (let k = 0; k < marks.length; k++) {
         const yb = clamp(yOf(marks[k].t), rect.y, rect.y + rect.h);
@@ -581,13 +621,13 @@
     ctx.save();
     ctx.strokeStyle = 'rgba(40,32,24,.45)'; ctx.lineWidth = 0.8;
     for (let i = 0; i < layers.length; i++) {
-      [[layers[i].t + dtThrow, true], [layers[i].t, false]].forEach(([tt, isHW]) => {
+      [[layers[i].t + dtThrow, true], [layers[i].t, false]].forEach(([tt, isMoved]) => {
         ctx.beginPath();
         let started = false;
         for (let px = 0; px <= W; px++) {
           const xm = (px / W) * SECW;
           const tc = tCross(xm, xc);
-          const on = isHW ? tt < tc : tt > tc;
+          const on = isMoved ? (early ? tt < tc : tt > tc) : (early ? tt > tc : tt < tc);
           if (!on || tt < T0 || tt > TEND) { started = false; continue; }
           const x = rect.x + px, y = yOf(tt);
           started ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
@@ -749,7 +789,7 @@
 
     // apparent dip on screen, for the vertical-exaggeration readout
     const runPx = xOf(faultX(TEND, CACHE.xc)) - xOf(faultX(T0, CACHE.xc));
-    CACHE.dipDrawn = Math.abs(Math.atan2(rect.h, runPx) * 180 / Math.PI);
+    CACHE.dipDrawn = (Math.atan2(rect.h, runPx) * 180 / Math.PI + 180) % 180;
 
     SEIS.frame(ctx, rect);
     SEIS.axisBottom(ctx, rect, 0, uL(SECW), 'Distance (' + U().lab + ')', (v) => v.toFixed(0));
@@ -815,10 +855,10 @@
   /* ------------------------- legend and hint ---------------------------- */
 
   function updateLegend() {
-    const ic = impedanceColors();
+    const rc = rcColors();
     const bits = [];
-    bits.push('<span><i class="sw" style="background:' + ic.up + '"></i>impedance up</span>');
-    bits.push('<span><i class="sw" style="background:' + ic.down + '"></i>impedance down</span>');
+    bits.push('<span><i class="sw" style="background:' + rc.pos + '"></i>positive RC (peak)</span>');
+    bits.push('<span><i class="sw" style="background:' + rc.neg + '"></i>negative RC (trough)</span>');
     if (Q.on) bits.push('<span><i style="border-color:' + CRIMSON + '"></i>Your pick</span>');
     if (showingTruth()) {
       bits.push('<span><i style="border-color:' + TEAL + ';border-top-style:dashed"></i>True fault plane</span>');
@@ -862,7 +902,7 @@
     }
     if (CACHE.dipDrawn !== undefined) {
       $('rDipLab').textContent = 'Dip as drawn (true ' + activeDip() + '°)';
-      $('rDip').textContent = CACHE.dipDrawn.toFixed(0) + '°';
+      $('rDip').textContent = CACHE.dipDrawn.toFixed(0) + '°  ' + faultSense();
     }
     $('rRatio').textContent = thr > 0 ? 'λ/' + (lam / thr).toFixed(1) : 'no fault';
     $('rMs').textContent = (2000 * thr / S.v).toFixed(1) + ' ms';
@@ -966,8 +1006,8 @@
       f,
       snr: cfg.snr[0] + rnd() * (cfg.snr[1] - cfg.snr[0]),
       xc: 0.22 + rnd() * 0.56,
-      dip: 40 + Math.round(rnd() * 48),
-      dir: rnd() < 0.5 ? -1 : 1,
+      dip: 25 + Math.round(rnd() * 130),
+      down: rnd() < 0.5 ? -1 : 1,
       seed: Math.floor(rnd() * 1e6),
     };
     clearPick();
@@ -1015,7 +1055,7 @@
             ' from the fault. True throw ' + fmtL(truth) + ' (λ/' + (lam / truth).toFixed(1) + '), ' +
             'peak frequency ' + Q.hidden.f + ' Hz. ' +
             'Your plane dips ' + yourDip.toFixed(0) + '°, the fault dips ' + activeDip() + '°' +
-            (Q.hidden.dir < 0 ? ', hanging wall on the left.' : '.');
+            ', a ' + faultSense() + ' fault.';
     }
     if (ok) Q.right++;
     $('score').textContent = Q.right + ' / ' + Q.asked;
@@ -1041,7 +1081,8 @@
 
   function syncLabels() {
     $('throwV').textContent = fmtL(S.thr, 0);
-    $('dipV').textContent = S.dip + '°';
+    $('dipV').textContent = S.dip + '° ' +
+      (Math.abs(S.dip - 90) < 1 ? 'vertical' : (S.dip < 90 ? 'normal' : 'reverse'));
     $('thkMinV').textContent = fmtL(S.thkMin, 0);
     $('thkMaxV').textContent = fmtL(S.thkMax, 0);
     $('freqV').textContent = S.f + ' Hz';
