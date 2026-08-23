@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Horizontal resolution — What Can You REALLY See in Seismic?</title>
+<meta name="description" content="The Fresnel zone, what migration does and does not collapse, and how close two features can be before they image as one.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>What can you <b>really</b> see in seismic?</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="#notes">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 04 &nbsp;·&nbsp; Horizontal resolution</p>
+    <h1>How small a feature can I map in plan view?</h1>
+    <p class="sub">Vertical resolution gets all the attention, but a seismic trace does not sample a point on
+      the reflector. It samples a patch — the Fresnel zone — which at depth can be hundreds of meters across.
+      Migration exists largely to shrink that patch, and it does so dramatically. What it cannot do is shrink
+      it below about a quarter of a wavelength, or shrink it at all in a direction you did not acquire.</p>
+  </div>
+
+  <!-- ============================== CONTROLS ============================== -->
+  <section class="controls">
+    <div class="ctl-col">
+      <h2>The target</h2>
+      <div class="ctl">
+        <label for="sep">Separation of the two points <span class="val" id="sepV">80 m</span></label>
+        <input type="range" id="sep" min="0" max="400" step="1" value="80">
+      </div>
+      <button class="btn small" id="animBtn" type="button">Walk them together</button>
+      <div class="ctl" style="margin-top:12px">
+        <label for="t0">Two-way time to the reflector <span class="val" id="t0V">0.80 s</span></label>
+        <input type="range" id="t0" min="0.2" max="3" step="0.05" value="0.8">
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>The data</h2>
+      <div class="ctl">
+        <label for="freq">Peak frequency <span class="val" id="freqV">30 Hz</span></label>
+        <input type="range" id="freq" min="8" max="70" step="1" value="30">
+      </div>
+      <div class="ctl">
+        <label for="vel">Velocity to the reflector <span class="val" id="velV">2500 m/s</span></label>
+        <input type="range" id="vel" min="1500" max="5000" step="50" value="2500">
+      </div>
+      <div class="ctl">
+        <label for="units">Units</label>
+        <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Migration</h2>
+      <div class="ctl">
+        <div class="seg" role="group" aria-label="Migration state">
+          <button type="button" id="mNone" aria-pressed="false">None</button>
+          <button type="button" id="m2D" aria-pressed="false">2D</button>
+          <button type="button" id="m3D" aria-pressed="true">3D</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="ap">Migration aperture <span class="val" id="apV">2000 m</span></label>
+        <input type="range" id="ap" min="100" max="6000" step="50" value="2000">
+      </div>
+      <p style="font-size:12px;color:var(--ink-soft);margin:0 0 8px">
+        The aperture is how far to the side the migration is allowed to gather energy. It sets the
+        largest angle the image can use, and that angle is what sharpens the spot.</p>
+      <label class="check"><input type="checkbox" id="showFres" checked> Draw the Fresnel zone</label>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Display</h2>
+      <div class="ctl">
+        <label for="cmap">Color map</label>
+        <select id="cmap">
+          <option value="bwr">Blue peak / red trough</option>
+          <option value="cbsafe">Blue peak / orange trough (colorblind safe)</option>
+          <option value="gray">Grayscale (black peak)</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="gain">Gain <span class="val" id="gainV">1.0×</span></label>
+        <input type="range" id="gain" min="0.4" max="4" step="0.1" value="1">
+      </div>
+      <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="pngBtn" type="button">Save plan view as PNG</button>
+      <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
+    </div>
+  </section>
+
+  <!-- =============================== PANELS =============================== -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>Two point scatterers</h3>
+    </div>
+    <p class="hint-line" id="hintLine">The same two points, seen three ways.</p>
+    <div class="sec-row" id="panelRow">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Plan view
+          <span class="note">how big a patch each point smears into</span></p>
+        <canvas id="mapCanvas" aria-label="Map view of the Fresnel zone and migrated resolution"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Before migration
+          <span class="note">diffraction hyperbolas</span></p>
+        <canvas id="rawCanvas" aria-label="Unmigrated section showing two diffraction hyperbolas"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> After migration
+          <span class="note" id="migNote">energy collapsed back to the points</span></p>
+        <canvas id="migCanvas" aria-label="Migrated section"></canvas>
+      </div>
+    </div>
+    <div class="legend" id="mainLegend"></div>
+  </section>
+
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>Amplitude along the reflector</h3>
+      <span class="hint">A slice across the image at the reflector time. Two peaks or one?</span>
+    </div>
+    <canvas id="profCanvas" aria-label="Lateral amplitude profile through the image"></canvas>
+    <div class="legend">
+      <span><i style="border-color:#841617"></i>After migration</span>
+      <span><i style="border-color:#5C6670;border-top-style:dashed"></i>Before migration</span>
+      <span><i style="border-color:#0B7285;border-top-style:dotted"></i>True positions</span>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span>Wavelength λ = V / f</span><b id="rLam">— m</b></div>
+    <div class="stat"><span>Depth to the reflector</span><b id="rZ">— m</b></div>
+    <div class="stat"><span>Fresnel zone radius</span><b id="rFres">— m</b></div>
+    <div class="stat"><span>Fresnel zone across</span><b id="rFresD">— m</b></div>
+    <div class="stat"><span>Largest angle the aperture allows</span><b id="rTheta">—</b></div>
+    <div class="stat key"><span>Resolution after migration</span><b id="rMig">— m</b></div>
+    <div class="stat"><span>Improvement factor</span><b id="rGain">—</b></div>
+    <div class="stat"><span>Separation of the points</span><b id="rSep">— m</b></div>
+    <div class="stat wide"><span>Verdict</span><b id="rVerdict">—</b></div>
+  </div>
+
+  <!-- ============================== TEACHING ============================== -->
+  <div class="teach">
+    <div class="tryit">
+      <h3>Try this</h3>
+      <ol>
+        <li><b>See what migration is for.</b> With the default setup, switch between None and 3D and watch
+          panel 1.
+          <span class="ans">The patch each point smears into drops from a few hundred meters across to a few
+            tens. Nearly everything you believe about the lateral shape of a feature — a channel edge, a fault
+            trace, the limit of a sand body — depends on that collapse having worked.</span></li>
+        <li><b>Walk the two points together.</b> Press the button and watch panel 3 and the profile below.
+          <span class="ans">They stay separate until their spacing drops to about a quarter of a wavelength,
+            then merge into a single blob that keeps getting brighter. This is the wedge model's tuning
+            behaviour, rotated into the horizontal plane — same physics, same λ/4.</span></li>
+        <li><b>Try to resolve them without migrating.</b> Set migration to None and separate the points by
+          100 m.
+          <span class="ans">Unmigrated, they are inside one Fresnel zone and there is no separating them at
+            any amplitude. Migration does not merely tidy the picture; it is the step that makes lateral
+            interpretation possible at all.</span></li>
+        <li><b>Go deep.</b> Take the reflector time from 0.8 s to 3 s.
+          <span class="ans">The Fresnel zone grows as the square root of depth, but migrated resolution only
+            worsens through λ, which grows more slowly. So migration buys you the most where the target is
+            deepest — and deep unmigrated data is nearly useless laterally.</span></li>
+        <li><b>Starve the aperture.</b> Pull the migration aperture down to 400 m at 2 s.
+          <span class="ans">Resolution collapses, because the aperture sets the largest angle available and
+            the migrated spot size goes as λ/(4 sin θ). A narrow survey, or a target near the edge of one,
+            cannot be imaged sharply no matter how good the processing. This is why surveys are shot larger
+            than the prospect.</span></li>
+        <li><b>Switch from 3D to 2D.</b> Look at the plan view.
+          <span class="ans">The spot becomes a cigar. A 2D line collapses the Fresnel zone along the line and
+            leaves it untouched across the line, so a feature is resolved in one direction and smeared in the
+            other. Anything you map from 2D lines carries this shape, and it is oriented by the acquisition
+            rather than by the geology.</span></li>
+      </ol>
+    </div>
+
+    <div class="takeaway">
+      <h3>What to carry away</h3>
+      <ul>
+        <li><b>An unmigrated trace samples a patch, not a point.</b> The Fresnel zone is
+          <span class="k">(V/2)·√(t/f)</span> in radius, which is hundreds of meters at typical depths.</li>
+        <li><b>Migration is what makes maps possible.</b> It collapses that patch toward λ/4 — often a
+          tenfold improvement or more.</li>
+        <li><b>λ/4 is the floor, not the guarantee.</b> Limited aperture, wrong velocities and dipping
+          overburden all leave you short of it.</li>
+        <li><b>Horizontal and vertical resolution are the same problem.</b> Both end up at a quarter of a
+          wavelength, and both improve only with bandwidth.</li>
+        <li><b>2D lines resolve in one direction only.</b> The smear is oriented by the survey, which is a
+          good reason to be suspicious of feature shapes mapped from a grid of 2D lines.</li>
+      </ul>
+    </div>
+  </div>
+
+  <details class="notes" id="notes">
+    <summary>Method, assumptions, and where to read more</summary>
+    <p>The unmigrated panel is computed rather than sketched: each point scatterer produces a diffraction
+      hyperbola at <span class="k">τ(x) = √(t₀² + (2Δx/V)²)</span>, convolved with a zero-phase Ricker wavelet
+      and weighted by obliquity. That is exactly what a zero-offset section over a point scatterer looks like.</p>
+    <p>The migrated panel is not a full Kirchhoff migration. It is the band-limited point-spread response that
+      a successful migration produces: each scatterer images as its wavelet in time, multiplied by a lateral
+      response whose half-amplitude radius is <span class="k">λ / (4 sin θ)</span>, where θ is the largest
+      angle the aperture allows, <span class="k">θ = arctan(aperture / depth)</span>. This is the standard
+      resolution result, and it is used here in preference to running a real migration operator because a real
+      one brings operator aliasing and edge artifacts that would obscure the point being made. The trade-off
+      is that this panel shows what migration is trying to achieve rather than the ways it can fail.</p>
+    <p>The Fresnel zone quoted is the first Fresnel zone at zero offset,
+      <span class="k">r = (V/2)·√(t/f)</span>, equivalently <span class="k">r ≈ √(λz/2)</span>. Real
+      apertures are limited by the survey, by dip, and by how far the processor is willing to let noise in.
+      Also left out: 3D acquisition footprint, azimuthal variation, velocity error, and the fact that
+      migration only focuses correctly when the velocity model is right.</p>
+    <ul>
+      <li>Sheriff, R.E., 1980, Nomogram for Fresnel-zone calculation: <em>Geophysics</em>, 45, 968–972.</li>
+      <li>Lindsey, J.P., 1989, The Fresnel zone and its interpretive significance:
+        <em>The Leading Edge</em>, 8, 33–39.</li>
+      <li>Chen, J., and Schuster, G.T., 1999, Resolution limits of migrated images:
+        <em>Geophysics</em>, 64, 1046–1053.</li>
+      <li>Yilmaz, Ö., 2001, <em>Seismic Data Analysis</em>: SEG.</li>
+    </ul>
+  </details>
+
+  <div class="pager">
+    <a class="btn ghost" href="faults.html">← Can you see the fault?</a>
+    <a class="btn" href="../index.html#modules">All modules →</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma —
+        with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.
+        Free to use or adapt in your own courses with citation.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/seismic.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const DEF = {
+    sep: 80, t0: 0.8, f: 30, v: 2500, ap: 2000,
+    mig: '3d', cmap: 'bwr', gain: 1, fres: true, units: 'm',
+  };
+  let S = SEIS.readState(DEF);
+
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670', OCHRE = '#8A6D1F';
+
+  const U = () => SEIS.UNITS[S.units];
+  const uL = (m) => m * U().len;
+  const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 0 : d) + ' ' + U().lab;
+
+  /* ------------------------------ the physics -------------------------- */
+
+  function geometry() {
+    const wav = SEIS.makeWavelet({ type: 'ricker', f: S.f });
+    const lam = S.v / S.f;
+    const z = S.v * S.t0 / 2;                       // depth to the reflector
+    const fres = (S.v / 2) * Math.sqrt(S.t0 / S.f); // first Fresnel zone radius
+    const theta = Math.atan(S.ap / z);              // largest angle the aperture allows
+    // migrated lateral resolution; lambda/4 is the floor at full aperture
+    const rMig = Math.max(lam / 4, lam / (4 * Math.max(Math.sin(theta), 1e-3)));
+    return { wav, lam, z, fres, theta, rMig };
+  }
+
+  // Two copies of a shape, side by side, stop reading as two once they are
+  // close enough that the trough between them fills in. This finds that
+  // separation for the wavelet, in the wavelet's own time units, so the lateral
+  // kernel can be stretched to put it exactly on the resolution length. Doing
+  // it this way rather than by half-amplitude width matters: they differ by a
+  // factor of about 2.7, which would put the panel and the stated number at
+  // odds with each other.
+  function twoPeakSeparation(wav) {
+    const N = 501, span = 2.4 * wav.halfLength;
+    const splits = (s) => {
+      const p = [];
+      for (let i = 0; i < N; i++) {
+        const u = -span + (2 * span * i) / (N - 1);
+        p.push(wav.fn(u - s / 2) + wav.fn(u + s / 2));
+      }
+      const peaks = [];
+      for (let i = 1; i < N - 1; i++) if (p[i] > p[i - 1] && p[i] >= p[i + 1] && p[i] > 0) peaks.push(i);
+      if (peaks.length < 2) return false;
+      peaks.sort((a, b) => p[b] - p[a]);
+      const pr = [peaks[0], peaks[1]].sort((a, b) => a - b);
+      if (p[pr[1]] < 0.5 * p[pr[0]]) return false;
+      let dip = Infinity;
+      for (let i = pr[0]; i <= pr[1]; i++) dip = Math.min(dip, p[i]);
+      return dip < 0.8 * Math.min(p[pr[0]], p[pr[1]]);
+    };
+    let lo = 0, hi = wav.halfLength;
+    if (!splits(hi)) return hi;
+    for (let i = 0; i < 40; i++) {
+      const m = (lo + hi) / 2;
+      if (splits(m)) hi = m; else lo = m;
+    }
+    return hi;
+  }
+
+  let CACHE = {};
+
+  function compute() {
+    const G = geometry();
+    const half = S.sep / 2;
+    const xs = [-half, half];
+
+    // how wide a window to draw: enough to show the Fresnel zone and both points
+    const XW = Math.max(4 * G.fres, 6 * S.sep, 8 * G.rMig, 200);
+    const NX = 220, dx = XW / NX;
+
+    // time window: the hyperbolas must have room to develop
+    const tEdge = Math.sqrt(S.t0 * S.t0 + Math.pow(2 * (XW / 2) / S.v, 2));
+    const tStart = Math.max(0.01, S.t0 - 3 / S.f);
+    const tEnd = Math.min(tEdge, S.t0 + 0.9 * (tEdge - S.t0)) + 2 / S.f;
+    const nt = clamp(Math.round((tEnd - tStart) / 0.002), 60, 420);
+    const dt = (tEnd - tStart) / nt;
+
+    // --- unmigrated: real diffraction hyperbolas
+    const raw = new Float32Array(NX * nt);
+    for (let ix = 0; ix < NX; ix++) {
+      const x = -XW / 2 + (ix + 0.5) * dx;
+      for (const x0 of xs) {
+        const d = x - x0;
+        const tau = Math.sqrt(S.t0 * S.t0 + Math.pow(2 * d / S.v, 2));
+        const amp = S.t0 / tau;                    // obliquity
+        const hl = G.wav.halfLength;
+        const i0 = Math.max(0, Math.ceil((tau - hl - tStart) / dt));
+        const i1 = Math.min(nt - 1, Math.floor((tau + hl - tStart) / dt));
+        for (let i = i0; i <= i1; i++) raw[ix * nt + i] += amp * G.wav.fn(tStart + i * dt - tau);
+      }
+    }
+
+    // --- migrated: the band-limited point response migration aims to produce
+    // stretched so two points exactly `r` apart are on the point of separating
+    const sr = twoPeakSeparation(G.wav);
+    const lateral = (d, r) => G.wav.fn(sr * d / Math.max(r, 1e-6));
+    const rIn = S.mig === 'none' ? G.fres : G.rMig;          // in-line radius
+    const rCross = S.mig === '3d' ? G.rMig : G.fres;         // cross-line radius
+    const mig = new Float32Array(NX * nt);
+    for (let ix = 0; ix < NX; ix++) {
+      const x = -XW / 2 + (ix + 0.5) * dx;
+      for (const x0 of xs) {
+        const lat = lateral(x - x0, rIn);
+        if (Math.abs(lat) < 1e-4) continue;
+        const hl = G.wav.halfLength;
+        const i0 = Math.max(0, Math.ceil((S.t0 - hl - tStart) / dt));
+        const i1 = Math.min(nt - 1, Math.floor((S.t0 + hl - tStart) / dt));
+        for (let i = i0; i <= i1; i++) mig[ix * nt + i] += lat * G.wav.fn(tStart + i * dt - S.t0);
+      }
+    }
+
+    // lateral profiles at the reflector time
+    const it = clamp(Math.round((S.t0 - tStart) / dt), 0, nt - 1);
+    const profMig = [], profRaw = [];
+    for (let ix = 0; ix < NX; ix++) { profMig.push(mig[ix * nt + it]); profRaw.push(raw[ix * nt + it]); }
+
+    CACHE = { G, XW, NX, dx, nt, dt, tStart, tEnd, raw, mig, xs, profMig, profRaw, rIn, rCross };
+  }
+
+  // Two peaks with a real trough between them, on the migrated profile.
+  function resolved() {
+    const p = CACHE.profMig;
+    let mx = 0; p.forEach((v) => { if (Math.abs(v) > Math.abs(mx)) mx = v; });
+    const q = mx < 0 ? p.map((v) => -v) : p;
+    const peaks = [];
+    for (let i = 1; i < q.length - 1; i++) if (q[i] > q[i - 1] && q[i] >= q[i + 1] && q[i] > 0) peaks.push(i);
+    if (peaks.length < 2) return false;
+    peaks.sort((a, b) => q[b] - q[a]);
+    const pair = [peaks[0], peaks[1]].sort((a, b) => a - b);
+    if (q[pair[1]] < 0.5 * q[pair[0]]) return false;
+    let dip = Infinity;
+    for (let i = pair[0]; i <= pair[1]; i++) dip = Math.min(dip, q[i]);
+    return dip < 0.8 * Math.min(q[pair[0]], q[pair[1]]);
+  }
+
+  /* ------------------------------- layout ------------------------------ */
+
+  function layout() {
+    const box = $('mapCanvas').closest('.plot');
+    const W = Math.max(300, box.clientWidth - 28);
+    const stacked = W < 760;
+    if (stacked) return { stacked, w: { map: W, raw: W, mig: W }, h: 300 };
+    const avail = W - 20;
+    const map = Math.round(avail * 0.34);
+    const rest = Math.round((avail - map) / 2);
+    return { stacked, w: { map: map, raw: rest, mig: avail - map - rest }, h: clamp(Math.round(W * 0.30), 260, 380) };
+  }
+
+  /* ------------------------------ drawing ------------------------------ */
+
+  function drawMap(L) {
+    const ctx = SEIS.fitCanvas($('mapCanvas'), L.w.map, L.h);
+    ctx.clearRect(0, 0, L.w.map, L.h);
+    const m = { l: 46, r: 12, t: 8, b: 40 };
+    const rect = { x: m.l, y: m.t, w: L.w.map - m.l - m.r, h: L.h - m.t - m.b };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+    const { G, xs, rIn, rCross } = CACHE;
+    // square map, scaled so the largest patch fits
+    const span = Math.max(2.6 * Math.max(G.fres, rIn, rCross), 3 * S.sep, 100);
+    const sc = Math.min(rect.w, rect.h) / (2 * span);
+    const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+    const px = (v) => cx + v * sc, py = (v) => cy + v * sc;
+
+    // grid
+    ctx.save();
+    ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+    ctx.strokeStyle = 'rgba(92,102,112,.16)'; ctx.lineWidth = 1;
+    const step = SEIS.niceTicks(-span, span, 5)[1] - SEIS.niceTicks(-span, span, 5)[0];
+    for (let v = -span; v <= span; v += step) {
+      ctx.beginPath(); ctx.moveTo(px(v), rect.y); ctx.lineTo(px(v), rect.y + rect.h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(rect.x, py(v)); ctx.lineTo(rect.x + rect.w, py(v)); ctx.stroke();
+    }
+
+    // the Fresnel zone, one per point
+    if (S.fres) {
+      xs.forEach((x0) => {
+        ctx.save();
+        ctx.fillStyle = 'rgba(138,109,31,.13)';
+        ctx.strokeStyle = OCHRE; ctx.lineWidth = 1.3; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.ellipse(px(x0), cy, G.fres * sc, G.fres * sc, 0, 0, 6.284);
+        ctx.fill(); ctx.stroke(); ctx.restore();
+      });
+    }
+    // the imaged patch after migration: a circle in 3D, a cigar in 2D
+    xs.forEach((x0) => {
+      ctx.save();
+      ctx.fillStyle = 'rgba(132,22,23,.30)';
+      ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.ellipse(px(x0), cy, rIn * sc, rCross * sc, 0, 0, 6.284);
+      ctx.fill(); ctx.stroke(); ctx.restore();
+      ctx.save();
+      ctx.fillStyle = '#16191C';
+      ctx.beginPath(); ctx.arc(px(x0), cy, 2.4, 0, 6.284); ctx.fill(); ctx.restore();
+    });
+    ctx.restore();
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisBottom(ctx, rect, -uL(span), uL(span), 'In-line distance (' + U().lab + ')', (v) => v.toFixed(0));
+    SEIS.axisLeft(ctx, rect, -uL(span), uL(span), 'Cross-line (' + U().lab + ')', (v) => v.toFixed(0));
+  }
+
+  function drawSection(id, field, L, wKey, label) {
+    const ctx = SEIS.fitCanvas($(id), L.w[wKey], L.h);
+    ctx.clearRect(0, 0, L.w[wKey], L.h);
+    const m = { l: L.stacked ? 46 : 40, r: 12, t: 8, b: 40 };
+    const rect = { x: m.l, y: m.t, w: L.w[wKey] - m.l - m.r, h: L.h - m.t - m.b };
+    const { NX, nt, XW, tStart, tEnd, xs } = CACHE;
+
+    let peak = 1e-6;
+    for (let i = 0; i < field.length; i++) peak = Math.max(peak, Math.abs(field[i]));
+    SEIS.drawVarDensity(ctx, field, NX, nt, rect,
+      { cmap: SEIS.COLORMAPS[S.cmap], gain: S.gain, clip: peak });
+
+    // true positions
+    xs.forEach((x0) => {
+      const x = rect.x + ((x0 + XW / 2) / XW) * rect.w;
+      const y = rect.y + ((S.t0 - tStart) / (tEnd - tStart)) * rect.h;
+      ctx.save();
+      ctx.strokeStyle = TEAL; ctx.lineWidth = 1.2; ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(x, rect.y); ctx.lineTo(x, rect.y + rect.h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(x, y, 2.6, 0, 6.284); ctx.fillStyle = TEAL; ctx.fill();
+      ctx.restore();
+    });
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisBottom(ctx, rect, -uL(XW / 2), uL(XW / 2), 'Distance (' + U().lab + ')', (v) => v.toFixed(0));
+    SEIS.axisLeft(ctx, rect, tStart * 1000, tEnd * 1000,
+                  L.stacked || wKey === 'raw' ? 'Two-way time (ms)' : '', (v) => v.toFixed(0));
+  }
+
+  function drawProfile() {
+    const w = Math.max(300, $('profCanvas').closest('.plot').clientWidth - 28);
+    const h = 190;
+    const ctx = SEIS.fitCanvas($('profCanvas'), w, h);
+    ctx.clearRect(0, 0, w, h);
+    const m = { l: 58, r: 14, t: 10, b: 42 };
+    const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+    const { profMig, profRaw, NX, XW, xs } = CACHE;
+    const norm = (p) => {
+      let mx = 1e-9; p.forEach((v) => { mx = Math.max(mx, Math.abs(v)); });
+      let sgn = 0; p.forEach((v) => { if (Math.abs(v) === mx) sgn = Math.sign(v); });
+      return p.map((v) => (sgn < 0 ? -v : v) / mx);
+    };
+    const a = norm(profMig), b = norm(profRaw);
+    const xOf = (i) => rect.x + (i / (NX - 1)) * rect.w;
+    const yOf = (v) => rect.y + rect.h * (0.82 - v * 0.62);
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(92,102,112,.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(rect.x, yOf(0)); ctx.lineTo(rect.x + rect.w, yOf(0)); ctx.stroke();
+    ctx.restore();
+
+    xs.forEach((x0) => {
+      const x = rect.x + ((x0 + XW / 2) / XW) * rect.w;
+      SEIS.dashedLine(ctx, x, rect.y, x, rect.y + rect.h, TEAL, [2, 3], 1.2);
+    });
+
+    const line = (arr, color, width, dash) => {
+      ctx.save();
+      if (dash) ctx.setLineDash(dash);
+      ctx.strokeStyle = color; ctx.lineWidth = width;
+      ctx.beginPath();
+      arr.forEach((v, i) => { const x = xOf(i), y = yOf(v); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+      ctx.stroke(); ctx.restore();
+    };
+    line(b, 'rgba(92,102,112,.9)', 1.4, [5, 4]);
+    line(a, CRIMSON, 2.2);
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisBottom(ctx, rect, -uL(XW / 2), uL(XW / 2), 'Distance (' + U().lab + ')', (v) => v.toFixed(0));
+    SEIS.axisLeft(ctx, rect, -0.3, 1.15, 'Relative amplitude', (v) => v.toFixed(1), { flip: true });
+  }
+
+  function updateLegend() {
+    const bits = [];
+    if (S.fres) bits.push('<span><i style="border-color:' + OCHRE + ';border-top-style:dashed"></i>Fresnel zone (unmigrated)</span>');
+    bits.push('<span><i style="border-color:' + CRIMSON + '"></i>imaged patch' +
+              (S.mig === 'none' ? ' (not migrated)' : S.mig === '2d' ? ' (2D migrated)' : ' (3D migrated)') + '</span>');
+    bits.push('<span><i style="border-color:' + TEAL + ';border-top-style:dashed"></i>true positions</span>');
+    $('mainLegend').innerHTML = bits.join('');
+    $('migNote').textContent = S.mig === 'none' ? 'migration switched off — still smeared'
+      : S.mig === '2d' ? 'collapsed along the line only' : 'collapsed in both directions';
+    $('hintLine').textContent = 'Two points ' + fmtL(S.sep) + ' apart at ' +
+      (S.t0 * 1000).toFixed(0) + ' ms, seen three ways.';
+  }
+
+  function updateStats() {
+    const { G, rIn, rCross } = CACHE;
+    $('rLam').textContent = fmtL(G.lam);
+    $('rZ').textContent = fmtL(G.z);
+    $('rFres').textContent = fmtL(G.fres);
+    $('rFresD').textContent = fmtL(2 * G.fres);
+    $('rTheta').textContent = (G.theta * 180 / Math.PI).toFixed(0) + '\u00b0';
+    $('rMig').textContent = S.mig === 'none' ? 'not migrated'
+      : (S.mig === '2d' ? fmtL(rIn) + ' \u00d7 ' + fmtL(rCross) : fmtL(G.rMig));
+    $('rGain').textContent = S.mig === 'none' ? '\u2014'
+      : (G.fres / G.rMig).toFixed(1) + '\u00d7 smaller across';
+    $('rSep').textContent = fmtL(S.sep) + '  = \u03bb/' + (S.sep > 0 ? (G.lam / S.sep).toFixed(1) : '\u221e');
+    const ok = resolved();
+    $('rVerdict').textContent = S.sep === 0
+      ? 'The two points are on top of each other'
+      : ok
+        ? 'Two separate features — the image resolves them'
+        : (S.mig === 'none'
+            ? 'One feature — inside a single Fresnel zone, and unmigrated data cannot separate them'
+            : 'One feature — closer than the migrated resolution, so they merge and brighten');
+  }
+
+  /* ------------------------------ plumbing ----------------------------- */
+
+  function render() {
+    const L = layout();
+    const cols = $('panelRow').querySelectorAll('.panel-col');
+    ['map', 'raw', 'mig'].forEach((k, i) => { if (cols[i]) cols[i].style.width = L.w[k] + 'px'; });
+    drawMap(L);
+    drawSection('rawCanvas', CACHE.raw, L, 'raw');
+    drawSection('migCanvas', CACHE.mig, L, 'mig');
+    drawProfile();
+    updateLegend(); updateStats();
+  }
+
+  function refresh() { compute(); render(); SEIS.writeState(S, DEF); }
+
+  function syncLabels() {
+    $('sepV').textContent = fmtL(S.sep);
+    $('t0V').textContent = S.t0.toFixed(2) + ' s';
+    $('freqV').textContent = S.f + ' Hz';
+    $('velV').textContent = Math.round(uL(S.v)) + ' ' + U().vlab;
+    $('apV').textContent = fmtL(S.ap);
+    $('gainV').textContent = S.gain.toFixed(1) + '\u00d7';
+    $('mNone').setAttribute('aria-pressed', S.mig === 'none');
+    $('m2D').setAttribute('aria-pressed', S.mig === '2d');
+    $('m3D').setAttribute('aria-pressed', S.mig === '3d');
+  }
+  function pushToInputs() {
+    $('sep').value = S.sep; $('t0').value = S.t0; $('freq').value = S.f;
+    $('vel').value = S.v; $('ap').value = S.ap; $('gain').value = S.gain;
+    $('cmap').value = S.cmap; $('units').value = S.units; $('showFres').checked = S.fres;
+  }
+  function bump() { syncLabels(); refresh(); }
+
+  const slide = (id, key) => $(id).addEventListener('input', () => {
+    S[key] = parseFloat($(id).value); bump();
+  });
+  slide('sep', 'sep'); slide('t0', 't0'); slide('freq', 'f');
+  slide('vel', 'v'); slide('ap', 'ap'); slide('gain', 'gain');
+
+  const toggle = (id, val) => $(id).addEventListener('click', () => { S.mig = val; bump(); });
+  toggle('mNone', 'none'); toggle('m2D', '2d'); toggle('m3D', '3d');
+
+  $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(); });
+  $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
+  $('showFres').addEventListener('change', () => { S.fres = $('showFres').checked; bump(); });
+  $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
+  $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
+  $('pngBtn').addEventListener('click', () => SEIS.savePNG($('mapCanvas'), 'plan-view-resolution'));
+
+  // walk the two points together, then back out again
+  let anim = null;
+  $('animBtn').addEventListener('click', () => {
+    if (anim) { cancelAnimationFrame(anim); anim = null; $('animBtn').textContent = 'Walk them together'; return; }
+    $('animBtn').textContent = 'Stop';
+    let dir = -1;
+    const step = () => {
+      S.sep = clamp(S.sep + dir * 3, 0, 400);
+      if (S.sep <= 0) dir = 1;
+      if (S.sep >= 400) dir = -1;
+      $('sep').value = S.sep;
+      bump();
+      anim = requestAnimationFrame(step);
+    };
+    anim = requestAnimationFrame(step);
+  });
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+
+  pushToInputs(); syncLabels(); refresh();
+  document.fonts && document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>
