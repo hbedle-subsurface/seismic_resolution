@@ -6,11 +6,11 @@
 :root {
   --ink:        #16191C;
   --ink-soft:   #2C3239;
-  --paper:      #F1F3F5;
+  --paper:      #EAECEF;
   --panel:      #FFFFFF;
   --crimson:    #841617;
   --crimson-dp: #5A0E0F;
-  --cream:      #FFFFFB;
+  --cream:      #FAF4F4;
   --cream-edge: #EAEAE2;
   --slate:      #5C6670;
   --rule:       rgba(22, 25, 28, 0.14);
