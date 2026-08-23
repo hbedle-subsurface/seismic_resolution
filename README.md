@@ -4,14 +4,28 @@ Browser-based experiments in seismic resolution, built for teaching.
 
 Aimed at three groups who mostly get skipped: undergraduates meeting seismic for the first time,
 graduate students who *use* seismic data in their research without having been taught how it is
-made, and people who went straight to industry and are now expected to map horizons on it. No
-install, no account, no maths prerequisite beyond `λ = V / f`.
+made, and people who went straight to industry and are now expected to map horizons on it (that was how I got started!). No
+install, no account, no math prerequisite beyond `λ = V / f`.
 
 Built by Heather Bedle, School of Geosciences, University of Oklahoma, with the
 [AASPI](https://www.ou.edu/mcee/labs/aaspi) consortium.
 
 ---
+## Get started
 
+**→ [Open the site](https://hbedle-subsurface/seismic_resolution/)**
+
+New to this? Go straight to the wedge model — it's the one everything else builds on:
+
+**→ [Start here: The wedge model & tuning](https://hbedle-subsurface/seismic_resolution/modules/wedge.html)**
+
+Move the frequency slider, watch a bed thin to nothing, and see the seismic keep
+reporting a thickness that stopped being real. Ten minutes, no install, nothing to set up.
+
+Then try **[Can you see the fault?](https://hbedle-subsurface/seismic_resolution/modules/faults.html)**
+and turn on quiz mode.
+
+---
 ## Live modules
 
 | # | Module | Question it answers |
