@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What Can You REALLY See in Seismic?</title>
+<meta name="description" content="Hands-on browser experiments in seismic resolution: tuning, wedge models, fault visibility. No install, no maths prerequisite. University of Oklahoma / AASPI.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="index.html"><span class="dot"></span>University of Oklahoma &nbsp;·&nbsp; <b>AASPI</b></a>
+    <nav>
+      <a href="#modules">Modules</a>
+      <a href="#who">Who this is for</a>
+      <a href="modules/wedge.html">Start</a>
+    </nav>
+  </header>
+
+  <!-- =============================== HERO =============================== -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">Seismic interpretation, from the ground up</p>
+        <h1 class="title">What can you <em>really</em> see in seismic?</h1>
+        <p class="lede">Seismic data does not show you the earth. It shows you the earth
+          <strong>convolved with a wavelet</strong> — and that wavelet quietly decides which beds you get to
+          resolve, which faults you get to map, and which bright spots are rock rather than arithmetic.</p>
+        <p class="lede">These are experiments, not lectures. Move a slider, watch a bed disappear,
+          and find out where your data stops telling the truth.</p>
+        <p>
+          <a class="btn" href="modules/wedge.html">Open the wedge model</a>
+          <a class="btn ghost" href="modules/faults.html" style="margin-left:8px">Can you see the fault?</a>
+        </p>
+      </div>
+
+      <div class="hero-panel">
+        <canvas id="heroCanvas" aria-label="Animated wedge model: two reflections merging as frequency drops"></canvas>
+        <div class="hero-cap">
+          <span>One bed thinning to zero, drawn over and over</span>
+          <span>peak frequency <b id="heroF">40 Hz</b> &nbsp;·&nbsp; thinnest resolvable bed <b id="heroR">16 m</b></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== PRIMER ============================== -->
+  <section class="primer" id="who">
+    <div class="primer-grid">
+      <div>
+        <h3>The only equation you need</h3>
+        <span class="eq">λ = V / f</span>
+        <p>Wavelength equals velocity over frequency. A 3000 m/s layer imaged at 30 Hz gives a 100 m wavelength.
+          Nearly every limit on this site is some fraction of that one number.</p>
+      </div>
+      <div>
+        <h3>The rule of thumb</h3>
+        <span class="eq">λ / 4</span>
+        <p>Beds thinner than about a quarter of a wavelength stop showing you a separate top and base.
+          Twenty-five metres, in that example. The modules show you how optimistic even this is.</p>
+      </div>
+      <div>
+        <h3>The thing people miss</h3>
+        <span class="eq">detect ≠ resolve</span>
+        <p>You can often tell that a thin bed is <em>there</em> long after you have lost the ability to say how
+          thick it is. Confusing the two is how thickness maps go wrong.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= MODULES ============================== -->
+  <section class="modules" id="modules">
+    <p class="eyebrow">The modules — in the order they build on each other</p>
+    <div class="card-grid">
+
+      <div class="card planned">
+        <div class="thumb"></div>
+        <div class="card-body">
+          <div class="card-no">01</div>
+          <h3>What your data is made of</h3>
+          <p>Ricker versus Ormsby, peak frequency versus bandwidth, and why two wavelets with the same
+            dominant frequency can resolve very differently.</p>
+          <div class="q">Is a 30 Hz wavelet always a 30 Hz wavelet?</div>
+        </div>
+        <span class="flag">In progress</span>
+      </div>
+
+      <a class="card" href="modules/wedge.html">
+        <canvas class="thumb-canvas" data-thumb="wedge"></canvas>
+        <div class="card-body">
+          <div class="card-no">02</div>
+          <h3>The wedge model &amp; tuning</h3>
+          <p>Thin a bed to nothing and watch the reflections merge, brighten, then fade — while the seismic
+            keeps reporting a thickness that stopped being real.</p>
+          <div class="q">Why is the thin edge of my channel the brightest part?</div>
+        </div>
+        <span class="flag next">Start here</span>
+      </a>
+
+      <a class="card" href="modules/faults.html">
+        <canvas class="thumb-canvas" data-thumb="fault"></canvas>
+        <div class="card-body">
+          <div class="card-no">03</div>
+          <h3>Can you see the fault?</h3>
+          <p>Throw, frequency, and noise against your own eye. Includes a quiz mode that hides the answer —
+            and sometimes hides no fault at all.</p>
+          <div class="q">How small a fault am I missing?</div>
+        </div>
+        <span class="flag next">Live</span>
+      </a>
+
+      <div class="card planned">
+        <div class="thumb"></div>
+        <div class="card-body">
+          <div class="card-no">04</div>
+          <h3>Horizontal resolution</h3>
+          <p>The Fresnel zone, and what migration does and does not collapse. Two point scatterers walking
+            toward each other until they become one.</p>
+          <div class="q">How small a feature can I map in plan view?</div>
+        </div>
+        <span class="flag">In progress</span>
+      </div>
+
+      <div class="card planned">
+        <div class="thumb"></div>
+        <div class="card-body">
+          <div class="card-no">05</div>
+          <h3>Resolution with depth</h3>
+          <p>Velocity climbs, the earth eats your high frequencies, and λ/4 in metres grows all the way down
+            the section.</p>
+          <div class="q">Why does my deep interpretation feel so much vaguer?</div>
+        </div>
+        <span class="flag">In progress</span>
+      </div>
+
+      <div class="card planned">
+        <div class="thumb"></div>
+        <div class="card-body">
+          <div class="card-no">06</div>
+          <h3>Sampling &amp; spatial aliasing</h3>
+          <p>Trace spacing against dip against frequency. Where steep events fold back on themselves and
+            start lying about their dip.</p>
+          <div class="q">Is that dipping event real or aliased?</div>
+        </div>
+        <span class="flag">In progress</span>
+      </div>
+
+      <div class="card planned">
+        <div class="thumb"></div>
+        <div class="card-body">
+          <div class="card-no">07</div>
+          <h3>Tuning in map view</h3>
+          <p>A channel with real thickness variation, turned into an amplitude extraction — so you can see
+            exactly how a thickness map goes wrong.</p>
+          <div class="q">Does bright mean thick?</div>
+        </div>
+        <span class="flag">In progress</span>
+      </div>
+
+      <div class="card planned">
+        <div class="thumb"></div>
+        <div class="card-body">
+          <div class="card-no">08</div>
+          <h3>Phase, polarity &amp; well ties</h3>
+          <p>Rotate the wavelet and watch the apparent bed boundary move. The quiet reason well ties and
+            picked horizons disagree.</p>
+          <div class="q">Am I picking the top of the sand, or near it?</div>
+        </div>
+        <span class="flag">In progress</span>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-grid">
+      <div>
+        <p><strong>Built for teaching by Heather Bedle</strong>, School of Geosciences, University of Oklahoma,
+          with the <a href="http://www.aaspi.ou.edu/">AASPI</a> consortium.</p>
+        <p>Everything runs in your browser — no install, no account, no data leaves your machine. Free to fork
+          and adapt for your own courses; a citation back is appreciated.</p>
+      </div>
+      <div>
+        <p>Every module has a <em>Copy link to this setup</em> button, so you can hand students a link that
+          opens on an exact configuration.</p>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script src="assets/seismic.js"></script>
+<script>
+(function () {
+  'use strict';
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ------------------------- animated hero wedge ------------------------- */
+  const hero = document.getElementById('heroCanvas');
+  const NX = 150, V = 2600, MAXH = 55, TTOP = 0.045;
+
+  function wedgeField(f, nt, dt) {
+    const wav = SEIS.makeWavelet({ type: 'ricker', f });
+    const out = new Float32Array(NX * nt);
+    for (let ix = 0; ix < NX; ix++) {
+      const h = (ix / (NX - 1)) * MAXH;
+      const sp = [{ t: TTOP, r: 0.14 }, { t: TTOP + 2 * h / V, r: -0.14 }];
+      for (let it = 0; it < nt; it++) out[ix * nt + it] = SEIS.traceValue(sp, it * dt, wav.fn);
+    }
+    return out;
+  }
+
+  let f = 40, dir = -1;
+  function drawHero() {
+    const w = hero.parentElement.clientWidth - 30;
+    const h = Math.max(190, Math.min(260, w * 0.56));
+    const ctx = SEIS.fitCanvas(hero, w, h);
+    const dt = 0.0004;
+    const tEnd = TTOP + 2 * MAXH / V + 0.055;
+    const nt = Math.round(tEnd / dt);
+    const rect = { x: 0, y: 0, w: w, h: h };
+    const field = wedgeField(f, nt, dt);
+    SEIS.drawVarDensity(ctx, field, NX, nt, rect, { cmap: SEIS.COLORMAPS.bwr, clip: 0.21 });
+
+    // the quarter-wavelength marker, sliding as frequency changes
+    const q = (V / f) / 4;
+    if (q <= MAXH) {
+      const x = (q / MAXH) * w;
+      SEIS.dashedLine(ctx, x, 0, x, h, '#0B7285', [3, 3], 1.6);
+      SEIS.tag(ctx, x + 4, 12, 'λ/4', '#0B7285');
+    }
+    SEIS.dashedLine(ctx, 0, (TTOP / tEnd) * h, w, (TTOP / tEnd) * h, 'rgba(22,25,28,.55)', [5,4], 1.2);
+    SEIS.dashedLine(ctx, 0, (TTOP / tEnd) * h, w, ((TTOP + 2*MAXH/V) / tEnd) * h, 'rgba(22,25,28,.55)', [5,4], 1.2);
+
+    document.getElementById('heroF').textContent = f.toFixed(0) + ' Hz';
+    document.getElementById('heroR').textContent = (V / f / 4).toFixed(0) + ' m';
+  }
+
+  let last = 0;
+  function tick(ts) {
+    if (ts - last > 55) {
+      last = ts;
+      f += dir * 0.55;
+      if (f <= 14) { f = 14; dir = 1; }
+      if (f >= 55) { f = 55; dir = -1; }
+      drawHero();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  drawHero();
+  if (!reduce) requestAnimationFrame(tick);
+
+  /* --------------------------- card thumbnails --------------------------- */
+  function thumbWedge(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    const dt = 0.0004, tEnd = TTOP + 2 * MAXH / V + 0.05;
+    const nt = Math.round(tEnd / dt);
+    const wav = SEIS.makeWavelet({ type: 'ricker', f: 38 });
+    const fld = new Float32Array(NX * nt);
+    for (let ix = 0; ix < NX; ix++) {
+      const hh = (ix / (NX - 1)) * MAXH;
+      const sp = [{ t: TTOP, r: 0.14 }, { t: TTOP + 2 * hh / V, r: -0.14 }];
+      for (let it = 0; it < nt; it++) fld[ix * nt + it] = SEIS.traceValue(sp, it * dt, wav.fn);
+    }
+    SEIS.drawVarDensity(ctx, fld, NX, nt, { x:0, y:0, w:w, h:h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.21 });
+  }
+
+  function thumbFault(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    const nx = 160, dx = 12.5, t0 = 0.06, tE = 0.30, dt = 0.0006;
+    const nt = Math.round((tE - t0) / dt);
+    const wav = SEIS.makeWavelet({ type: 'ricker', f: 34 });
+    const layers = [
+      { t:0.095, r:0.12 }, { t:0.130, r:-0.09 }, { t:0.163, r:0.13 },
+      { t:0.205, r:-0.11 }, { t:0.248, r:0.10 },
+    ];
+    const thr = 0.019, vel = 2800, tanD = Math.tan(64 * Math.PI / 180);
+    const fld = new Float32Array(nx * nt);
+    for (let ix = 0; ix < nx; ix++) {
+      const x = (ix + 0.5) * dx;
+      const sp = layers.map((L) => {
+        const fx = 0.52 * nx * dx + (vel * (L.t - 0.18) / 2) / tanD;
+        return { t: x > fx ? L.t + thr : L.t, r: L.r };
+      });
+      for (let it = 0; it < nt; it++) fld[ix * nt + it] = SEIS.traceValue(sp, t0 + it * dt, wav.fn);
+    }
+    SEIS.drawVarDensity(ctx, fld, nx, nt, { x:0, y:0, w:w, h:h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.15 });
+  }
+
+  function drawThumbs() {
+    document.querySelectorAll('.thumb-canvas').forEach((c) => {
+      c.dataset.thumb === 'wedge' ? thumbWedge(c) : thumbFault(c);
+    });
+  }
+  drawThumbs();
+
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => { drawHero(); drawThumbs(); }, 140);
+  });
+})();
+</script>
+</body>
+</html>
