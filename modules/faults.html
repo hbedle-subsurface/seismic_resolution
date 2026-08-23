@@ -164,6 +164,7 @@
         <p class="sublabel"><b>3</b> The seismic that comes out
           <span class="note" id="polNote">layers convolved with the wavelet</span></p>
         <canvas id="secCanvas" aria-label="Synthetic seismic section across a normal fault"></canvas>
+        <canvas id="cbarCanvas" aria-label="Color bar relating reflection coefficient to display color"></canvas>
         <div class="legend" id="secLegend"></div>
       </div>
       <div class="panel-col">
@@ -806,6 +807,18 @@
     SEIS.axisLeft(ctx, rect, T0 * 1000, TEND * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
   }
 
+  // Color bar in reflection-coefficient terms, so switching polarity visibly
+  // reverses the bar even though the underlying color map is unchanged.
+  function drawColorbar(L) {
+    const ctx = SEIS.fitCanvas($('cbarCanvas'), L.secW, 30);
+    ctx.clearRect(0, 0, L.secW, 30);
+    const w = Math.min(260, L.secW - 70);
+    SEIS.drawColorbar(ctx, { x: 58, y: 4, w: w, h: 11 },
+      SEIS.COLORMAPS[S.cmap],
+      { pol: S.pol === 'reverse' ? -1 : 1,
+        left: '\u2212 RC  (impedance down)', right: '(impedance up)  + RC' });
+  }
+
   // Traces run down the page, the way an interpreter reads them, and share the
   // section's time axis so the two panels line up.
   function drawCompare(L) {
@@ -1085,7 +1098,8 @@
     $('wavCanvas').parentElement.style.width = L.cmpW + 'px';
     $('secCanvas').parentElement.style.width = L.secW + 'px';
     $('cmpCanvas').parentElement.style.width = L.cmpW + 'px';
-    drawModel(L); drawWavelet(L); drawSection(L); drawCompare(L); updateLegend(); updateReadout();
+    drawModel(L); drawWavelet(L); drawSection(L); drawColorbar(L);
+    drawCompare(L); updateLegend(); updateReadout();
   }
   function save() { SEIS.writeState(S, DEF); }
 
