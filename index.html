@@ -78,16 +78,16 @@
     <p class="eyebrow">The modules — in the order they build on each other</p>
     <div class="card-grid">
 
-      <a class="card" href="modules/wavelets.html">
-        <canvas class="thumb-canvas" data-thumb="wavelet"></canvas>
+      <a class="card" href="modules/model1d.html">
+        <canvas class="thumb-canvas" data-thumb="model1d"></canvas>
         <div class="card-body">
           <div class="card-no">01</div>
-          <h3>What your data is made of</h3>
-          <p>Ricker versus Ormsby, peak frequency versus bandwidth, and why two wavelets with the same
-            dominant frequency can resolve very differently.</p>
-          <div class="q">Is a 30 Hz wavelet always a 30 Hz wavelet?</div>
+          <h3>Where a seismic trace comes from</h3>
+          <p>One column of rock. Set thickness, velocity and density, and follow it through impedance and
+            reflection coefficients to a synthetic trace, with nothing hidden in between.</p>
+          <div class="q">Why does that formation top have no reflector?</div>
         </div>
-        <span class="flag next">Live</span>
+        <span class="flag next">Start here</span>
       </a>
 
       <a class="card" href="modules/wedge.html">
@@ -327,41 +327,62 @@
     SEIS.drawVarDensity(ctx, fld, nx, nt, { x: 0, y: 0, w: w, h: h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.11 });
   }
 
-  function thumbWavelet(canvas) {
+  function thumb1d(canvas) {
     const w = canvas.parentElement.clientWidth, h = 118;
     const ctx = SEIS.fitCanvas(canvas, w, h);
     ctx.clearRect(0, 0, w, h);
-    const wavA = SEIS.makeWavelet({ type: 'ricker', f: 30 });
-    const wavB = SEIS.makeWavelet({ type: 'ormsby', f1: 8, f2: 16, f3: 42, f4: 60 });
-    const m = { l: 6, r: 6, t: 8, b: 8 };
-    const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
-    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
-    ctx.save();
-    ctx.strokeStyle = 'rgba(92,102,112,.35)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(rect.x, rect.y + rect.h / 2); ctx.lineTo(rect.x + rect.w, rect.y + rect.h / 2); ctx.stroke();
-    ctx.restore();
-    const span = 0.07;
-    const drawW = (wav, color) => {
-      ctx.save();
-      ctx.strokeStyle = color; ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      for (let i = 0; i <= 160; i++) {
-        const tt = -span + (i / 160) * 2 * span;
-        const x = rect.x + (i / 160) * rect.w;
-        const y = rect.y + rect.h / 2 - wav.fn(tt) * rect.h * 0.42;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.stroke(); ctx.restore();
+    const layers = [
+      { v: 2450, d: 2.38 }, { v: 2750, d: 2.30 }, { v: 2500, d: 2.40 },
+      { v: 2800, d: 2.32 }, { v: 2550, d: 2.42 },
+    ];
+    const thick = [0, 45, 30, 22, 0];
+    const ai = layers.map((l) => l.v * l.d * 1000 / 1e6);
+    let t = 0.05; const ifc = [];
+    for (let i = 0; i < layers.length - 1; i++) {
+      if (i > 0) t += 2 * thick[i] / layers[i].v;
+      ifc.push({ t, rc: (ai[i + 1] - ai[i]) / (ai[i + 1] + ai[i]) });
+    }
+    const tEnd = 0.2;
+    const EARTH = [[238,227,197],[212,189,145],[172,149,113],[126,109,88],[78,68,58]];
+    const lo = Math.min.apply(null, ai), hi = Math.max.apply(null, ai);
+    const shade = (i) => {
+      const u = (ai[i] - lo) / ((hi - lo) || 1) * (EARTH.length - 1);
+      const k = Math.min(EARTH.length - 2, Math.floor(u)), f = u - k;
+      const a = EARTH[k], b = EARTH[k + 1];
+      return 'rgb(' + Math.round(a[0]+(b[0]-a[0])*f) + ',' + Math.round(a[1]+(b[1]-a[1])*f) +
+             ',' + Math.round(a[2]+(b[2]-a[2])*f) + ')';
     };
-    drawW(wavB, '#B02418');
-    drawW(wavA, '#16191C');
+    const colW = w * 0.42, synX = w * 0.52, synW = w - synX;
+    const yOf = (tt) => (tt / tEnd) * h;
+    for (let i = 0; i < layers.length; i++) {
+      const y0 = i === 0 ? 0 : yOf(ifc[i - 1].t);
+      const y1 = i < ifc.length ? yOf(ifc[i].t) : h;
+      ctx.fillStyle = shade(i);
+      ctx.fillRect(0, y0, colW, y1 - y0);
+    }
+    const wav = SEIS.makeWavelet({ type: 'ricker', f: 32 });
+    const dt = 0.0004, nt = Math.round(tEnd / dt);
+    const tr = SEIS.traceFromSpikes(ifc.map((f) => ({ t: f.t, r: f.rc })), 0, dt, nt, wav);
+    const nx = 26, fld = new Float32Array(nx * nt);
+    for (let ix = 0; ix < nx; ix++) fld.set(tr, ix * nt);
+    SEIS.drawVarDensity(ctx, fld, nx, nt, { x: synX, y: 0, w: synW, h: h },
+      { cmap: SEIS.COLORMAPS.bwr, clip: 0.055 });
+    ctx.save();
+    ctx.strokeStyle = 'rgba(132,22,23,.85)'; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    const cx = colW + (synX - colW) / 2;
+    ifc.forEach((f) => {
+      const y = yOf(f.t);
+      ctx.moveTo(cx, y); ctx.lineTo(cx + (f.rc / 0.05) * ((synX - colW) / 2) * 0.8, y);
+    });
+    ctx.stroke(); ctx.restore();
   }
 
   function drawThumbs() {
     document.querySelectorAll('.thumb-canvas').forEach((c) => {
       if (c.dataset.thumb === 'wedge') thumbWedge(c);
       else if (c.dataset.thumb === 'fault') thumbFault(c);
-      else if (c.dataset.thumb === 'wavelet') thumbWavelet(c);
+      else if (c.dataset.thumb === 'model1d') thumb1d(c);
       else if (c.dataset.thumb === 'depth') thumbDepth(c);
     });
   }
