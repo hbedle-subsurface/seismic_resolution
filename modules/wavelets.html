@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What your data is made of — What Can You REALLY See in Seismic?</title>
+<meta name="description" content="Ricker versus Ormsby, peak frequency versus bandwidth: why two wavelets with the same dominant frequency can resolve very differently.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>What can you <b>really</b> see in seismic?</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="#notes">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 01 &nbsp;·&nbsp; The building block of everything else</p>
+    <h1>What your data is made of</h1>
+    <p class="sub">Every trace on every module in this site is a wavelet, repeated once per reflector and added up.
+      The wavelet's peak frequency gets all the attention because it is the one number on the acquisition report,
+      but peak frequency alone does not fix how a wavelet behaves — its bandwidth does at least as much of the
+      work. Build two wavelets that share a peak frequency and give them different bandwidths, and watch them
+      disagree about the same bed.</p>
+  </div>
+
+  <!-- ============================== CONTROLS ============================== -->
+  <section class="controls">
+
+    <div class="ctl-col">
+      <h2>Wavelet A</h2>
+      <div class="ctl">
+        <label for="aType">Shape</label>
+        <select id="aType"><option value="ricker">Ricker</option><option value="ormsby">Ormsby</option></select>
+      </div>
+      <div id="aRickerCtl">
+        <div class="ctl">
+          <label for="aF">Peak frequency <span class="val" id="aFV">30 Hz</span></label>
+          <input type="range" id="aF" min="8" max="80" step="1" value="30">
+        </div>
+      </div>
+      <div id="aOrmsbyCtl" hidden>
+        <div class="ctl"><label for="aF1">Low cut <span class="val" id="aF1V">6 Hz</span></label>
+          <input type="range" id="aF1" min="1" max="40" step="1" value="6"></div>
+        <div class="ctl"><label for="aF2">Low plateau <span class="val" id="aF2V">14 Hz</span></label>
+          <input type="range" id="aF2" min="2" max="60" step="1" value="14"></div>
+        <div class="ctl"><label for="aF3">High plateau <span class="val" id="aF3V">38 Hz</span></label>
+          <input type="range" id="aF3" min="5" max="100" step="1" value="38"></div>
+        <div class="ctl"><label for="aF4">High cut <span class="val" id="aF4V">55 Hz</span></label>
+          <input type="range" id="aF4" min="8" max="130" step="1" value="55"></div>
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Wavelet B</h2>
+      <div class="ctl">
+        <label for="bType">Shape</label>
+        <select id="bType"><option value="ricker">Ricker</option><option value="ormsby" selected>Ormsby</option></select>
+      </div>
+      <div id="bRickerCtl" hidden>
+        <div class="ctl">
+          <label for="bF">Peak frequency <span class="val" id="bFV">30 Hz</span></label>
+          <input type="range" id="bF" min="8" max="80" step="1" value="30">
+        </div>
+      </div>
+      <div id="bOrmsbyCtl">
+        <div class="ctl"><label for="bF1">Low cut <span class="val" id="bF1V">8 Hz</span></label>
+          <input type="range" id="bF1" min="1" max="40" step="1" value="8"></div>
+        <div class="ctl"><label for="bF2">Low plateau <span class="val" id="bF2V">16 Hz</span></label>
+          <input type="range" id="bF2" min="2" max="60" step="1" value="16"></div>
+        <div class="ctl"><label for="bF3">High plateau <span class="val" id="bF3V">42 Hz</span></label>
+          <input type="range" id="bF3" min="5" max="100" step="1" value="42"></div>
+        <div class="ctl"><label for="bF4">High cut <span class="val" id="bF4V">60 Hz</span></label>
+          <input type="range" id="bF4" min="8" max="130" step="1" value="60"></div>
+      </div>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin:2px 0 0">Ormsby is a trapezoid in the amplitude
+        spectrum: it ramps up from the low cut to the low plateau, stays flat, then ramps down from the high
+        plateau to the high cut.</p>
+    </div>
+
+    <div class="ctl-col">
+      <h2>The test bed</h2>
+      <div class="ctl">
+        <label for="thick">Bed thickness <span class="val" id="thickV">16 m</span></label>
+        <input type="range" id="thick" min="0" max="150" step="1" value="16">
+      </div>
+      <div class="ctl">
+        <label for="maxH">Thickest bed shown <span class="val" id="maxHV">80 m</span></label>
+        <input type="range" id="maxH" min="30" max="200" step="5" value="80">
+      </div>
+      <div class="ctl">
+        <label for="vel">Interval velocity <span class="val" id="velV">2600 m/s</span></label>
+        <input type="range" id="vel" min="1800" max="5500" step="50" value="2600">
+      </div>
+      <div class="ctl">
+        <label for="contrast">Reflection coefficient <span class="val" id="contrastV">0.15</span></label>
+        <input type="range" id="contrast" min="0.05" max="0.30" step="0.01" value="0.15">
+      </div>
+      <div class="ctl">
+        <label for="units">Units</label>
+        <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Display</h2>
+      <div class="ctl">
+        <div class="seg" role="group" aria-label="Display style">
+          <button type="button" id="dVD" aria-pressed="true">Color</button>
+          <button type="button" id="dBoth" aria-pressed="false">Both</button>
+          <button type="button" id="dWig" aria-pressed="false">Wiggle</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="cmap">Color map</label>
+        <select id="cmap">
+          <option value="bwr">Blue – white – red</option>
+          <option value="cbsafe">Blue – white – orange (colorblind safe)</option>
+          <option value="gray">Grayscale</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="gain">Gain <span class="val" id="gainV">1.0×</span></label>
+        <input type="range" id="gain" min="0.4" max="4" step="0.1" value="1">
+      </div>
+      <div class="ctl">
+        <label>Polarity <span class="val" id="polV">SEG normal</span></label>
+        <div class="seg" role="group" aria-label="Display polarity">
+          <button type="button" id="pNorm" aria-pressed="true">Normal</button>
+          <button type="button" id="pRev" aria-pressed="false">Reverse</button>
+        </div>
+      </div>
+      <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="pngBtn" type="button">Save wedges as PNG</button>
+      <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
+    </div>
+
+  </section>
+
+  <!-- =============================== PLOTS ============================== -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>From wavelet to resolution</h3>
+    </div>
+    <p class="hint-line">Same rock, same acquisition — the only thing that differs between the two columns is
+      the wavelet</p>
+
+    <div class="sec-row" id="wavRow">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Wavelet A <span class="note" id="aNote">30 Hz Ricker</span></p>
+        <canvas id="wavACanvas" aria-label="Wavelet A shape in time and its amplitude spectrum"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Wavelet B <span class="note" id="bNote">8/16/42/60 Ormsby</span></p>
+        <canvas id="wavBCanvas" aria-label="Wavelet B shape in time and its amplitude spectrum"></canvas>
+      </div>
+    </div>
+
+    <div class="sec-row" id="wedgeRow">
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> The wedge, through wavelet A</p>
+        <canvas id="wedgeACanvas" aria-label="Wedge model convolved with wavelet A"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>4</b> The wedge, through wavelet B</p>
+        <canvas id="wedgeBCanvas" aria-label="Wedge model convolved with wavelet B"></canvas>
+      </div>
+    </div>
+    <div class="legend" id="wedgeLegend"></div>
+
+    <div class="sec-row" id="curveRow">
+      <div class="panel-col" style="width:100%">
+        <p class="sublabel"><b>5</b> Composite amplitude, as the bed thins
+          <span class="note">measured off the wedge above, one column at a time</span></p>
+        <canvas id="curveCanvas" aria-label="Tuning curve: composite amplitude versus bed thickness for both wavelets"></canvas>
+        <div class="legend" id="curveLegend"></div>
+      </div>
+    </div>
+
+    <div class="sec-row" id="traceRow">
+      <div class="panel-col" style="width:100%">
+        <p class="sublabel"><b>6</b> The same bed, two tools
+          <span class="note">traces pulled from the crimson line above, at your chosen thickness</span></p>
+        <canvas id="traceCanvas" aria-label="Traces from wavelet A and wavelet B at the current test thickness"></canvas>
+        <div class="legend" id="traceLegend"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span>Wavelet A — dominant frequency</span><b id="rAdom">30 Hz</b></div>
+    <div class="stat"><span>Wavelet A — −6 dB bandwidth</span><b id="rAbw">— Hz</b></div>
+    <div class="stat"><span>Wavelet A — λ/4</span><b id="rAq">— m</b></div>
+    <div class="stat"><span>Wavelet A — tuning thickness (measured)</span><b id="rAtune">— m</b></div>
+    <div class="stat"><span>Wavelet B — dominant frequency</span><b id="rBdom">29 Hz</b></div>
+    <div class="stat"><span>Wavelet B — −6 dB bandwidth</span><b id="rBbw">— Hz</b></div>
+    <div class="stat"><span>Wavelet B — λ/4</span><b id="rBq">— m</b></div>
+    <div class="stat"><span>Wavelet B — tuning thickness (measured)</span><b id="rBtune">— m</b></div>
+    <div class="stat key"><span>Test bed thickness</span><b id="rThick">16 m</b></div>
+    <div class="stat wide"><span>Verdict at that thickness</span><b id="rVerdict">A: resolved &nbsp;·&nbsp; B: resolved</b></div>
+  </div>
+
+  <!-- ============================== TEACHING ============================== -->
+  <div class="teach">
+    <div class="tryit">
+      <h3>Try this</h3>
+      <ol>
+        <li><b>Start from the default pairing.</b> Wavelet A is a 30 Hz Ricker, wavelet B an 8/16/42/60 Ormsby.
+          Read the dominant frequency off each stat.
+          <span class="ans">They land within a hertz or two of each other. If you only read the peak frequency
+            off a processing report, you would call these the same wavelet. They are not.</span></li>
+        <li><b>Now compare the shaded band under each spectrum.</b>
+          <span class="ans">The shaded region is the −6 dB bandwidth, the range over which the wavelet actually
+            carries useful energy. The two bands differ even though the peaks line up, and it is that width,
+            not the peak, that sets how sharp the wavelet is in time.</span></li>
+        <li><b>Walk the bed thickness down from 60 m to zero</b> and watch both wedges together.
+          <span class="ans">Both reflectors merge into one eventually, but not at the same thickness, and the
+            brightening on the way down — the tuning effect — peaks at different beds for A and B. A wider
+            bandwidth generally tunes at a thinner bed, because it packs more of a true impulse response into
+            less time.</span></li>
+        <li><b>Read the tuning-curve panel at the thickness where each curve peaks.</b>
+          <span class="ans">That peak, not λ/4, is the actual thinnest bed each wavelet can double in
+            amplitude on. λ/4 is a convenient rule of thumb derived assuming a simple band-limited wavelet; the
+            measured tuning thickness moves around with real bandwidth, which is the whole point of comparing a
+            Ricker against an Ormsby instead of trusting the formula blindly.</span></li>
+        <li><b>Set the test-bed slider to a thickness between the two tuning thicknesses.</b>
+          <span class="ans">One wavelet reads that bed as tuned and bright, the other reads it as still
+            separating into two events. Same rock, same velocity, same day of acquisition — a different
+            instrument gives a different verdict.</span></li>
+        <li><b>Now make wavelet B a Ricker too, matched to A's peak frequency.</b> Set B's shape to Ricker and
+          its frequency to the same value as A.
+          <span class="ans">The two wedges become identical, the two tuning curves overlap exactly, and the
+            two-trace panel collapses to one line. Bandwidth was the only thing doing any work in the earlier
+            comparison — once shape and peak frequency both match, there is nothing left to disagree about.</span></li>
+        <li><b>Push wavelet B's low cut up toward its low plateau,</b> squeezing the ramp into almost a step.
+          <span class="ans">A steep-sided passband rings: watch side lobes appear beside the main event in the
+            time-domain panel and in the traces below the wedge. A sharp box in frequency is a slowly decaying
+            oscillation in time — narrowing the transition bands buys you a crisper-looking passband and a
+            noisier-looking wavelet, and real processing has to trade the two off.</span></li>
+        <li><b>Drop wavelet A's peak frequency to 15 Hz and raise B's high cut to 90 Hz</b>, keeping B's low cut
+          near 20 Hz.
+          <span class="ans">Now the dominant frequencies are close to a factor of two apart in the other
+            direction and the bandwidths overlap only partially. This is closer to what actually happens
+            comparing two real surveys, or a legacy 2D line against a modern 3D: the whole spectrum moves, not
+            just the label on the report.</span></li>
+      </ol>
+    </div>
+
+    <div class="takeaway">
+      <h3>What to carry away</h3>
+      <ul>
+        <li><b>Peak frequency is one number; a wavelet is a shape.</b> Two wavelets can share a peak frequency
+          and disagree about everything downstream of it — tuning thickness, side-lobe strength, apparent bed
+          boundary position.</li>
+        <li><b>Bandwidth, not peak frequency, sets resolving power.</b> A broader passband concentrates the
+          wavelet in time and pushes the tuning thickness down, which is why acquisition and processing reports
+          are more honest when they quote a band, not a single Hertz value.</li>
+        <li><b>λ/4 is a rule of thumb, not a law.</b> It comes from idealizing the wavelet. Every later module on
+          this site uses it as a convenient benchmark, but the tuning curve here shows the real answer moving
+          around it depending on what the wavelet actually looks like.</li>
+        <li><b>Ringing is the price of a sharp passband.</b> Steepen an Ormsby's corners and you buy a cleaner
+          frequency response and a wavelet with more side-lobe energy — resolution and ringing trade against
+          each other, not for free.</li>
+      </ul>
+    </div>
+  </div>
+
+  <details class="notes" id="notes">
+    <summary>Method, assumptions, and where to read more</summary>
+    <p>Both wavelets are zero phase and normalized so their central sample equals 1, so a single isolated
+      reflection reads at amplitude equal to the reflection coefficient regardless of which wavelet made it.
+      The Ricker is the second derivative of a Gaussian, fixed by one number, its peak frequency. The Ormsby is
+      a trapezoid in the amplitude spectrum defined by four corner frequencies — low cut, low plateau, high
+      plateau, high cut — and is the shape most processing shops actually apply as a band-pass filter, because
+      real acquisition and real anti-alias filters roll off gradually rather than obeying a single peak.</p>
+    <p>The wedge is the same two-reflector model used elsewhere on this site: a bed of variable thickness
+      bounded by equal and opposite reflection coefficients, so it thins to a perfect cancellation at zero
+      thickness rather than to a single isolated event. The composite-amplitude curve is read directly off that
+      wedge, one column at a time, as the peak absolute amplitude of the column divided by the reflection
+      coefficient. A value of 1 means the two reflectors are acting independently; a value near 2 means they are
+      interfering constructively at close to their maximum; the curve's own peak, not a formula, is reported as
+      each wavelet's measured tuning thickness.</p>
+    <p>The −6 dB bandwidth shown under each spectrum is the frequency range over which the amplitude spectrum
+      stays at or above half its peak value. It is one of several reasonable ways to define "bandwidth" for a
+      wavelet with no hard edges, chosen here because it is the convention most seismic processing reports
+      already use.</p>
+    <p>This is a 1-D convolutional model with no attenuation, no multiples, and no NMO stretch. It leaves those
+      effects to be layered on top; what it isolates is the one relationship this module is about, between a
+      wavelet's shape in frequency and its behavior in time.</p>
+    <ul>
+      <li>Ricker, N., 1953, The form and laws of propagation of seismic wavelets: <em>Geophysics</em>, 18, 10–40.</li>
+      <li>Ormsby, J.F.A., 1961, Design of numerical filters with applications to missile data processing:
+        <em>Journal of the ACM</em>, 8, 440–466.</li>
+      <li>Widess, M.B., 1973, How thin is a thin bed?: <em>Geophysics</em>, 38, 1176–1180.</li>
+      <li>Kallweit, R.S., and Wood, L.C., 1982, The limits of resolution of zero-phase wavelets:
+        <em>Geophysics</em>, 47, 1035–1046.</li>
+    </ul>
+  </details>
+
+  <div class="pager">
+    <a class="btn ghost" href="../index.html#modules">← All modules</a>
+    <a class="btn" href="wedge.html">Next: the wedge model →</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma —
+        with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.
+        Free to use or adapt in your own courses with citation.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/seismic.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const DEF = {
+    aType: 'ricker', aF: 30, aF1: 6, aF2: 14, aF3: 38, aF4: 55,
+    bType: 'ormsby', bF: 30, bF1: 8, bF2: 16, bF3: 42, bF4: 60,
+    thick: 16, maxH: 80, v: 2600, contrast: 0.15,
+    gain: 1, cmap: 'bwr', pol: 'normal', units: 'm', disp: 'vd',
+  };
+  let S = SEIS.readState(DEF);
+
+  const $ = (id) => document.getElementById(id);
+  const T0 = 0.05;
+  const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670';
+  const C_A = '#16191C', C_B = '#B02418';
+
+  const U = () => SEIS.UNITS[S.units];
+  const uL = (m) => m * U().len;
+  const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 1 : d) + ' ' + U().lab;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  let CACHE = {};
+
+  /* ------------------------------ wavelets ------------------------------- */
+
+  function wavCfg(p) {
+    if (S[p + 'Type'] === 'ormsby') {
+      return { type: 'ormsby', f1: S[p + 'F1'], f2: S[p + 'F2'], f3: S[p + 'F3'], f4: S[p + 'F4'] };
+    }
+    return { type: 'ricker', f: S[p + 'F'] };
+  }
+
+  function wavLabel(p) {
+    return S[p + 'Type'] === 'ormsby'
+      ? S[p + 'F1'] + '/' + S[p + 'F2'] + '/' + S[p + 'F3'] + '/' + S[p + 'F4'] + ' Ormsby'
+      : S[p + 'F'] + ' Hz Ricker';
+  }
+
+  // Keep the four Ormsby corners ordered with a minimum gap, so the filter
+  // never divides by zero and the trapezoid never turns inside out.
+  function clampOrmsby(p) {
+    let f1 = S[p + 'F1'], f2 = S[p + 'F2'], f3 = S[p + 'F3'], f4 = S[p + 'F4'];
+    f1 = Math.max(1, f1);
+    f2 = Math.max(f1 + 1, f2);
+    f3 = Math.max(f2 + 1, f3);
+    f4 = Math.max(f3 + 1, f4);
+    S[p + 'F1'] = f1; S[p + 'F2'] = f2; S[p + 'F3'] = f3; S[p + 'F4'] = f4;
+  }
+
+  // How far to plot the wavelet's own shape in time. wav.halfLength is a
+  // numerical-truncation radius (huge for a low-cut Ormsby, since its tail
+  // decays slowly); the display only needs enough of it to show the shape.
+  function dispSpan(wav) {
+    return Math.min(wav.halfLength, 2.6 / Math.max(wav.fdom, 6));
+  }
+
+  // Half-amplitude (-6 dB) bandwidth, read off the amplitude spectrum by
+  // linear interpolation between samples.
+  function halfAmpBand(sp) {
+    let flo = null, fhi = null;
+    for (let i = 1; i < sp.length; i++) {
+      const a0 = sp[i - 1].a, a1 = sp[i].a;
+      if (flo === null && a0 < 0.5 && a1 >= 0.5) {
+        const t = (0.5 - a0) / (a1 - a0); flo = sp[i - 1].f + t * (sp[i].f - sp[i - 1].f);
+      }
+      if (flo !== null && fhi === null && a0 >= 0.5 && a1 < 0.5) {
+        const t = (0.5 - a0) / (a1 - a0); fhi = sp[i - 1].f + t * (sp[i].f - sp[i - 1].f);
+      }
+    }
+    if (flo === null) flo = 0;
+    if (fhi === null) fhi = sp[sp.length - 1].f;
+    return { flo, fhi };
+  }
+
+  /* ------------------------------ compute -------------------------------- */
+
+  const NXW = 170;
+
+  function compute() {
+    const wavA = SEIS.makeWavelet(wavCfg('a'));
+    const wavB = SEIS.makeWavelet(wavCfg('b'));
+    const spA = SEIS.spectrum(wavA, 0.0007, 220, 130);
+    const spB = SEIS.spectrum(wavB, 0.0007, 220, 130);
+    const bandA = halfAmpBand(spA), bandB = halfAmpBand(spB);
+
+    // Shared time axis for both wedges and the trace panel. Capped so a very
+    // low Ormsby low-cut (a long numerical tail) doesn't blow the axis out.
+    const margin = Math.min(Math.max(wavA.halfLength, wavB.halfLength), 0.09);
+    const dt = 0.0004;
+    const tEnd = T0 + 2 * S.maxH / S.v + margin;
+    const nt = Math.max(12, Math.round((tEnd - T0) / dt));
+
+    const fieldA = new Float32Array(NXW * nt);
+    const fieldB = new Float32Array(NXW * nt);
+    const curveA = new Float32Array(NXW);
+    const curveB = new Float32Array(NXW);
+
+    for (let ix = 0; ix < NXW; ix++) {
+      const hh = (ix / (NXW - 1)) * S.maxH;
+      const spikes = [{ t: T0, r: S.contrast }, { t: T0 + 2 * hh / S.v, r: -S.contrast }];
+      let mxA = 0, mxB = 0;
+      for (let it = 0; it < nt; it++) {
+        const t = T0 + it * dt;
+        const vA = SEIS.traceValue(spikes, t, wavA.fn);
+        const vB = SEIS.traceValue(spikes, t, wavB.fn);
+        fieldA[ix * nt + it] = vA; fieldB[ix * nt + it] = vB;
+        if (Math.abs(vA) > mxA) mxA = Math.abs(vA);
+        if (Math.abs(vB) > mxB) mxB = Math.abs(vB);
+      }
+      curveA[ix] = mxA / S.contrast;
+      curveB[ix] = mxB / S.contrast;
+    }
+
+    const argmax = (arr) => { let bi = 0; for (let i = 1; i < arr.length; i++) if (arr[i] > arr[bi]) bi = i; return bi; };
+    const tuneHA = (argmax(curveA) / (NXW - 1)) * S.maxH;
+    const tuneHB = (argmax(curveB) / (NXW - 1)) * S.maxH;
+
+    CACHE = {
+      wavA, wavB, spA, spB, bandA, bandB, tuneHA, tuneHB,
+      fieldA, fieldB, curveA, curveB, nt, dt, tEnd,
+    };
+  }
+
+  /* ------------------------------ layout ---------------------------------- */
+
+  function layout() {
+    const box = document.querySelector('.plot');
+    const W = Math.max(320, box.clientWidth - 28);
+    const stacked = W < 640;
+    const halfW = stacked ? W : Math.floor((W - 12) / 2);
+    return {
+      W, stacked, halfW,
+      wavH: clamp(Math.round(halfW * 0.62), 175, 250),
+      wedgeH: clamp(Math.round(halfW * 0.82), 230, 340),
+      curveH: clamp(Math.round(W * 0.30), 170, 250),
+      traceH: clamp(Math.round(W * 0.42), 230, 360),
+    };
+  }
+
+  /* ------------------------------ drawing --------------------------------- */
+
+  function drawWaveletPanel(id, wav, sp, band, w, h, accent) {
+    const ctx = SEIS.fitCanvas($(id), w, h);
+    ctx.clearRect(0, 0, w, h);
+    const m = { l: 16, r: 12, t: 6, b: 16 };
+    const gap = 18, avail = h - m.t - m.b - gap, each = avail / 2;
+    const rW = { x: m.l, y: m.t, w: w - m.l - m.r, h: each };
+    const rS = { x: m.l, y: m.t + each + gap, w: rW.w, h: each };
+
+    ctx.fillStyle = '#fff'; ctx.fillRect(rW.x, rW.y, rW.w, rW.h); ctx.fillRect(rS.x, rS.y, rS.w, rS.h);
+
+    // shape in time
+    ctx.save();
+    ctx.strokeStyle = 'rgba(92,102,112,.4)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(rW.x, rW.y + rW.h / 2); ctx.lineTo(rW.x + rW.w, rW.y + rW.h / 2); ctx.stroke();
+    const span = dispSpan(wav);
+    ctx.strokeStyle = accent; ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    for (let i = 0; i <= 180; i++) {
+      const tt = -span + (i / 180) * 2 * span;
+      const x = rW.x + (i / 180) * rW.w;
+      const y = rW.y + rW.h / 2 - wav.fn(tt) * rW.h * 0.40;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.restore();
+
+    // amplitude spectrum, with the half-amplitude band shaded first (underneath)
+    const fmax = 130;
+    ctx.save();
+    ctx.fillStyle = 'rgba(11,114,133,.16)';
+    ctx.fillRect(rS.x + (band.flo / fmax) * rS.w, rS.y, ((band.fhi - band.flo) / fmax) * rS.w, rS.h);
+    ctx.fillStyle = accent === CRIMSON ? 'rgba(176,36,24,.20)' : 'rgba(22,25,28,.14)';
+    ctx.beginPath(); ctx.moveTo(rS.x, rS.y + rS.h);
+    sp.forEach((q) => ctx.lineTo(rS.x + (q.f / fmax) * rS.w, rS.y + rS.h - q.a * rS.h * 0.88));
+    ctx.lineTo(rS.x + rS.w, rS.y + rS.h); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = accent; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    sp.forEach((q, i) => {
+      const x = rS.x + (q.f / fmax) * rS.w, y = rS.y + rS.h - q.a * rS.h * 0.88;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    const fx = rS.x + (wav.fdom / fmax) * rS.w;
+    SEIS.dashedLine(ctx, fx, rS.y, fx, rS.y + rS.h, TEAL, [2, 3], 1.2);
+    ctx.restore();
+
+    SEIS.frame(ctx, rW); SEIS.frame(ctx, rS);
+    ctx.save();
+    ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('shape in time', rW.x + rW.w / 2, rW.y + rW.h + 3);
+    ctx.fillText(wav.fdom.toFixed(0) + ' Hz dominant  ·  ' + (band.fhi - band.flo).toFixed(0) +
+      ' Hz band (−6 dB)', rS.x + rS.w / 2, rS.y + rS.h + 3);
+    ctx.restore();
+  }
+
+  function drawWedgePanel(id, field, lamQ, tuneH, w, h) {
+    const ctx = SEIS.fitCanvas($(id), w, h);
+    ctx.clearRect(0, 0, w, h);
+    const m = { l: 50, r: 12, t: 8, b: 34 };
+    const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
+    const clip = S.contrast * 1.15;
+
+    if (S.disp !== 'wiggle') {
+      SEIS.drawVarDensity(ctx, field, NXW, CACHE.nt, rect, { cmap: SEIS.COLORMAPS[S.cmap], gain: S.gain, clip });
+    } else {
+      ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    }
+    if (S.disp !== 'vd') {
+      SEIS.drawWiggle(ctx, field, NXW, CACHE.nt, rect, {
+        step: Math.max(1, Math.round(NXW / (S.disp === 'wiggle' ? 60 : 26))),
+        clip: clip / S.gain, excursion: 1.3,
+        stroke: S.disp === 'both' ? 'rgba(22,25,28,.5)' : 'rgba(22,25,28,.9)',
+        fill: S.disp === 'both' ? 'rgba(22,25,28,.26)' : 'rgba(22,25,28,.78)',
+      });
+    }
+
+    const xOf = (hh) => rect.x + (clamp(hh, 0, S.maxH) / S.maxH) * rect.w;
+
+    if (lamQ <= S.maxH) {
+      const x = xOf(lamQ);
+      SEIS.dashedLine(ctx, x, rect.y, x, rect.y + rect.h, TEAL, [3, 3], 1.4);
+      SEIS.tag(ctx, x + 4, rect.y + 12, 'λ/4', '#0B7285');
+    }
+    if (tuneH <= S.maxH) {
+      const xt = xOf(tuneH);
+      SEIS.dashedLine(ctx, xt, rect.y, xt, rect.y + rect.h, 'rgba(132,22,23,.55)', [2, 2], 1.2);
+    }
+    const xc = xOf(S.thick);
+    ctx.save(); ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xc, rect.y); ctx.lineTo(xc, rect.y + rect.h); ctx.stroke(); ctx.restore();
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisBottom(ctx, rect, 0, uL(S.maxH), 'Bed thickness (' + U().lab + ')', (v) => v.toFixed(0));
+    SEIS.axisLeft(ctx, rect, T0 * 1000, CACHE.tEnd * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
+  }
+
+  function drawCurve(L) {
+    const ctx = SEIS.fitCanvas($('curveCanvas'), L.W, L.curveH);
+    ctx.clearRect(0, 0, L.W, L.curveH);
+    const m = { l: 46, r: 14, t: 10, b: 30 };
+    const rect = { x: m.l, y: m.t, w: L.W - m.l - m.r, h: L.curveH - m.t - m.b };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+    const ymax = Math.max(2.2, 1.15 * Math.max.apply(null, CACHE.curveA), 1.15 * Math.max.apply(null, CACHE.curveB));
+    const xOf = (hh) => rect.x + (clamp(hh, 0, S.maxH) / S.maxH) * rect.w;
+    const yOf = (v) => rect.y + rect.h - (v / ymax) * rect.h;
+
+    // isolated-reflection asymptote
+    SEIS.dashedLine(ctx, rect.x, yOf(1), rect.x + rect.w, yOf(1), 'rgba(92,102,112,.5)', [4, 3], 1);
+
+    const drawCurveLine = (arr, color) => {
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      for (let i = 0; i < arr.length; i++) {
+        const hh = (i / (arr.length - 1)) * S.maxH;
+        const x = xOf(hh), y = yOf(arr[i]);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    drawCurveLine(CACHE.curveA, C_A);
+    drawCurveLine(CACHE.curveB, C_B);
+
+    // markers: tuning thickness for each, and the current test thickness
+    [[CACHE.tuneHA, C_A], [CACHE.tuneHB, C_B]].forEach(([hh, color]) => {
+      if (hh > S.maxH) return;
+      SEIS.dashedLine(ctx, xOf(hh), rect.y, xOf(hh), rect.y + rect.h, color, [2, 2], 1);
+    });
+    const xc = xOf(S.thick);
+    ctx.save(); ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xc, rect.y); ctx.lineTo(xc, rect.y + rect.h); ctx.stroke(); ctx.restore();
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisBottom(ctx, rect, 0, uL(S.maxH), 'Bed thickness (' + U().lab + ')', (v) => v.toFixed(0));
+    SEIS.axisLeft(ctx, rect, 0, ymax, 'Composite ÷ isolated amplitude', (v) => v.toFixed(1));
+  }
+
+  function drawTraces(L) {
+    const ctx = SEIS.fitCanvas($('traceCanvas'), L.W, L.traceH);
+    ctx.clearRect(0, 0, L.W, L.traceH);
+    const m = { l: 58, r: 14, t: 8, b: 34 };
+    const rect = { x: m.l, y: m.t, w: L.W - m.l - m.r, h: L.traceH - m.t - m.b };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+    const nt = CACHE.nt;
+    const ix = clamp(Math.round((S.thick / S.maxH) * (NXW - 1)), 0, NXW - 1);
+    const A = (it) => CACHE.fieldA[ix * nt + it];
+    const B = (it) => CACHE.fieldB[ix * nt + it];
+
+    let peak = 1e-6;
+    for (let it = 0; it < nt; it++) peak = Math.max(peak, Math.abs(A(it)), Math.abs(B(it)));
+    const cx = rect.x + rect.w / 2;
+    const sc = (rect.w / 2) * 0.86 / peak;
+    const yOf = (it) => rect.y + (it / (nt - 1)) * rect.h;
+    const xOf = (v) => cx + v * sc;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(92,102,112,.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
+    ctx.restore();
+
+    // true top and base of the bed, so the eye has something honest to compare against
+    const tTop = T0, tBase = T0 + 2 * S.thick / S.v;
+    [tTop, tBase].forEach((tt) => {
+      const y = rect.y + ((tt - T0) / (CACHE.tEnd - T0)) * rect.h;
+      SEIS.dashedLine(ctx, rect.x, y, rect.x + rect.w, y, 'rgba(92,102,112,.4)', [3, 3], 1);
+    });
+
+    const line = (get, color) => {
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.7;
+      ctx.beginPath();
+      for (let it = 0; it < nt; it++) {
+        const x = xOf(get(it)), y = yOf(it);
+        it === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    line(A, C_A); line(B, C_B);
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisLeft(ctx, rect, T0 * 1000, CACHE.tEnd * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
+    ctx.save();
+    ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('amplitude', cx, rect.y + rect.h + 8);
+    ctx.restore();
+  }
+
+  function updateLegends() {
+    $('wedgeLegend').innerHTML =
+      '<span><i style="border-color:' + TEAL + ';border-top-style:dashed"></i>λ/4 (that wavelet)</span>' +
+      '<span><i style="border-color:rgba(132,22,23,.7);border-top-style:dashed"></i>measured tuning thickness</span>' +
+      '<span><i style="border-color:' + CRIMSON + '"></i>your test thickness</span>';
+    $('curveLegend').innerHTML =
+      '<span><i style="border-color:' + C_A + '"></i>Wavelet A</span>' +
+      '<span><i style="border-color:' + C_B + '"></i>Wavelet B</span>' +
+      '<span><i style="border-color:rgba(92,102,112,.6);border-top-style:dashed"></i>isolated-reflection amplitude</span>' +
+      '<span><i style="border-color:' + CRIMSON + '"></i>your test thickness</span>';
+    $('traceLegend').innerHTML =
+      '<span><i style="border-color:' + C_A + '"></i>Wavelet A</span>' +
+      '<span><i style="border-color:' + C_B + '"></i>Wavelet B</span>' +
+      '<span><i style="border-color:rgba(92,102,112,.6);border-top-style:dashed"></i>true top / base of bed</span>';
+  }
+
+  /* ------------------------------ readout --------------------------------- */
+
+  function verdict(thr, lam) {
+    const ratio = thr / lam;
+    return ratio >= 0.25 ? 'resolved' : ratio >= 0.125 ? 'detectable' : 'below detection';
+  }
+
+  function updateReadout() {
+    const lamA = S.v / CACHE.wavA.fdom, lamB = S.v / CACHE.wavB.fdom;
+    $('rAdom').textContent = CACHE.wavA.fdom.toFixed(0) + ' Hz';
+    $('rBdom').textContent = CACHE.wavB.fdom.toFixed(0) + ' Hz';
+    $('rAbw').textContent = (CACHE.bandA.fhi - CACHE.bandA.flo).toFixed(0) + ' Hz (' +
+      CACHE.bandA.flo.toFixed(0) + '–' + CACHE.bandA.fhi.toFixed(0) + ')';
+    $('rBbw').textContent = (CACHE.bandB.fhi - CACHE.bandB.flo).toFixed(0) + ' Hz (' +
+      CACHE.bandB.flo.toFixed(0) + '–' + CACHE.bandB.fhi.toFixed(0) + ')';
+    $('rAq').textContent = fmtL(lamA / 4);
+    $('rBq').textContent = fmtL(lamB / 4);
+    $('rAtune').textContent = fmtL(CACHE.tuneHA, 0);
+    $('rBtune').textContent = fmtL(CACHE.tuneHB, 0);
+    $('rThick').textContent = fmtL(S.thick, 0);
+    $('rVerdict').textContent = 'A: ' + verdict(S.thick, lamA) + '  ·  B: ' + verdict(S.thick, lamB);
+  }
+
+  /* ------------------------------ plumbing -------------------------------- */
+
+  function render(recompute) {
+    if (recompute !== false) compute();
+    const L = layout();
+    $('wavACanvas').parentElement.style.width = L.halfW + 'px';
+    $('wavBCanvas').parentElement.style.width = L.halfW + 'px';
+    $('wedgeACanvas').parentElement.style.width = L.halfW + 'px';
+    $('wedgeBCanvas').parentElement.style.width = L.halfW + 'px';
+
+    drawWaveletPanel('wavACanvas', CACHE.wavA, CACHE.spA, CACHE.bandA, L.halfW, L.wavH, C_A);
+    drawWaveletPanel('wavBCanvas', CACHE.wavB, CACHE.spB, CACHE.bandB, L.halfW, L.wavH, C_B);
+    drawWedgePanel('wedgeACanvas', CACHE.fieldA, S.v / CACHE.wavA.fdom / 4, CACHE.tuneHA, L.halfW, L.wedgeH);
+    drawWedgePanel('wedgeBCanvas', CACHE.fieldB, S.v / CACHE.wavB.fdom / 4, CACHE.tuneHB, L.halfW, L.wedgeH);
+    drawCurve(L);
+    drawTraces(L);
+    updateLegends();
+    updateReadout();
+  }
+  function save() { SEIS.writeState(S, DEF); }
+
+  function syncLabels() {
+    $('aFV').textContent = S.aF + ' Hz';
+    $('aF1V').textContent = S.aF1 + ' Hz'; $('aF2V').textContent = S.aF2 + ' Hz';
+    $('aF3V').textContent = S.aF3 + ' Hz'; $('aF4V').textContent = S.aF4 + ' Hz';
+    $('bFV').textContent = S.bF + ' Hz';
+    $('bF1V').textContent = S.bF1 + ' Hz'; $('bF2V').textContent = S.bF2 + ' Hz';
+    $('bF3V').textContent = S.bF3 + ' Hz'; $('bF4V').textContent = S.bF4 + ' Hz';
+    $('thickV').textContent = fmtL(S.thick, 0);
+    $('maxHV').textContent = fmtL(S.maxH, 0);
+    $('velV').textContent = Math.round(uL(S.v)) + ' ' + U().vlab;
+    $('contrastV').textContent = S.contrast.toFixed(2);
+    $('gainV').textContent = S.gain.toFixed(1) + '×';
+    $('dVD').setAttribute('aria-pressed', S.disp === 'vd');
+    $('dBoth').setAttribute('aria-pressed', S.disp === 'both');
+    $('dWig').setAttribute('aria-pressed', S.disp === 'wiggle');
+    $('pNorm').setAttribute('aria-pressed', S.pol === 'normal');
+    $('pRev').setAttribute('aria-pressed', S.pol === 'reverse');
+    $('polV').textContent = S.pol === 'reverse' ? 'SEG reverse' : 'SEG normal';
+    $('aRickerCtl').hidden = S.aType !== 'ricker';
+    $('aOrmsbyCtl').hidden = S.aType !== 'ormsby';
+    $('bRickerCtl').hidden = S.bType !== 'ricker';
+    $('bOrmsbyCtl').hidden = S.bType !== 'ormsby';
+    $('aNote').textContent = wavLabel('a');
+    $('bNote').textContent = wavLabel('b');
+    $('thick').max = S.maxH;
+  }
+
+  function pushToInputs() {
+    $('aType').value = S.aType; $('bType').value = S.bType;
+    $('aF').value = S.aF; $('aF1').value = S.aF1; $('aF2').value = S.aF2;
+    $('aF3').value = S.aF3; $('aF4').value = S.aF4;
+    $('bF').value = S.bF; $('bF1').value = S.bF1; $('bF2').value = S.bF2;
+    $('bF3').value = S.bF3; $('bF4').value = S.bF4;
+    $('thick').value = S.thick; $('maxH').value = S.maxH;
+    $('vel').value = S.v; $('contrast').value = S.contrast;
+    $('gain').value = S.gain; $('cmap').value = S.cmap; $('units').value = S.units;
+  }
+
+  function bump() { syncLabels(); render(); save(); }
+
+  const slide = (id, key) => $(id).addEventListener('input', () => { S[key] = parseFloat($(id).value); bump(); });
+  slide('aF', 'aF'); slide('bF', 'bF');
+  slide('thick', 'thick'); slide('vel', 'v'); slide('contrast', 'contrast'); slide('gain', 'gain');
+
+  $('maxH').addEventListener('input', () => {
+    S.maxH = parseFloat($('maxH').value);
+    S.thick = clamp(S.thick, 0, S.maxH);
+    bump();
+  });
+
+  ['a', 'b'].forEach((p) => {
+    ['F1', 'F2', 'F3', 'F4'].forEach((k) => {
+      $(p + k).addEventListener('input', () => {
+        S[p + k] = parseFloat($(p + k).value);
+        clampOrmsby(p);
+        pushToInputs();
+        bump();
+      });
+    });
+    $(p + 'Type').addEventListener('change', () => { S[p + 'Type'] = $(p + 'Type').value; bump(); });
+  });
+
+  const toggle = (id, key, val) => $(id).addEventListener('click', () => { S[key] = val; bump(); });
+  toggle('dVD', 'disp', 'vd'); toggle('dBoth', 'disp', 'both'); toggle('dWig', 'disp', 'wiggle');
+  toggle('pNorm', 'pol', 'normal'); toggle('pRev', 'pol', 'reverse');
+
+  $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(); });
+  $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
+
+  $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
+  $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
+  $('pngBtn').addEventListener('click', () => SEIS.savePNG($('wedgeACanvas'), 'wavelet-wedge-A'));
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => render(false), 120); });
+
+  pushToInputs(); syncLabels(); render();
+  document.fonts && document.fonts.ready.then(() => render(false));
+})();
+</script>
+</body>
+</html>
