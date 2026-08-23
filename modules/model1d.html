@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where a seismic trace comes from — What Can You REALLY See in Seismic?</title>
+<meta name="description" content="A 1D earth model: set thickness, velocity and density, watch acoustic impedance become reflection coefficients, and see them convolved into a synthetic trace.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>What can you <b>really</b> see in seismic?</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="#notes">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 01 &nbsp;·&nbsp; The foundation</p>
+    <h1>Where a seismic trace comes from</h1>
+    <p class="sub">One column of rock. Give each layer a thickness, a velocity and a density, and the trace
+      follows from there with nothing hidden: velocity times density is acoustic impedance, the contrast
+      between two impedances is a reflection coefficient, and those coefficients convolved with a wavelet are
+      the trace. Change any number on the left and watch which panel moves. Everything else on this site is
+      this model, repeated sideways.</p>
+  </div>
+
+  <!-- ============================== CONTROLS ============================== -->
+  <section class="controls">
+    <div class="ctl-col">
+      <h2>Start from</h2>
+      <div class="ctl">
+        <select id="preset">
+          <option value="custom">Custom model</option>
+          <option value="sandshale" selected>Sand encased in shale</option>
+          <option value="gas">Gas sand — a bright spot</option>
+          <option value="carb">Shale over limestone</option>
+          <option value="coal">Coal seam</option>
+          <option value="wet">Wet sand — a dim reflection</option>
+        </select>
+      </div>
+      <button class="btn ghost small" id="addLayer" type="button">Add a layer</button>
+      <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="pngBtn" type="button">Save panels as PNG</button>
+      <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
+    </div>
+
+    <div class="ctl-col">
+      <h2>The wavelet</h2>
+      <div class="ctl">
+        <div class="seg" role="group" aria-label="Wavelet type">
+          <button type="button" id="wRicker" aria-pressed="true">Ricker</button>
+          <button type="button" id="wOrmsby" aria-pressed="false">Ormsby</button>
+        </div>
+      </div>
+      <div id="rickerCtl">
+        <div class="ctl">
+          <label for="freq">Peak frequency <span class="val" id="freqV">30 Hz</span></label>
+          <input type="range" id="freq" min="8" max="90" step="1" value="30">
+        </div>
+      </div>
+      <div id="ormsbyCtl" hidden>
+        <div class="ctl">
+          <label>Low cut / low pass <span class="val" id="f12V">5 – 10 Hz</span></label>
+          <input type="range" id="f1" min="2" max="24" step="1" value="5">
+          <input type="range" id="f2" min="4" max="34" step="1" value="10" style="margin-top:5px">
+        </div>
+        <div class="ctl">
+          <label>High pass / high cut <span class="val" id="f34V">40 – 50 Hz</span></label>
+          <input type="range" id="f3" min="20" max="90" step="1" value="40">
+          <input type="range" id="f4" min="24" max="110" step="1" value="50" style="margin-top:5px">
+        </div>
+      </div>
+      <div class="ctl">
+        <label>Polarity <span class="val" id="polV">SEG normal</span></label>
+        <div class="seg" role="group" aria-label="Display polarity">
+          <button type="button" id="pNorm" aria-pressed="true">Normal</button>
+          <button type="button" id="pRev" aria-pressed="false">Reverse</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Display</h2>
+      <div class="ctl">
+        <label for="cmap">Color map</label>
+        <select id="cmap">
+          <option value="bwr">Blue peak / red trough</option>
+          <option value="cbsafe">Blue peak / orange trough (colorblind safe)</option>
+          <option value="gray">Grayscale (black peak)</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="gain">Gain <span class="val" id="gainV">1.0×</span></label>
+        <input type="range" id="gain" min="0.4" max="4" step="0.1" value="1">
+      </div>
+      <div class="ctl">
+        <label for="noise">Signal-to-noise <span class="val" id="noiseV">clean</span></label>
+        <input type="range" id="noise" min="0" max="20" step="0.5" value="0">
+      </div>
+      <div class="ctl">
+        <label for="units">Units</label>
+        <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
+      </div>
+      <label class="check"><input type="checkbox" id="showLabels" checked> Label layers on the panel</label>
+    </div>
+  </section>
+
+  <!-- ============================= THE MODEL ============================== -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>The earth model</h3>
+      <span class="hint">Type in any box. The first layer starts at the surface; the last one continues below the section.</span>
+    </div>
+    <div class="tab-wrap">
+      <table class="ltab" id="ltab"></table>
+    </div>
+  </section>
+
+  <!-- ============================== PANELS =============================== -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>From rock to trace</h3>
+    </div>
+    <p class="hint-line" id="chainHint">Read left to right. Every panel shares the same two-way time axis except the wavelet.</p>
+    <div class="sec-row" id="panelRow">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Rock layers</p>
+        <canvas id="layerCanvas" aria-label="Layer column shaded by acoustic impedance"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Impedance</p>
+        <canvas id="aiCanvas" aria-label="Acoustic impedance versus two-way time"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> Reflectivity</p>
+        <canvas id="rcCanvas" aria-label="Reflection coefficients at each interface"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>4</b> &#8859; Wavelet</p>
+        <canvas id="wavCanvas" aria-label="The wavelet, on its own time scale"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>5</b> = Seismic trace</p>
+        <canvas id="synCanvas" aria-label="The synthetic seismic trace"></canvas>
+      </div>
+    </div>
+    <canvas id="cbarCanvas" aria-label="Color bar relating reflection coefficient to display color"></canvas>
+    <div class="legend" id="mainLegend"></div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span>Layers / interfaces</span><b id="rN">5 / 4</b></div>
+    <div class="stat"><span>Dominant frequency</span><b id="rF">30 Hz</b></div>
+    <div class="stat"><span>Wavelength in the thinnest bed</span><b id="rLam">— m</b></div>
+    <div class="stat"><span>λ/4 there</span><b id="rQ">— m</b></div>
+    <div class="stat"><span>Thinnest bed</span><b id="rThin">— m</b></div>
+    <div class="stat key"><span>Strongest reflection</span><b id="rMaxRc">—</b></div>
+    <div class="stat wide"><span>Verdict</span><b id="rVerdict">—</b></div>
+  </div>
+
+  <!-- ============================== TEACHING ============================== -->
+  <div class="teach">
+    <div class="tryit">
+      <h3>Try this</h3>
+      <ol>
+        <li><b>Make a reflection disappear.</b> Pick any interface and change the velocity and density of the
+          layer below until its impedance matches the layer above.
+          <span class="ans">The reflection coefficient goes to zero and the event vanishes, even though the
+            rock type still changes. Seismic sees impedance contrast, not geology. A sand and a shale with the
+            same impedance are invisible to each other, and that is why some perfectly real formation tops
+            have no reflector to pick.</span></li>
+        <li><b>Separate velocity from density.</b> Raise the velocity of one layer by 20%, then put it back and
+          raise its density by 20% instead.
+          <span class="ans">Both change impedance and both change the reflection. Seismic cannot tell you
+            which one did it — that ambiguity is the reason we need well logs, and the reason inversion is
+            harder than it looks.</span></li>
+        <li><b>Flip a reflection over.</b> Make one layer slower and lighter than the one above it.
+          <span class="ans">The reflection coefficient goes negative and the event changes color. A soft
+            layer over a hard one and a hard layer over a soft one produce opposite events. Getting this
+            backwards is the classic well-tie error.</span></li>
+        <li><b>Watch two reflections merge.</b> Take the thinnest bed down from 40 m to 5 m, and keep an eye
+          on panels 3 and 5 together.
+          <span class="ans">The two spikes in panel 3 stay separate and keep their full size, because the
+            rock is still there. The trace in panel 5 merges them into a single event that changes shape and
+            amplitude. That gap between what exists and what you can see is the whole subject of module 02.</span></li>
+        <li><b>Change the wavelet, not the rock.</b> Leave the model alone and sweep frequency from 15 Hz to
+          70 Hz.
+          <span class="ans">Panels 1 to 3 never move — the earth has not changed. Only panel 5 does. Every
+            argument about what is or is not resolvable is an argument about panel 4.</span></li>
+        <li><b>Switch polarity.</b>
+          <span class="ans">The whole trace inverts and the color bar reverses with it. Nothing about the
+            rock changed. Polarity is a convention about how data is displayed, and if you do not know which
+            one your data uses, you cannot say whether a bright event is a hard streak or a soft one.</span></li>
+      </ol>
+    </div>
+
+    <div class="takeaway">
+      <h3>What to carry away</h3>
+      <ul>
+        <li><b>Impedance is the only rock property seismic responds to</b>, and only through the contrast at
+          a boundary. A thick uniform layer returns nothing from its middle.</li>
+        <li><b>Reflection coefficients are properties of interfaces</b>, not of layers. They live at the
+          boundaries and nowhere else.</li>
+        <li><b>The wavelet is where resolution is decided.</b> The reflectivity in panel 3 is as sharp as the
+          geology; the trace is only as sharp as the wavelet.</li>
+        <li><b>Convolution is a smearing operation</b>, and it is not reversible in practice. Everything you
+          interpret has been through it once already.</li>
+      </ul>
+    </div>
+  </div>
+
+  <details class="notes" id="notes">
+    <summary>Method, assumptions, and where to read more</summary>
+    <p>Acoustic impedance is velocity times density. At an interface the normal-incidence reflection
+      coefficient is <span class="k">R = (I₂ − I₁) / (I₂ + I₁)</span>, and the two-way time to each interface
+      accumulates as <span class="k">2h/V</span> through the layers above it. The trace is the reflectivity
+      convolved with a zero-phase wavelet, done here as a sum of shifted, scaled wavelets so interface timing
+      is exact rather than rounded to the sample grid. The first interface is placed at 50 ms so the top
+      reflection is clear of the start of the display.</p>
+    <p>This is normal incidence only, so there is no offset, no AVO, and no mode conversion; all three need
+      the full Zoeppritz equations rather than the single expression above. Also left out: transmission loss
+      through each interface, internal multiples, attenuation, and geometrical spreading. Each would reduce
+      deeper amplitudes, and real processing tries to correct for them. The wavelet is zero phase, which is
+      what processing aims for and rarely achieves exactly.</p>
+    <ul>
+      <li>Sheriff, R.E., and Geldart, L.P., 1995, <em>Exploration Seismology</em>, 2nd ed.: Cambridge University Press.</li>
+      <li>Simm, R., and Bacon, M., 2014, <em>Seismic Amplitude: An Interpreter's Handbook</em>: Cambridge University Press.</li>
+      <li>Widess, M.B., 1973, How thin is a thin bed?: <em>Geophysics</em>, 38, 1176–1180.</li>
+    </ul>
+  </details>
+
+  <div class="pager">
+    <a class="btn ghost" href="../index.html">← All modules</a>
+    <a class="btn" href="wedge.html">Next: the wedge model →</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma —
+        with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.
+        Free to use or adapt in your own courses with citation.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/seismic.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ------------------------------- state ------------------------------- */
+
+  // Layers run top to bottom. The first has no thickness (it reaches the
+  // surface) and the last has none either (it continues below the display),
+  // which is why both are half-spaces as far as the model is concerned.
+  const PRESETS = {
+    sandshale: [
+      { n: 'Shale',     h: 0,  v: 2450, d: 2.38 },
+      { n: 'Sand',      h: 45, v: 2750, d: 2.30 },
+      { n: 'Shale',     h: 30, v: 2500, d: 2.40 },
+      { n: 'Sand',      h: 22, v: 2800, d: 2.32 },
+      { n: 'Shale',     h: 0,  v: 2550, d: 2.42 },
+    ],
+    gas: [
+      { n: 'Shale',     h: 0,  v: 2500, d: 2.40 },
+      { n: 'Gas sand',  h: 28, v: 1950, d: 2.02 },
+      { n: 'Shale',     h: 0,  v: 2560, d: 2.42 },
+    ],
+    carb: [
+      { n: 'Shale',     h: 0,  v: 2600, d: 2.42 },
+      { n: 'Limestone', h: 60, v: 4900, d: 2.62 },
+      { n: 'Shale',     h: 0,  v: 2700, d: 2.45 },
+    ],
+    coal: [
+      { n: 'Shale',     h: 0,  v: 2600, d: 2.45 },
+      { n: 'Coal',      h: 8,  v: 2200, d: 1.35 },
+      { n: 'Sandstone', h: 0,  v: 2900, d: 2.35 },
+    ],
+    wet: [
+      { n: 'Shale',     h: 0,  v: 2500, d: 2.40 },
+      { n: 'Wet sand',  h: 35, v: 2540, d: 2.38 },
+      { n: 'Shale',     h: 0,  v: 2520, d: 2.41 },
+    ],
+  };
+
+  const DEF = {
+    wav: 'ricker', f: 30, f1: 5, f2: 10, f3: 40, f4: 50,
+    cmap: 'bwr', gain: 1, noise: 0, pol: 'normal', units: 'm',
+    labels: true, preset: 'sandshale',
+    model: '',                       // layers packed into the URL when edited
+  };
+  let S = SEIS.readState(DEF);
+
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const TTOP = 0.050;                // two-way time of the first interface
+  const DT = 0.0002;
+
+  const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670';
+
+  let LAYERS = [];
+
+  function packModel() {
+    return LAYERS.map((L) => [L.n, L.h, L.v, L.d].join('~')).join('!');
+  }
+  function unpackModel(str) {
+    try {
+      const out = str.split('!').map((row) => {
+        const [n, h, v, d] = row.split('~');
+        return { n: n || 'Layer', h: parseFloat(h) || 0, v: parseFloat(v), d: parseFloat(d) };
+      }).filter((L) => isFinite(L.v) && isFinite(L.d));
+      return out.length >= 2 ? out : null;
+    } catch (e) { return null; }
+  }
+
+  LAYERS = (S.model && unpackModel(S.model)) ||
+           JSON.parse(JSON.stringify(PRESETS[S.preset] || PRESETS.sandshale));
+
+  const U = () => SEIS.UNITS[S.units];
+  const uL = (m) => m * U().len;
+  const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 1 : d) + ' ' + U().lab;
+
+  /* ------------------------------- model ------------------------------- */
+
+  // Impedance in SI, then scaled to the 10^6 kg m^-2 s^-1 that logs are
+  // usually plotted in. Density arrives in g/cc.
+  const impedanceOf = (L) => (L.v * L.d * 1000) / 1e6;
+
+  function buildModel() {
+    const ai = LAYERS.map(impedanceOf);
+    const iface = [];
+    let t = TTOP;
+    for (let i = 0; i < LAYERS.length - 1; i++) {
+      if (i > 0) t += 2 * LAYERS[i].h / LAYERS[i].v;
+      iface.push({
+        t,
+        rc: (ai[i + 1] - ai[i]) / (ai[i + 1] + ai[i]),
+        above: i, below: i + 1,
+      });
+    }
+    const last = iface.length ? iface[iface.length - 1].t : TTOP;
+    const tEnd = Math.max(0.34, last + 0.10);
+    return { ai, iface, tEnd };
+  }
+
+  function wavelet() {
+    if (S.wav !== 'ormsby') return SEIS.makeWavelet({ type: 'ricker', f: S.f });
+    const f1 = S.f1;
+    const f2 = Math.max(S.f2, f1 + 2);
+    const f3 = Math.max(S.f3, f2 + 2);
+    const f4 = Math.max(S.f4, f3 + 2);
+    return SEIS.makeWavelet({ type: 'ormsby', f1, f2, f3, f4 });
+  }
+
+  let CACHE = {};
+
+  function compute() {
+    const M = buildModel();
+    const wav = wavelet();
+    const pol = S.pol === 'reverse' ? -1 : 1;
+    const nt = Math.round(M.tEnd / DT);
+    const spikes = M.iface.map((f) => ({ t: f.t, r: pol * f.rc }));
+    const trace = SEIS.traceFromSpikes(spikes, 0, DT, nt, wav);
+
+    if (S.noise > 0) {
+      const peak = M.iface.reduce((m, f) => Math.max(m, Math.abs(f.rc)), 0.01);
+      const dtn = 0.001, ntn = Math.max(8, Math.round(M.tEnd / dtn));
+      const nz = SEIS.bandLimitedNoise(1, ntn, dtn, wav, 4242, 0);
+      const amp = peak / S.noise;
+      for (let i = 0; i < nt; i++) {
+        const p = (i * DT) / dtn;
+        const i0 = Math.min(ntn - 2, Math.floor(p)), fr = p - i0;
+        trace[i] += amp * (nz[i0] + (nz[i0 + 1] - nz[i0]) * fr);
+      }
+    }
+    CACHE = { M, wav, nt, trace, pol };
+  }
+
+  /* ------------------------------ layout ------------------------------- */
+
+  function layout() {
+    const box = $('layerCanvas').closest('.plot');
+    const W = Math.max(300, box.clientWidth - 28);
+    const stacked = W < 760;
+    if (stacked) {
+      return { stacked, h: 300, w: { layer: W, ai: W, rc: W, wav: W, syn: W } };
+    }
+    const gaps = 10 * 4;
+    const avail = W - gaps;
+    const w = {
+      layer: Math.round(avail * 0.26),
+      ai:    Math.round(avail * 0.18),
+      rc:    Math.round(avail * 0.17),
+      wav:   Math.round(avail * 0.15),
+    };
+    w.syn = avail - w.layer - w.ai - w.rc - w.wav;
+    return { stacked, h: clamp(Math.round(W * 0.36), 300, 430), w };
+  }
+
+  /* ------------------------------ shading ------------------------------ */
+
+  const EARTH = [[238,227,197],[212,189,145],[172,149,113],[126,109,88],[78,68,58]];
+  function earth(u) {
+    const p = clamp(u, 0, 1) * (EARTH.length - 1);
+    const i = Math.min(EARTH.length - 2, Math.floor(p)), f = p - i;
+    const a = EARTH[i], b = EARTH[i + 1];
+    return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * f) + ',' +
+                    Math.round(a[1] + (b[1] - a[1]) * f) + ',' +
+                    Math.round(a[2] + (b[2] - a[2]) * f) + ')';
+  }
+  function aiShade(i) {
+    const ai = CACHE.M.ai;
+    const lo = Math.min.apply(null, ai), hi = Math.max.apply(null, ai);
+    return earth(hi > lo ? (ai[i] - lo) / (hi - lo) : 0.4);
+  }
+
+  /* ------------------------------ drawing ------------------------------ */
+
+  const MT = 8, MB = 40;
+  const yScale = (rect, tEnd) => (t) => rect.y + (t / tEnd) * rect.h;
+
+  function panelRect(w, h, left) {
+    return { x: left, y: MT, w: w - left - 10, h: h - MT - MB };
+  }
+
+  function drawLayers(L) {
+    const ctx = SEIS.fitCanvas($('layerCanvas'), L.w.layer, L.h);
+    ctx.clearRect(0, 0, L.w.layer, L.h);
+    const rect = panelRect(L.w.layer, L.h, 52);
+    const { M } = CACHE;
+    const yOf = yScale(rect, M.tEnd);
+
+    for (let i = 0; i < LAYERS.length; i++) {
+      const top = i === 0 ? 0 : M.iface[i - 1].t;
+      const bot = i < M.iface.length ? M.iface[i].t : M.tEnd;
+      const y0 = yOf(top), y1 = yOf(bot);
+      ctx.fillStyle = aiShade(i);
+      ctx.fillRect(rect.x, y0, rect.w, y1 - y0);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(40,32,24,.45)'; ctx.lineWidth = 0.9;
+      ctx.beginPath(); ctx.moveTo(rect.x, y1); ctx.lineTo(rect.x + rect.w, y1); ctx.stroke();
+      ctx.restore();
+      if (S.labels && y1 - y0 > 15) {
+        ctx.save();
+        ctx.beginPath(); ctx.rect(rect.x, y0, rect.w, y1 - y0); ctx.clip();
+        const dark = i === M.ai.indexOf(Math.max.apply(null, M.ai));
+        ctx.fillStyle = dark ? 'rgba(255,255,255,.92)' : 'rgba(28,22,16,.85)';
+        ctx.font = '11px "IBM Plex Sans", sans-serif';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        const mid = (y0 + y1) / 2;
+        ctx.fillText(LAYERS[i].n, rect.x + 7, y1 - y0 > 30 ? mid - 7 : mid);
+        if (y1 - y0 > 30) {
+          ctx.font = '9.5px "IBM Plex Mono", monospace';
+          ctx.fillText(Math.round(uL(LAYERS[i].v)) + ' ' + U().vlab + '  ·  ' +
+                       LAYERS[i].d.toFixed(2) + ' g/cc', rect.x + 7, mid + 7);
+        }
+        ctx.restore();
+      }
+    }
+    SEIS.frame(ctx, rect);
+    SEIS.axisLeft(ctx, rect, 0, M.tEnd * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
+  }
+
+  function drawAI(L) {
+    const ctx = SEIS.fitCanvas($('aiCanvas'), L.w.ai, L.h);
+    ctx.clearRect(0, 0, L.w.ai, L.h);
+    const rect = panelRect(L.w.ai, L.h, L.stacked ? 52 : 12);
+    const { M } = CACHE;
+    const yOf = yScale(rect, M.tEnd);
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+    const lo = Math.min.apply(null, M.ai), hi = Math.max.apply(null, M.ai);
+    const pad = Math.max(0.4, (hi - lo) * 0.25);
+    const a0 = lo - pad, a1 = hi + pad;
+    const xOf = (a) => rect.x + ((a - a0) / (a1 - a0)) * rect.w;
+
+    ctx.save();
+    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < LAYERS.length; i++) {
+      const top = i === 0 ? 0 : M.iface[i - 1].t;
+      const bot = i < M.iface.length ? M.iface[i].t : M.tEnd;
+      const x = xOf(M.ai[i]);
+      if (i === 0) ctx.moveTo(x, yOf(top)); else ctx.lineTo(x, yOf(top));
+      ctx.lineTo(x, yOf(bot));
+    }
+    ctx.stroke(); ctx.restore();
+
+    SEIS.frame(ctx, rect);
+    if (L.stacked) SEIS.axisLeft(ctx, rect, 0, M.tEnd * 1000, '', (v) => v.toFixed(0));
+    SEIS.axisBottom(ctx, rect, a0, a1, 'AI  (10\u2076 kg m\u207B\u00B2 s\u207B\u00B9)', (v) => v.toFixed(1));
+  }
+
+  function drawRC(L) {
+    const ctx = SEIS.fitCanvas($('rcCanvas'), L.w.rc, L.h);
+    ctx.clearRect(0, 0, L.w.rc, L.h);
+    const rect = panelRect(L.w.rc, L.h, L.stacked ? 52 : 12);
+    const { M } = CACHE;
+    const yOf = yScale(rect, M.tEnd);
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+    const peak = Math.max(0.05, M.iface.reduce((m, f) => Math.max(m, Math.abs(f.rc)), 0) * 1.25);
+    const cx = rect.x + rect.w / 2;
+    const xOf = (r) => cx + (r / peak) * (rect.w / 2) * 0.92;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(92,102,112,.4)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
+    ctx.restore();
+
+    const cmap = SEIS.COLORMAPS[S.cmap];
+    M.iface.forEach((f) => {
+      const y = yOf(f.t), x = xOf(CACHE.pol * f.rc);
+      const c = cmap(clamp(CACHE.pol * f.rc / peak, -1, 1) * 0.92);
+      ctx.save();
+      ctx.strokeStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(x, y); ctx.stroke();
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, 6.284); ctx.fill();
+      ctx.restore();
+    });
+
+    SEIS.frame(ctx, rect);
+    if (L.stacked) SEIS.axisLeft(ctx, rect, 0, M.tEnd * 1000, '', (v) => v.toFixed(0));
+    SEIS.axisBottom(ctx, rect, -peak, peak, 'Reflection coefficient', (v) => v.toFixed(2));
+  }
+
+  function drawWavelet(L) {
+    const ctx = SEIS.fitCanvas($('wavCanvas'), L.w.wav, L.h);
+    ctx.clearRect(0, 0, L.w.wav, L.h);
+    const rect = panelRect(L.w.wav, L.h, 12);
+    const { wav } = CACHE;
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+    // its own time scale: the wavelet is tens of milliseconds long, the section
+    // is hundreds, so sharing an axis would render it as a flat line
+    const span = wav.halfLength;
+    const cx = rect.x + rect.w / 2;
+    const yOf = (t) => rect.y + rect.h / 2 + (t / (2 * span)) * rect.h;
+    const xOf = (v) => cx + v * (rect.w / 2) * 0.86;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(92,102,112,.4)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i <= 220; i++) {
+      const t = -span + (i / 220) * 2 * span;
+      const x = xOf(CACHE.pol * wav.fn(t)), y = yOf(t);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.restore();
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisLeft(ctx, rect, -span * 1000, span * 1000, '', (v) => v.toFixed(0));
+    ctx.save();
+    ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('ms about the peak', rect.x + rect.w / 2, rect.y + rect.h + 6);
+    ctx.fillText(Math.round(CACHE.wav.fdom) + ' Hz', rect.x + rect.w / 2, rect.y + rect.h + 19);
+    ctx.restore();
+  }
+
+  function drawSynthetic(L) {
+    const ctx = SEIS.fitCanvas($('synCanvas'), L.w.syn, L.h);
+    ctx.clearRect(0, 0, L.w.syn, L.h);
+    const rect = panelRect(L.w.syn, L.h, L.stacked ? 52 : 12);
+    const { M, trace, nt } = CACHE;
+
+    const peak = Math.max(0.03, M.iface.reduce((m, f) => Math.max(m, Math.abs(f.rc)), 0) * 1.15);
+    const NX = 14;
+    const field = new Float32Array(NX * nt);
+    for (let ix = 0; ix < NX; ix++) field.set(trace, ix * nt);
+
+    SEIS.drawVarDensity(ctx, field, NX, nt, rect,
+      { cmap: SEIS.COLORMAPS[S.cmap], gain: S.gain, clip: peak });
+    SEIS.drawWiggle(ctx, field, NX, nt, rect,
+      { step: 4, clip: peak / S.gain, excursion: 1.7,
+        stroke: 'rgba(22,25,28,.75)', fill: 'rgba(22,25,28,.30)' });
+
+    // tie each interface back to the event it produced
+    const yOf = yScale(rect, M.tEnd);
+    M.iface.forEach((f) => {
+      SEIS.dashedLine(ctx, rect.x, yOf(f.t), rect.x + rect.w, yOf(f.t),
+                      'rgba(11,114,133,.55)', [3, 4], 1);
+    });
+
+    SEIS.frame(ctx, rect);
+    if (L.stacked) SEIS.axisLeft(ctx, rect, 0, M.tEnd * 1000, '', (v) => v.toFixed(0));
+    ctx.save();
+    ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('one trace, repeated', rect.x + rect.w / 2, rect.y + rect.h + 6);
+    ctx.restore();
+  }
+
+  function drawBar(L) {
+    const wTot = $('layerCanvas').closest('.plot').clientWidth - 28;
+    const ctx = SEIS.fitCanvas($('cbarCanvas'), wTot, 30);
+    ctx.clearRect(0, 0, wTot, 30);
+    SEIS.drawColorbar(ctx, { x: 52, y: 4, w: Math.min(260, wTot - 70), h: 11 },
+      SEIS.COLORMAPS[S.cmap],
+      { pol: CACHE.pol,
+        left: '\u2212 RC  (impedance down)', right: '(impedance up)  + RC' });
+  }
+
+  function updateLegend() {
+    const cmap = SEIS.COLORMAPS[S.cmap];
+    const rgb = (v) => { const c = cmap(v); return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
+    const p = CACHE.pol;
+    $('mainLegend').innerHTML =
+      '<span><i class="sw" style="background:' + rgb(0.85 * p) + '"></i>positive RC (' +
+        (p > 0 ? 'peak' : 'trough') + ')</span>' +
+      '<span><i class="sw" style="background:' + rgb(-0.85 * p) + '"></i>negative RC (' +
+        (p > 0 ? 'trough' : 'peak') + ')</span>' +
+      '<span><i style="border-color:' + TEAL + ';border-top-style:dashed"></i>interface time</span>';
+    $('polV').textContent = S.pol === 'reverse' ? 'SEG reverse' : 'SEG normal';
+  }
+
+  /* ------------------------------- table ------------------------------- */
+
+  function buildTable() {
+    const { M } = CACHE;
+    let html = '<thead><tr>' +
+      '<th style="width:34%">Layer</th>' +
+      '<th style="width:14%">Thickness</th>' +
+      '<th style="width:14%">Velocity</th>' +
+      '<th style="width:13%">Density</th>' +
+      '<th style="width:12%">Impedance</th>' +
+      '<th style="width:13%">RC below</th>' +
+      '<th></th></tr></thead><tbody>';
+
+    LAYERS.forEach((Lr, i) => {
+      const edge = (i === 0 || i === LAYERS.length - 1);
+      const rc = i < M.iface.length ? M.iface[i].rc : null;
+      html += '<tr>' +
+        '<td><span class="chip" style="background:' + aiShade(i) + '"></span>' +
+          '<input data-k="n" data-i="' + i + '" type="text" value="' + Lr.n +
+          '" style="width:calc(100% - 24px);display:inline-block" aria-label="Layer name"></td>' +
+        '<td>' + (edge
+          ? '<input value="\u2014" disabled title="This layer continues beyond the display">'
+          : '<input data-k="h" data-i="' + i + '" type="number" min="1" max="500" step="1" value="' +
+            Math.round(uL(Lr.h)) + '" aria-label="Thickness">') + '</td>' +
+        '<td><input data-k="v" data-i="' + i + '" type="number" min="1000" max="7000" step="10" value="' +
+          Math.round(uL(Lr.v)) + '" aria-label="Velocity"></td>' +
+        '<td><input data-k="d" data-i="' + i + '" type="number" min="1" max="3.2" step="0.01" value="' +
+          Lr.d.toFixed(2) + '" aria-label="Density"></td>' +
+        '<td class="ro">' + M.ai[i].toFixed(2) + '</td>' +
+        '<td class="ro" style="color:' + (rc === null ? 'var(--slate)'
+            : (rc > 0 ? '#1B4F9C' : '#B02418')) + '">' +
+          (rc === null ? '\u2014' : (rc > 0 ? '+' : '') + rc.toFixed(3)) + '</td>' +
+        '<td>' + (LAYERS.length > 2
+          ? '<button class="rowbtn" data-del="' + i + '" title="Remove this layer">\u00d7</button>'
+          : '') + '</td></tr>';
+    });
+    html += '</tbody>';
+    $('ltab').innerHTML = html;
+
+    $('ltab').querySelectorAll('input[data-k]').forEach((el) => {
+      el.addEventListener('change', onEdit);
+      if (el.type === 'number') el.addEventListener('input', onEdit);
+    });
+    $('ltab').querySelectorAll('button[data-del]').forEach((b) => {
+      b.addEventListener('click', () => {
+        LAYERS.splice(parseInt(b.dataset.del, 10), 1);
+        S.preset = 'custom'; $('preset').value = 'custom';
+        refresh(true);
+      });
+    });
+  }
+
+  function onEdit(e) {
+    const i = parseInt(e.target.dataset.i, 10), k = e.target.dataset.k;
+    if (k === 'n') { LAYERS[i].n = e.target.value.slice(0, 22); }
+    else {
+      const raw = parseFloat(e.target.value);
+      if (!isFinite(raw)) return;
+      // inputs are in display units; the model is always metric
+      if (k === 'd') LAYERS[i].d = clamp(raw, 1, 3.2);
+      else if (k === 'h') LAYERS[i].h = clamp(raw / U().len, 1, 500);
+      else LAYERS[i].v = clamp(raw / U().vel, 1000, 7000);
+    }
+    S.preset = 'custom'; $('preset').value = 'custom';
+    refresh(k === 'n');
+  }
+
+  /* ------------------------------ readout ------------------------------ */
+
+  function updateStats() {
+    const { M, wav } = CACHE;
+    const inner = LAYERS.slice(1, -1);
+    const thin = inner.length ? inner.reduce((a, b) => (a.h < b.h ? a : b)) : null;
+    const strongest = M.iface.reduce((a, b) => (Math.abs(a.rc) > Math.abs(b.rc) ? a : b),
+                                     { rc: 0, above: 0, below: 0 });
+
+    $('rN').textContent = LAYERS.length + ' / ' + M.iface.length;
+    $('rF').textContent = Math.round(wav.fdom) + ' Hz';
+    if (thin) {
+      const lam = thin.v / wav.fdom;
+      $('rLam').textContent = fmtL(lam, 0);
+      $('rQ').textContent = fmtL(lam / 4);
+      $('rThin').textContent = fmtL(thin.h, 0) + '  ' + thin.n;
+      const ratio = thin.h / lam;
+      $('rVerdict').textContent = ratio >= 0.25
+        ? 'Thinnest bed is above tuning — top and base resolve separately'
+        : ratio >= 0.125
+          ? 'Thinnest bed is below tuning — its two reflections have merged into one event'
+          : 'Thinnest bed is near the detection limit — visible only as a change in amplitude';
+    } else {
+      $('rLam').textContent = '\u2014'; $('rQ').textContent = '\u2014';
+      $('rThin').textContent = '\u2014';
+      $('rVerdict').textContent = 'Add a layer in the middle to give the model a bed thickness';
+    }
+    $('rMaxRc').textContent = (strongest.rc > 0 ? '+' : '') + strongest.rc.toFixed(3) +
+      '  ' + (LAYERS[strongest.above] ? LAYERS[strongest.above].n : '') + ' / ' +
+      (LAYERS[strongest.below] ? LAYERS[strongest.below].n : '');
+  }
+
+  /* ------------------------------ plumbing ----------------------------- */
+
+  function render() {
+    const L = layout();
+    const cols = $('panelRow').querySelectorAll('.panel-col');
+    ['layer', 'ai', 'rc', 'wav', 'syn'].forEach((k, i) => {
+      if (cols[i]) cols[i].style.width = L.w[k] + 'px';
+    });
+    drawLayers(L); drawAI(L); drawRC(L); drawWavelet(L); drawSynthetic(L);
+    drawBar(L); updateLegend(); updateStats();
+  }
+
+  function refresh(rebuildTable) {
+    compute();
+    if (rebuildTable !== false) buildTable();
+    render();
+    S.model = packModel();
+    SEIS.writeState(S, DEF);
+  }
+
+  function syncLabels() {
+    $('freqV').textContent = S.f + ' Hz';
+    $('f12V').textContent = S.f1 + ' \u2013 ' + S.f2 + ' Hz';
+    $('f34V').textContent = S.f3 + ' \u2013 ' + S.f4 + ' Hz';
+    $('gainV').textContent = S.gain.toFixed(1) + '\u00d7';
+    $('noiseV').textContent = S.noise <= 0 ? 'clean' : S.noise.toFixed(1) + ' : 1';
+    $('rickerCtl').hidden = S.wav !== 'ricker';
+    $('ormsbyCtl').hidden = S.wav !== 'ormsby';
+    $('wRicker').setAttribute('aria-pressed', S.wav === 'ricker');
+    $('wOrmsby').setAttribute('aria-pressed', S.wav === 'ormsby');
+    $('pNorm').setAttribute('aria-pressed', S.pol === 'normal');
+    $('pRev').setAttribute('aria-pressed', S.pol === 'reverse');
+  }
+
+  function pushToInputs() {
+    $('freq').value = S.f; $('f1').value = S.f1; $('f2').value = S.f2;
+    $('f3').value = S.f3; $('f4').value = S.f4;
+    $('gain').value = S.gain; $('noise').value = S.noise;
+    $('cmap').value = S.cmap; $('units').value = S.units;
+    $('showLabels').checked = S.labels; $('preset').value = S.preset;
+  }
+
+  function bump(rebuild) { syncLabels(); refresh(rebuild); }
+
+  const slide = (id, key) => $(id).addEventListener('input', () => {
+    S[key] = parseFloat($(id).value); bump(false);
+  });
+  slide('freq', 'f'); slide('gain', 'gain'); slide('noise', 'noise');
+  ['f1', 'f2', 'f3', 'f4'].forEach((k) => slide(k, k));
+
+  const toggle = (id, key, val) => $(id).addEventListener('click', () => { S[key] = val; bump(false); });
+  toggle('wRicker', 'wav', 'ricker'); toggle('wOrmsby', 'wav', 'ormsby');
+  toggle('pNorm', 'pol', 'normal');   toggle('pRev', 'pol', 'reverse');
+
+  $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(true); });
+  $('units').addEventListener('change', () => { S.units = $('units').value; bump(true); });
+  $('showLabels').addEventListener('change', () => { S.labels = $('showLabels').checked; bump(false); });
+
+  $('preset').addEventListener('change', () => {
+    const p = PRESETS[$('preset').value];
+    if (!p) return;
+    S.preset = $('preset').value;
+    LAYERS = JSON.parse(JSON.stringify(p));
+    bump(true);
+  });
+
+  $('addLayer').addEventListener('click', () => {
+    if (LAYERS.length >= 9) return;
+    const at = Math.max(1, LAYERS.length - 1);
+    const prev = LAYERS[at - 1];
+    LAYERS.splice(at, 0, { n: 'New layer', h: 25, v: Math.round(prev.v * 0.92), d: +(prev.d - 0.08).toFixed(2) });
+    S.preset = 'custom'; $('preset').value = 'custom';
+    bump(true);
+  });
+
+  $('resetBtn').addEventListener('click', () => {
+    S = Object.assign({}, DEF);
+    LAYERS = JSON.parse(JSON.stringify(PRESETS.sandshale));
+    pushToInputs(); bump(true);
+  });
+  $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
+  $('pngBtn').addEventListener('click', () => SEIS.savePNG($('synCanvas'), 'synthetic-trace'));
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+
+  pushToInputs();
+  syncLabels();
+  refresh(true);
+  document.fonts && document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>
