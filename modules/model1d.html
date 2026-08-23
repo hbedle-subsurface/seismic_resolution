@@ -53,7 +53,8 @@
 
     <div class="ctl-col">
       <h2>The wavelet</h2>
-      <div class="ctl">
+      <canvas id="wavPreview" aria-label="Wavelet shape and amplitude spectrum"></canvas>
+      <div class="ctl" style="margin-top:10px">
         <div class="seg" role="group" aria-label="Wavelet type">
           <button type="button" id="wRicker" aria-pressed="true">Ricker</button>
           <button type="button" id="wOrmsby" aria-pressed="false">Ormsby</button>
@@ -128,7 +129,7 @@
     <div class="plot-head">
       <h3>From rock to trace</h3>
     </div>
-    <p class="hint-line" id="chainHint">Read left to right. Every panel shares the same two-way time axis except the wavelet.</p>
+    <p class="hint-line" id="chainHint">Read left to right. Every panel shares the same two-way time axis. Panel 4 gives each interface its own lane so you can see the individual wavelets before they are added together.</p>
     <div class="sec-row" id="panelRow">
       <div class="panel-col">
         <p class="sublabel"><b>1</b> Rock layers</p>
@@ -143,11 +144,11 @@
         <canvas id="rcCanvas" aria-label="Reflection coefficients at each interface"></canvas>
       </div>
       <div class="panel-col">
-        <p class="sublabel"><b>4</b> &#8859; Wavelet</p>
-        <canvas id="wavCanvas" aria-label="The wavelet, on its own time scale"></canvas>
+        <p class="sublabel"><b>4</b> &#8859; One wavelet per interface</p>
+        <canvas id="wavCanvas" aria-label="A scaled, shifted wavelet for each interface"></canvas>
       </div>
       <div class="panel-col">
-        <p class="sublabel"><b>5</b> = Seismic trace</p>
+        <p class="sublabel"><b>5</b> = Their sum: the trace</p>
         <canvas id="synCanvas" aria-label="The synthetic seismic trace"></canvas>
       </div>
     </div>
@@ -186,14 +187,28 @@
             layer over a hard one and a hard layer over a soft one produce opposite events. Getting this
             backwards is the classic well-tie error.</span></li>
         <li><b>Watch two reflections merge.</b> Take the thinnest bed down from 40 m to 5 m, and keep an eye
-          on panels 3 and 5 together.
+          on panels 3, 4 and 5 together.
           <span class="ans">The two spikes in panel 3 stay separate and keep their full size, because the
-            rock is still there. The trace in panel 5 merges them into a single event that changes shape and
-            amplitude. That gap between what exists and what you can see is the whole subject of module 02.</span></li>
+            rock is still there. In panel 4 their wavelets slide toward each other until they overlap almost
+            completely, and panel 5 adds them into a single event. Nothing was lost in the rock or in the
+            reflectivity — it was lost in the addition. That gap between what exists and what you can see is
+            the whole subject of module 02.</span></li>
+        <li><b>Follow one interface through the chain.</b> Change the density of a single layer and track
+          lane by lane which wavelet in panel 4 changes size.
+          <span class="ans">Only the lanes for the interfaces at the top and base of that layer respond,
+            because a reflection coefficient belongs to a boundary and not to a layer. Each lane in panel 4
+            is the same wavelet every time, scaled by its coefficient and slid to its own time. That is all
+            convolution is, and panel 5 is just those lanes added across.</span></li>
+        <li><b>Make two wavelets cancel.</b> Find a bed where the top and base coefficients have opposite
+          signs, then thin it until the two lanes in panel 4 sit almost on top of each other.
+          <span class="ans">One is upside down relative to the other, so where they overlap they subtract.
+            Thin enough and they nearly erase each other, which is why a very thin bed with strong contrasts
+            can be almost invisible. Beds whose coefficients share a sign do the opposite and reinforce.</span></li>
         <li><b>Change the wavelet, not the rock.</b> Leave the model alone and sweep frequency from 15 Hz to
           70 Hz.
-          <span class="ans">Panels 1 to 3 never move — the earth has not changed. Only panel 5 does. Every
-            argument about what is or is not resolvable is an argument about panel 4.</span></li>
+          <span class="ans">Panels 1 to 3 never move, because the earth has not changed. Only the wavelets in
+            panel 4 get narrower or broader, and the trace follows them. Every argument about what is or is
+            not resolvable is an argument about the shape in panel 4.</span></li>
         <li><b>Switch polarity.</b>
           <span class="ans">The whole trace inverts and the color bar reverses with it. Nothing about the
             rock changed. Polarity is a convention about how data is displayed, and if you do not know which
@@ -210,6 +225,8 @@
           boundaries and nowhere else.</li>
         <li><b>The wavelet is where resolution is decided.</b> The reflectivity in panel 3 is as sharp as the
           geology; the trace is only as sharp as the wavelet.</li>
+        <li><b>A trace is a sum, not a picture.</b> Every sample in panel 5 is the total of every wavelet in
+          panel 4 that reaches it. No single event on a seismic section belongs to one interface alone.</li>
         <li><b>Convolution is a smearing operation</b>, and it is not reversible in practice. Everything you
           interpret has been through it once already.</li>
       </ul>
@@ -395,10 +412,10 @@
     const gaps = 10 * 4;
     const avail = W - gaps;
     const w = {
-      layer: Math.round(avail * 0.26),
-      ai:    Math.round(avail * 0.18),
-      rc:    Math.round(avail * 0.17),
-      wav:   Math.round(avail * 0.15),
+      layer: Math.round(avail * 0.24),
+      ai:    Math.round(avail * 0.15),
+      rc:    Math.round(avail * 0.14),
+      wav:   Math.round(avail * 0.23),
     };
     w.syn = avail - w.layer - w.ai - w.rc - w.wav;
     return { stacked, h: clamp(Math.round(W * 0.36), 300, 430), w };
@@ -533,42 +550,127 @@
     SEIS.axisBottom(ctx, rect, -peak, peak, 'Reflection coefficient', (v) => v.toFixed(2));
   }
 
+  // One lane per interface, each holding that interface's own wavelet: the same
+  // shape every time, scaled by the reflection coefficient and slid to the
+  // interface time. Panel 5 is these added together. Giving each its own lane is
+  // the only way to see them separately, because in the sum they overlap.
   function drawWavelet(L) {
     const ctx = SEIS.fitCanvas($('wavCanvas'), L.w.wav, L.h);
     ctx.clearRect(0, 0, L.w.wav, L.h);
-    const rect = panelRect(L.w.wav, L.h, 12);
-    const { wav } = CACHE;
+    const rect = panelRect(L.w.wav, L.h, L.stacked ? 52 : 12);
+    const { M, wav, pol } = CACHE;
     ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 
-    // its own time scale: the wavelet is tens of milliseconds long, the section
-    // is hundreds, so sharing an axis would render it as a flat line
+    const yOf = yScale(rect, M.tEnd);
+    const N = M.iface.length;
+    if (!N) { SEIS.frame(ctx, rect); return; }
+
+    const maxRc = Math.max(1e-6, M.iface.reduce((m, f) => Math.max(m, Math.abs(f.rc)), 0));
+    const laneW = rect.w / N;
+    const amp = laneW * 0.40 / maxRc;   // relative sizes preserved across lanes
+    const cmap = SEIS.COLORMAPS[S.cmap];
     const span = wav.halfLength;
-    const cx = rect.x + rect.w / 2;
-    const yOf = (t) => rect.y + rect.h / 2 + (t / (2 * span)) * rect.h;
-    const xOf = (v) => cx + v * (rect.w / 2) * 0.86;
 
     ctx.save();
-    ctx.strokeStyle = 'rgba(92,102,112,.4)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
+    ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+
+    M.iface.forEach((f, i) => {
+      const cx = rect.x + (i + 0.5) * laneW;
+      const c = cmap(clamp(pol * f.rc / maxRc, -1, 1) * 0.92);
+      const col = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+
+      // lane zero line
+      ctx.strokeStyle = 'rgba(92,102,112,.25)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
+
+      // the wavelet, centred on this interface
+      ctx.strokeStyle = col; ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      for (let k = 0; k <= 180; k++) {
+        const t = f.t - span + (k / 180) * 2 * span;
+        const x = cx + pol * f.rc * wav.fn(t - f.t) * amp;
+        const y = yOf(t);
+        k === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // a dot at the interface time itself
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(cx + pol * f.rc * amp, yOf(f.t), 2.6, 0, 6.284); ctx.fill();
+    });
+
+    // interface times, tying the lanes back to panel 3 and forward to panel 5
+    M.iface.forEach((f) => {
+      SEIS.dashedLine(ctx, rect.x, yOf(f.t), rect.x + rect.w, yOf(f.t),
+                      'rgba(11,114,133,.35)', [3, 4], 1);
+    });
     ctx.restore();
 
+    // lane numbers along the top
     ctx.save();
-    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i = 0; i <= 220; i++) {
-      const t = -span + (i / 220) * 2 * span;
-      const x = xOf(CACHE.pol * wav.fn(t)), y = yOf(t);
+    ctx.font = '9px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    M.iface.forEach((f, i) => {
+      ctx.fillText(String(i + 1), rect.x + (i + 0.5) * laneW, rect.y + 3);
+    });
+    ctx.restore();
+
+    SEIS.frame(ctx, rect);
+    if (L.stacked) SEIS.axisLeft(ctx, rect, 0, M.tEnd * 1000, '', (v) => v.toFixed(0));
+    ctx.save();
+    ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('add these across \u2192', rect.x + rect.w / 2, rect.y + rect.h + 6);
+    ctx.restore();
+  }
+
+  // The wavelet on its own, tucked beside its controls. It is tens of
+  // milliseconds long against a section of hundreds, so it needs its own scale.
+  function drawWaveletPreview() {
+    const c = $('wavPreview');
+    const w = Math.max(150, c.parentElement.clientWidth - 34);
+    const ctx = SEIS.fitCanvas(c, w, 92);
+    ctx.clearRect(0, 0, w, 92);
+    const wav = CACHE.wav || wavelet();
+    const gapW = 12, wW = (w - gapW) * 0.54, sW = w - gapW - wW;
+    const rW = { x: 0, y: 4, w: wW, h: 84 }, rS = { x: wW + gapW, y: 4, w: sW, h: 84 };
+
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(rW.x, rW.y, rW.w, rW.h); ctx.fillRect(rS.x, rS.y, rS.w, rS.h);
+
+    const span = wav.halfLength;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(92,102,112,.4)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(rW.x, rW.y + rW.h / 2); ctx.lineTo(rW.x + rW.w, rW.y + rW.h / 2); ctx.stroke();
+    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.8; ctx.beginPath();
+    for (let i = 0; i <= 160; i++) {
+      const t = -span + (i / 160) * 2 * span;
+      const x = rW.x + (i / 160) * rW.w;
+      const y = rW.y + rW.h / 2 - (CACHE.pol || 1) * wav.fn(t) * rW.h * 0.40;
       i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
     ctx.stroke(); ctx.restore();
 
-    SEIS.frame(ctx, rect);
-    SEIS.axisLeft(ctx, rect, -span * 1000, span * 1000, '', (v) => v.toFixed(0));
+    const fmax = 120;
+    const sp = SEIS.spectrum(wav, 0.0008, 56, fmax);
+    ctx.save();
+    ctx.fillStyle = 'rgba(132,22,23,.22)'; ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(rS.x, rS.y + rS.h);
+    sp.forEach((q) => ctx.lineTo(rS.x + (q.f / fmax) * rS.w, rS.y + rS.h - q.a * rS.h * 0.86));
+    ctx.lineTo(rS.x + rS.w, rS.y + rS.h); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    sp.forEach((q, i) => {
+      const x = rS.x + (q.f / fmax) * rS.w, y = rS.y + rS.h - q.a * rS.h * 0.86;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke(); ctx.restore();
+
+    SEIS.frame(ctx, rW); SEIS.frame(ctx, rS);
     ctx.save();
     ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('ms about the peak', rect.x + rect.w / 2, rect.y + rect.h + 6);
-    ctx.fillText(Math.round(CACHE.wav.fdom) + ' Hz', rect.x + rect.w / 2, rect.y + rect.h + 19);
+    ctx.fillText('shape in time', rW.x + rW.w / 2, rW.y + rW.h + 3);
+    ctx.fillText('0 \u2013 120 Hz', rS.x + rS.w / 2, rS.y + rS.h + 3);
     ctx.restore();
   }
 
@@ -767,6 +869,7 @@
     ['layer', 'ai', 'rc', 'wav', 'syn'].forEach((k, i) => {
       if (cols[i]) cols[i].style.width = L.w[k] + 'px';
     });
+    drawWaveletPreview();
     drawLayers(L); drawAI(L); drawRC(L); drawWavelet(L); drawSynthetic(L);
     drawBar(L); updateLegend(); updateStats();
   }
