@@ -462,6 +462,40 @@ const SEIS = (function () {
     ctx.restore();
   }
 
+  /**
+   * Horizontal color bar, drawn in terms of REFLECTION COEFFICIENT rather than
+   * displayed amplitude. That distinction matters: the color map itself never
+   * changes, but polarity decides whether a positive RC is drawn as a peak or a
+   * trough, so labelling the bar by RC makes the bar itself flip when polarity
+   * is switched. Pass pol = -1 for reverse polarity.
+   */
+  function drawColorbar(ctx, rect, cmap, opts) {
+    const o = opts || {};
+    const pol = o.pol === -1 ? -1 : 1;
+    const n = Math.max(2, Math.round(rect.w));
+    for (let i = 0; i < n; i++) {
+      const rcv = -1 + (2 * i) / (n - 1);          // reflection coefficient axis
+      const c = cmap(pol * rcv * 0.92);
+      ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+      ctx.fillRect(rect.x + i * (rect.w / n), rect.y, rect.w / n + 1, rect.h);
+    }
+    ctx.save();
+    ctx.strokeStyle = 'rgba(22,25,28,.45)'; ctx.lineWidth = 1;
+    ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w, rect.h);
+    ctx.font = '9.5px "IBM Plex Mono", monospace';
+    ctx.fillStyle = AX.color;
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillText(o.left || '\u2212 RC', rect.x, rect.y + rect.h + 3);
+    ctx.textAlign = 'right';
+    ctx.fillText(o.right || '+ RC', rect.x + rect.w, rect.y + rect.h + 3);
+    if (o.title) {
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(o.title, rect.x + rect.w / 2, rect.y - 3);
+    }
+    ctx.restore();
+  }
+
   /* ---------------------------------------------------------------------
      UNITS
      --------------------------------------------------------------------- */
@@ -524,7 +558,7 @@ const SEIS = (function () {
     traceValue, sampleTrace, traceFromSpikes, rc,
     mulberry32, gaussRand, bandLimitedNoise,
     COLORMAPS, fitCanvas, drawVarDensity, drawWiggle,
-    niceTicks, frame, axisBottom, axisLeft, dashedLine, tag,
+    niceTicks, frame, axisBottom, axisLeft, dashedLine, tag, drawColorbar,
     UNITS, readState, writeState, copyLink, savePNG,
   };
 })();
