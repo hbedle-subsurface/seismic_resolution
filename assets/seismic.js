@@ -228,24 +228,33 @@ const SEIS = (function () {
     };
   }
 
+  /**
+   * Seismic color maps. Each maps an amplitude in [-1, 1], so the NEGATIVE end
+   * is a trough and the POSITIVE end is a peak.
+   *
+   * Under the SEG normal convention a peak is blue, or black on a gray display,
+   * and a trough is red. Polarity is handled where the traces are built, by
+   * flipping the sign of the reflection coefficients, so these maps never need
+   * to change: a peak is always the positive end and always plots the same.
+   */
   const COLORMAPS = {
-    // Blue - white - red. The interpretation-industry default.
+    // trough red -- white -- peak blue
     bwr: rampMap([
-      [12, 44, 92], [27, 79, 156], [122, 168, 214],
+      [92, 14, 12], [176, 36, 24], [214, 138, 122],
       [248, 248, 246],
-      [214, 138, 122], [176, 36, 24], [92, 14, 12],
+      [122, 168, 214], [27, 79, 156], [12, 44, 92],
     ]),
-    // Gray. Honest, and what a lot of published sections still use.
+    // trough white -- peak black, the classic printed section
     gray: rampMap([
-      [16, 18, 20], [86, 92, 98], [186, 190, 194],
-      [246, 246, 244],
-      [186, 190, 194], [86, 92, 98], [16, 18, 20],
+      [253, 253, 252], [226, 227, 228], [188, 190, 193],
+      [140, 144, 148],
+      [92, 96, 100], [48, 51, 55], [12, 14, 16],
     ]),
-    // Blue - white - orange: safe for deuteranopia / protanopia.
+    // trough orange -- peak blue: safe for deuteranopia / protanopia
     cbsafe: rampMap([
-      [8, 48, 107], [33, 102, 172], [146, 197, 222],
+      [127, 63, 0], [224, 130, 20], [253, 190, 110],
       [247, 247, 247],
-      [253, 190, 110], [224, 130, 20], [127, 63, 0],
+      [146, 197, 222], [33, 102, 172], [8, 48, 107],
     ]),
   };
 
