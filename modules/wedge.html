@@ -23,10 +23,10 @@
 
   <div class="mod-head">
     <p class="eyebrow">Module 02 &nbsp;·&nbsp; Vertical resolution</p>
-    <h1>The wedge model, and the thickness that lies to you</h1>
-    <p class="sub">A bed thins to nothing. Its top and base reflections move together until they merge into one
-      event that keeps getting brighter — then dims — while the seismic keeps reporting the same thickness
-      no matter how thin the bed actually gets. Every amplitude map you have ever made has this effect baked into it.</p>
+    <h1>The wedge model and tuning thickness</h1>
+    <p class="sub">A bed thins to nothing. Its top and base reflections move together until they merge, the
+      merged event brightens and then dims, and the thickness you would pick off the section stops changing
+      well before the bed does. Any amplitude map over a thin reservoir carries this effect in it.</p>
   </div>
 
   <div class="lab">
@@ -103,17 +103,17 @@
       <h2>Display</h2>
       <div class="ctl">
         <div class="seg" role="group" aria-label="Display style">
-          <button type="button" id="dVD" aria-pressed="true">Colour</button>
+          <button type="button" id="dVD" aria-pressed="true">Color</button>
           <button type="button" id="dBoth" aria-pressed="false">Both</button>
           <button type="button" id="dWig" aria-pressed="false">Wiggle</button>
         </div>
       </div>
       <div class="ctl">
-        <label for="cmap">Colour map</label>
+        <label for="cmap">Color map</label>
         <select id="cmap">
           <option value="bwr">Blue – white – red</option>
-          <option value="cbsafe">Blue – white – orange (colourblind safe)</option>
-          <option value="grey">Greyscale</option>
+          <option value="cbsafe">Blue – white – orange (colorblind safe)</option>
+          <option value="gray">Grayscale</option>
         </select>
       </div>
       <div class="ctl">
@@ -125,7 +125,7 @@
       <label class="check"><input type="checkbox" id="revPol"> Reverse polarity (SEG negative)</label>
       <div class="ctl">
         <label for="units">Units</label>
-        <select id="units"><option value="m">Metres</option><option value="ft">Feet</option></select>
+        <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
       </div>
 
       <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
@@ -199,11 +199,11 @@
             exactly why broadband processing is worth paying for, and why deep targets are so much harder.</span></li>
         <li><b>Add some honesty.</b> Set signal-to-noise to about 4 and look for the thin end of the wedge.
           <span class="ans">The λ/8 detection limit assumes noiseless data. With real noise you lose the thin
-            end long before λ/8. Detectability is a data-quality question, not just a physics question.</span></li>
+            end long before λ/8. Detectability depends on data quality as much as on physics.</span></li>
         <li><b>Flip the base contrast to "Same".</b>
           <span class="ans">A bed whose top and base have the <em>same</em> sign behaves in reverse: the two
             reflections cancel near λ/4 and reinforce as the bed vanishes. Same rock thickness, opposite
-            amplitude behaviour. This is why you must know your polarity and your impedance profile before
+            amplitude behavior. This is why you must know your polarity and your impedance profile before
             you interpret any amplitude anomaly.</span></li>
       </ol>
     </div>
@@ -214,13 +214,13 @@
         <li><b>Resolving and detecting are different jobs.</b> Around λ/4 you stop being able to separate top from
           base. Down to roughly λ/8 you can still tell that <em>something</em> is there from the amplitude,
           if the data are clean.</li>
-        <li><b>Below tuning, amplitude is a thickness proxy — and a treacherous one.</b> Amplitude falls roughly
+        <li><b>Below tuning, amplitude works as a thickness proxy, but only just.</b> Amplitude falls roughly
           linearly with thickness there, so bright can mean thick. Above tuning that relationship inverts and
-          then breaks.</li>
-        <li><b>A bright spot at tuning is not more rock.</b> It is the same rock, interfering with itself.
+          then breaks down.</li>
+        <li><b>A bright spot at tuning does not mean more rock.</b> It is the same rock interfering with itself.
           Channels routinely look brightest along their thin edges.</li>
-        <li><b>λ = V/f, so resolution is worst exactly where you usually want it most:</b> deep, where velocity is
-          high and the earth has already absorbed your high frequencies.</li>
+        <li><b>Because λ = V/f, resolution is worst where you usually need it most:</b> deep, where velocity is
+          high and attenuation has already removed the high frequencies.</li>
       </ul>
     </div>
   </div>
@@ -236,11 +236,11 @@
       to length with the same interval velocity, <span class="k">h = V·Δt/2</span>.</p>
     <p>Deliberately left out, because each deserves its own module: wavelet phase other than zero, offset and
       NMO stretch, anything 3D, transmission losses and multiples inside the bed, and lateral velocity change.
-      This is the textbook case, which is the point — the real world is worse, not better.</p>
+      This is the textbook case; real data is generally worse rather than better.</p>
     <ul>
       <li>Widess, M.B., 1973, How thin is a thin bed?: <em>Geophysics</em>, 38, 1176–1180.</li>
       <li>Kallweit, R.S., and Wood, L.C., 1982, The limits of resolution of zero-phase wavelets:
-        <em>Geophysics</em>, 47, 1035–1046 — the source of the 1/(2.6 f) tuning thickness this page measures.</li>
+        <em>Geophysics</em>, 47, 1035–1046. The source of the 1/(2.6 f) tuning thickness this page measures.</li>
       <li>Chung, H., and Lawton, D.C., 1995, Frequency characteristics of seismic reflections from thin beds:
         <em>Canadian Journal of Exploration Geophysics</em>, 31, 32–37.</li>
       <li>Simm, R., and Bacon, M., 2014, <em>Seismic Amplitude: An Interpreter's Handbook</em>, Cambridge.</li>
@@ -255,7 +255,7 @@
   <footer>
     <div class="foot-grid">
       <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma —
-        with the <a href="http://www.aaspi.ou.edu/">AASPI</a> consortium. Free to use, fork, and adapt in your own courses.</p>
+        with the <a href="http://www.aaspi.ou.edu/">AASPI</a> consortium. Free to use or adapt in your own courses with citation.</p>
     </div>
   </footer>
 </div>
@@ -303,7 +303,7 @@
     return { r1, r2: S.pol === 'opp' ? -r1 : r1 };
   }
   const U = () => SEIS.UNITS[S.units];
-  const uL = (m) => m * U().len;                 // metres -> display units
+  const uL = (m) => m * U().len;                 // meters -> display units
   const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 1 : d) + ' ' + U().lab;
 
   /* ------------------------ picking the events ------------------------ */
