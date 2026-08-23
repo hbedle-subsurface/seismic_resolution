@@ -24,6 +24,9 @@
 
 * { box-sizing: border-box; }
 
+/* author display rules outrank the UA sheet's [hidden] rule, so make it stick */
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -438,7 +441,7 @@ footer p { margin: 0 0 6px; max-width: 62ch; }
 
 /* stacked panels: layer model, seismic, traces */
 #modelWrap { margin-bottom: 16px; }
-.panel-col { flex: none; min-width: 0; }
+.panel-col { flex: none; min-width: 0; max-width: 100%; }
 .hint-line {
   font-family: var(--mono); font-size: 10.5px; color: var(--slate);
   margin: -4px 0 12px;
@@ -461,12 +464,20 @@ footer p { margin: 0 0 6px; max-width: 62ch; }
 }
 
 .legend {
-  display: flex; gap: 16px; flex-wrap: wrap;
+  display: flex; gap: 7px 14px; flex-wrap: wrap;
   font-family: var(--mono); font-size: 10.5px; color: var(--slate);
   margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--rule);
+  min-width: 0; max-width: 100%;
 }
-.legend span { display: flex; align-items: center; gap: 6px; }
-.legend i { width: 15px; height: 0; border-top-width: 2px; border-top-style: solid; display: inline-block; }
+.legend span { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.legend i {
+  width: 15px; height: 0; flex: none;
+  border-top-width: 2px; border-top-style: solid; display: inline-block;
+}
+.legend i.sw {
+  width: 15px; height: 10px; border: 1px solid rgba(22,25,28,.35);
+  border-top-width: 1px;
+}
 
 /* teaching blocks */
 .teach { display: grid; grid-template-columns: 1.12fr 1fr; gap: 22px; padding: 30px 0 10px; }
