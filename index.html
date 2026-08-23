@@ -78,8 +78,8 @@
     <p class="eyebrow">The modules — in the order they build on each other</p>
     <div class="card-grid">
 
-      <div class="card planned">
-        <div class="thumb"></div>
+      <a class="card" href="modules/wavelets.html">
+        <canvas class="thumb-canvas" data-thumb="wavelet"></canvas>
         <div class="card-body">
           <div class="card-no">01</div>
           <h3>What your data is made of</h3>
@@ -87,8 +87,8 @@
             dominant frequency can resolve very differently.</p>
           <div class="q">Is a 30 Hz wavelet always a 30 Hz wavelet?</div>
         </div>
-        <span class="flag">In progress</span>
-      </div>
+        <span class="flag next">Live</span>
+      </a>
 
       <a class="card" href="modules/wedge.html">
         <canvas class="thumb-canvas" data-thumb="wedge"></canvas>
@@ -293,9 +293,41 @@
     SEIS.drawVarDensity(ctx, fld, nx, nt, { x:0, y:0, w:w, h:h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.15 });
   }
 
+  function thumbWavelet(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const wavA = SEIS.makeWavelet({ type: 'ricker', f: 30 });
+    const wavB = SEIS.makeWavelet({ type: 'ormsby', f1: 8, f2: 16, f3: 42, f4: 60 });
+    const m = { l: 6, r: 6, t: 8, b: 8 };
+    const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(92,102,112,.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(rect.x, rect.y + rect.h / 2); ctx.lineTo(rect.x + rect.w, rect.y + rect.h / 2); ctx.stroke();
+    ctx.restore();
+    const span = 0.07;
+    const drawW = (wav, color) => {
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      for (let i = 0; i <= 160; i++) {
+        const tt = -span + (i / 160) * 2 * span;
+        const x = rect.x + (i / 160) * rect.w;
+        const y = rect.y + rect.h / 2 - wav.fn(tt) * rect.h * 0.42;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    drawW(wavB, '#B02418');
+    drawW(wavA, '#16191C');
+  }
+
   function drawThumbs() {
     document.querySelectorAll('.thumb-canvas').forEach((c) => {
-      c.dataset.thumb === 'wedge' ? thumbWedge(c) : thumbFault(c);
+      if (c.dataset.thumb === 'wedge') thumbWedge(c);
+      else if (c.dataset.thumb === 'fault') thumbFault(c);
+      else if (c.dataset.thumb === 'wavelet') thumbWavelet(c);
     });
   }
   drawThumbs();
