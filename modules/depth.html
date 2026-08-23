@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resolution with depth — What Can You REALLY See in Seismic?</title>
+<meta name="description" content="Why the same physical bed reads as a clean two-reflector event near the surface and a single smeared kick at depth: velocity growth and intrinsic attenuation, both stretching your wavelength.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>What can you <b>really</b> see in seismic?</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="#notes">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 05 &nbsp;·&nbsp; Vertical resolution in practice</p>
+    <h1>Resolution with depth</h1>
+    <p class="sub">The λ/4 limit from the wedge model is not one number for a whole survey. Velocity climbs as you
+      go down, which stretches the wavelength on its own. On top of that the earth absorbs high frequencies
+      faster than low ones, so the wavelet you are convolved with keeps getting broader the longer it travels.
+      Both effects push the same way: a bed that is a crisp two-reflector event near the surface can become a
+      single soft kick lower in the same trace, with no change at all in how thick it really is.</p>
+  </div>
+
+  <!-- ============================== CONTROLS ============================== -->
+  <section class="controls">
+
+    <div class="ctl-col">
+      <h2>The source wavelet</h2>
+      <div class="ctl">
+        <label for="f0">Peak frequency sent <span class="val" id="f0V">40 Hz</span></label>
+        <input type="range" id="f0" min="10" max="90" step="1" value="40">
+      </div>
+      <div class="ctl">
+        <label for="qslide">Quality factor Q <span class="val" id="qV">80</span></label>
+        <input type="range" id="qslide" min="15" max="500" step="5" value="80">
+      </div>
+      <p style="font-size:12px;color:var(--ink-soft);margin:8px 0 0">Low Q is a lossy earth — shale, gas sands,
+        near-surface weathering. High Q is closer to competent carbonate or basement, where the source spectrum
+        survives further before it changes shape.</p>
+    </div>
+
+    <div class="ctl-col">
+      <h2>The earth</h2>
+      <div class="ctl">
+        <label for="v0">Velocity at the surface <span class="val" id="v0V">2000 m/s</span></label>
+        <input type="range" id="v0" min="1500" max="3000" step="50" value="2000">
+      </div>
+      <div class="ctl">
+        <label for="vmax">Velocity at the base of the section <span class="val" id="vmaxV">4800 m/s</span></label>
+        <input type="range" id="vmax" min="2000" max="6500" step="50" value="4800">
+      </div>
+      <div class="ctl">
+        <label for="units">Units</label>
+        <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
+      </div>
+      <p style="font-size:12px;color:var(--ink-soft);margin:8px 0 0">Velocity is grown smoothly between these
+        two numbers, the way it does over a compacting basin. Set them equal to switch the gradient off and
+        isolate what attenuation alone is doing.</p>
+    </div>
+
+    <div class="ctl-col">
+      <h2>The test bed</h2>
+      <div class="ctl">
+        <label for="thick">Bed thickness, held constant with depth <span class="val" id="thickV">30 m</span></label>
+        <input type="range" id="thick" min="5" max="150" step="1" value="30">
+      </div>
+      <div class="ctl">
+        <label for="probe">Inspect this depth <span class="val" id="probeV">1.80 s</span></label>
+        <input type="range" id="probe" min="0.1" max="3.1" step="0.02" value="1.8">
+      </div>
+      <div class="ctl">
+        <label for="snr">Signal-to-noise near the surface <span class="val" id="snrV">10 : 1</span></label>
+        <input type="range" id="snr" min="1" max="20" step="0.5" value="10">
+      </div>
+      <button class="btn ghost small" id="newLayers" type="button">New random background</button>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Display</h2>
+      <div class="ctl">
+        <div class="seg" role="group" aria-label="Display style">
+          <button type="button" id="dVD" aria-pressed="true">Color</button>
+          <button type="button" id="dBoth" aria-pressed="false">Both</button>
+          <button type="button" id="dWig" aria-pressed="false">Wiggle</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="cmap">Color map</label>
+        <select id="cmap">
+          <option value="bwr">Blue – white – red</option>
+          <option value="cbsafe">Blue – white – orange (colorblind safe)</option>
+          <option value="gray">Grayscale</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="gain">Gain <span class="val" id="gainV">1.0×</span></label>
+        <input type="range" id="gain" min="0.4" max="4" step="0.1" value="1">
+      </div>
+      <div class="ctl">
+        <label>Polarity <span class="val" id="polV">SEG normal</span></label>
+        <div class="seg" role="group" aria-label="Display polarity">
+          <button type="button" id="pNorm" aria-pressed="true">Normal</button>
+          <button type="button" id="pRev" aria-pressed="false">Reverse</button>
+        </div>
+      </div>
+      <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="pngBtn" type="button">Save section as PNG</button>
+      <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
+    </div>
+
+  </section>
+
+  <!-- =============================== SECTION ============================== -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>From the surface to the probe depth</h3>
+    </div>
+    <p class="hint-line">Drag <b>Inspect this depth</b> and watch every panel move together</p>
+
+    <div class="sec-row">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Velocity and λ/4 with depth
+          <span class="note">black = velocity &nbsp;·&nbsp; teal = λ/4 &nbsp;·&nbsp; dashed = bed thickness</span></p>
+        <canvas id="modelCanvas" aria-label="Velocity and quarter-wavelength growing with two-way time"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The pulse, broadening with depth</p>
+        <canvas id="wavCanvas" aria-label="Wavelet shape and spectrum at the reference and probe depths"></canvas>
+      </div>
+    </div>
+
+    <div class="sec-row">
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> The seismic that comes out
+          <span class="note" id="polNote">layers convolved with a depth-varying wavelet</span></p>
+        <canvas id="secCanvas" aria-label="Synthetic seismic column showing loss of character with depth"></canvas>
+        <div class="legend" id="secLegend"></div>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>4</b> Same bed, two depths</p>
+        <canvas id="cmpCanvas" aria-label="The reference bed and the probe-depth bed, drawn to their own local time axis"></canvas>
+        <div class="legend" id="cmpLegend"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span>Wavelength at the surface, λ₀ = V₀ / f₀</span><b id="rLam0">50 m</b></div>
+    <div class="stat"><span>Surface λ/4 — the shallow limit</span><b id="rQ40">12.5 m</b></div>
+    <div class="stat"><span>Probe — two-way time</span><b id="rProbeT">1800 ms</b></div>
+    <div class="stat"><span>Probe — approximate depth</span><b id="rDepth">2900 m</b></div>
+    <div class="stat"><span>Probe — interval velocity</span><b id="rVprobe">3270 m/s</b></div>
+    <div class="stat"><span>Probe — effective frequency</span><b id="rFprobe">21 Hz</b></div>
+    <div class="stat"><span>Probe — wavelength λ</span><b id="rLamProbe">155 m</b></div>
+    <div class="stat"><span>Probe — λ/4</span><b id="rQ4probe">39 m</b></div>
+    <div class="stat key"><span>Bed thickness as a fraction of λ, at probe</span><b id="rRatio">λ/5.2</b></div>
+    <div class="stat wide"><span>Verdict at probe</span><b id="rVerdict">Detectable — visible, not measurable</b></div>
+  </div>
+
+  <!-- ============================== TEACHING ============================== -->
+  <div class="teach">
+    <div class="tryit">
+      <h3>Try this</h3>
+      <ol>
+        <li><b>Turn attenuation off.</b> Push Q to 500, then drag the probe from the top of the section to the
+          bottom.
+          <span class="ans">The verdict still degrades. Velocity growth alone stretches λ enough to lose a
+            thin bed by depth, even in a nearly lossless earth. This is the part of the story that is pure
+            geometry, not absorption.</span></li>
+        <li><b>Now turn it back on.</b> Drop Q to 20 and repeat the same drag.
+          <span class="ans">The bed is lost much shallower. Attenuation compounds the velocity effect instead
+            of replacing it — real sections lose resolution faster than a velocity-only argument would
+            predict.</span></li>
+        <li><b>Try to fix it with a hotter source.</b> Raise the peak frequency from 25 Hz to 80 Hz and compare
+          the surface λ/4 stat against the probe λ/4 stat.
+          <span class="ans">Surface resolution improves a great deal. The probe barely moves. High frequencies
+            are exactly what the earth removes fastest, so more bandwidth at the source buys you shallow
+            resolution far more than deep resolution.</span></li>
+        <li><b>Find the crossing.</b> Set the bed to 15 m and drag the probe until the verdict flips from
+          Resolved to Below detection. Read the two-way time off the stat strip, then look for the same
+          crossing on panel 1, where the teal λ/4 curve climbs through the dashed bed-thickness line.
+          <span class="ans">The two should agree. Panel 1 is simply the readout stat turned into a curve, so
+            you can see the whole depth range at once instead of one point at a time.</span></li>
+        <li><b>Isolate the velocity term.</b> Set the base velocity equal to the surface velocity, so the
+          gradient is zero, and drag the probe.
+          <span class="ans">Resolution still gets worse with depth from attenuation alone. Set Q back up near
+            500 with the flat velocity and the verdict should barely change at all — that is the closest this
+            module gets to an earth with no depth-dependent resolution loss.</span></li>
+        <li><b>Watch panel 4 directly.</b> With a fairly thin bed and a mid-range Q, compare the reference trace
+          against the probe trace.
+          <span class="ans">Same reflection coefficients, same physical thickness, same convolution machinery —
+            only the local wavelet differs. The reference stays two clean kicks; the probe blurs into one.</span></li>
+        <li><b>Read panel 3 as an interpreter would.</b> Look at the background reflectivity above and below the
+          dashed PROBE line, not just at the marked bed.
+          <span class="ans">The whole column loses character with depth, not only the highlighted test bed.
+            That washed-out look on the lower part of a real section is usually this effect, not necessarily
+            worse geology.</span></li>
+      </ol>
+    </div>
+
+    <div class="takeaway">
+      <h3>What to carry away</h3>
+      <ul>
+        <li><b>λ/4 is not a fixed number for a survey.</b> It grows with two-way time because both the terms in
+          λ = V/f are moving against you: V goes up, and the earth's absorption pulls f down.</li>
+        <li><b>The two mechanisms are independent and they add.</b> Velocity growth is pure geometry and would
+          matter even for a lossless earth. Attenuation is a separate, physical loss of high-frequency energy,
+          and it does not need a velocity gradient to hurt you.</li>
+        <li><b>More source bandwidth mostly buys shallow resolution.</b> The frequencies you add at acquisition
+          are exactly the ones absorbed fastest, so the deep section converges toward the same answer regardless
+          of how hot the source was.</li>
+        <li><b>A resolution floor moving up a trace does not mean the geology changed.</b> The same physical bed
+          can cross from resolved to below detection purely by getting deeper, which is why two closely spaced
+          faults or beds can be obvious at 500 ms and invisible at 2500 ms.</li>
+      </ul>
+    </div>
+  </div>
+
+  <details class="notes" id="notes">
+    <summary>Method, assumptions, and where to read more</summary>
+    <p>Interval velocity is grown smoothly between the surface value and the base value you set, using
+      V(t) = V₀ · (V<sub>max</sub>/V₀)^(t / T<sub>max</sub>), where t is two-way time. This is the closed form
+      that falls out of a constant fractional velocity gradient with depth — the usual V₀–k model of refraction
+      seismology — reparameterized by its endpoints so the two sliders stay physically direct. Depth is then the
+      numerical integral of that velocity, halved for one-way travel, and is only meant to be read as an
+      order-of-magnitude figure.</p>
+    <p>Attenuation follows the standard constant-Q amplitude law: a frequency component f loses amplitude as
+      exp(−π f t / Q) after travel time t. The source wavelet's amplitude spectrum is treated as proportional to
+      f² exp(−(f/f₀)²), which is the shape that gives a Ricker wavelet its peak at f₀. Multiplying the two and
+      solving for the new peak analytically gives the effective frequency used to build the wavelet at every
+      depth in the section — the earth acts as a time-variant low-pass filter, and this is the peak of what
+      survives. The same exponential also sets how much amplitude the reflection keeps, so deep events are both
+      broader and weaker, the way real deep data actually looks.</p>
+    <p>Bed thickness is fixed in meters and held constant with depth; only its expression on the trace changes,
+      through the local velocity, the local effective frequency, and the local amplitude. The reference bed near
+      the top of the section and the bed at your probe depth are the same construction evaluated at two different
+      times, so panel 4 is a true apples-to-apples comparison. The background reflectivity around them is random,
+      seeded, and regenerated with the button provided; each layer's thickness is drawn in meters and converted
+      to time with the local velocity as the column is built, so it also compacts realistically going down.</p>
+    <p>This is a 1-D, normal-incidence, single-well cartoon. It leaves out geometric spreading, transmission
+      losses at each interface, multiples, NMO stretch, and the frequency-dependent dispersion that a physically
+      consistent constant-Q medium also produces alongside the amplitude loss modeled here. None of those change
+      the direction of the story, and several of them would only make the deep section look worse than this
+      module shows it.</p>
+    <p>The λ/4 and λ/8 thresholds and their "Resolved / Detectable / Below detection" labels are the same ones
+      used in the wedge and fault modules, applied here to a wavelength that is itself a function of depth
+      instead of a single fixed number.</p>
+    <ul>
+      <li>Kjartansson, E., 1979, Constant Q-wave propagation and attenuation: <em>Journal of Geophysical
+        Research</em>, 84, 4737–4748.</li>
+      <li>Futterman, W.I., 1962, Dispersive body waves: <em>Journal of Geophysical Research</em>, 67, 5279–5291.</li>
+      <li>Yilmaz, Ö., 2001, <em>Seismic Data Analysis: Processing, Inversion, and Interpretation of Seismic
+        Data</em>: SEG.</li>
+      <li>Kallweit, R.S., and Wood, L.C., 1982, The limits of resolution of zero-phase wavelets:
+        <em>Geophysics</em>, 47, 1035–1046.</li>
+    </ul>
+  </details>
+
+  <div class="pager">
+    <a class="btn ghost" href="faults.html">← Can you see the fault?</a>
+    <a class="btn" href="../index.html#modules">All modules →</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma —
+        with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.
+        Free to use or adapt in your own courses with citation.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/seismic.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const DEF = {
+    f0: 40, Q: 80, v0: 2000, vmax: 4800, thick: 30, probe: 1.8, snr: 10, seed: 11,
+    disp: 'vd', cmap: 'bwr', gain: 1, pol: 'normal', units: 'm',
+  };
+  let S = SEIS.readState(DEF);
+
+  const $ = (id) => document.getElementById(id);
+
+  const NX = 130;
+  const T0 = 0.04, TEND = 3.2, DT = 0.0015;
+  const NT = Math.round((TEND - T0) / DT);
+  const refT = T0 + 0.10 * (TEND - T0);
+
+  const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670';
+  const C_REF = '#16191C', C_PROBE = '#B02418';
+
+  const U = () => SEIS.UNITS[S.units];
+  const uL = (m) => m * U().len;
+  const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 1 : d) + ' ' + U().lab;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  let CACHE = { noiseKey: '' };
+
+  /* ------------------------------ physics -------------------------------- */
+
+  // Interval velocity, grown smoothly between the two endpoints the user set.
+  // This is the closed form of a constant fractional velocity gradient with
+  // depth, reparameterized by its two endpoints so the sliders stay direct.
+  function velAt(t) {
+    const p = clamp(t, 0, TEND) / TEND;
+    return S.v0 * Math.pow(S.vmax / S.v0, p);
+  }
+
+  // The peak of [source spectrum] x [constant-Q attenuation], solved in
+  // closed form. Source spectrum shape is f^2 * exp(-(f/f0)^2), the shape
+  // that gives a Ricker wavelet its peak at f0. Attenuation multiplies that
+  // by exp(-pi*f*t/Q). Setting d/df of the log of the product to zero and
+  // solving the resulting quadratic in f gives the new peak.
+  function effFreq(t) {
+    if (t <= 0) return S.f0;
+    const a = 2 / (S.f0 * S.f0), b = Math.PI * t / S.Q, c = -2;
+    const disc = b * b - 4 * a * c;
+    return (-b + Math.sqrt(disc)) / (2 * a);
+  }
+
+  // Fraction of amplitude the dominant frequency component keeps after
+  // travel time t, from the same constant-Q law.
+  function ampDecay(t) {
+    if (t <= 0) return 1;
+    return Math.exp(-Math.PI * effFreq(t) * t / S.Q);
+  }
+
+  function lamAt(t) { return velAt(t) / effFreq(t); }
+  function dtBedAt(t) { return 2 * S.thick / velAt(t); }
+  function probeT() { return clamp(S.probe, T0 + 0.01, TEND - 0.02); }
+
+  // Depth is a numerical integral of the velocity function, halved for
+  // one-way travel. Only meant to be read as an order-of-magnitude figure.
+  function buildDepthTable() {
+    const N = 240, dt = TEND / N;
+    const tt = new Float32Array(N + 1), zz = new Float32Array(N + 1);
+    let z = 0;
+    for (let i = 0; i <= N; i++) {
+      const t = i * dt;
+      tt[i] = t; zz[i] = z;
+      if (i < N) z += velAt(t + dt / 2) * (dt / 2);
+    }
+    return { tt, zz, N, dt };
+  }
+  function depthAt(table, t) {
+    const p = clamp(t, 0, TEND) / table.dt;
+    const i0 = Math.min(table.N - 1, Math.floor(p)), f = p - i0;
+    return table.zz[i0] + (table.zz[i0 + 1] - table.zz[i0]) * f;
+  }
+
+  // Background reflectivity. Bed thickness is drawn in meters and converted
+  // to time with the local velocity as the column is built, so it compacts
+  // the same way real interval thickness does.
+  function buildLayers(seed) {
+    const rnd = SEIS.mulberry32(seed >>> 0);
+    const out = [];
+    let t = T0 + 0.02, sign = 1;
+    while (t < TEND - 0.03 && out.length < 46) {
+      const thickM = 15 + rnd() * 55;
+      out.push({ t, r: sign * (0.045 + rnd() * 0.09) });
+      sign = rnd() < 0.8 ? -sign : sign;
+      t += 2 * thickM / velAt(t);
+    }
+    return out;
+  }
+
+  function testPair(tC, amp) {
+    const dt = dtBedAt(tC);
+    return [{ t: tC, r: amp }, { t: tC + dt, r: -amp }];
+  }
+
+  function compute() {
+    CACHE.depthTable = buildDepthTable();
+    const pT = probeT();
+    CACHE.probeT = pT;
+
+    const raw = buildLayers(S.seed);
+    const PROT = 0.055;
+    const bg = raw.filter((L) => Math.abs(L.t - refT) > PROT && Math.abs(L.t - pT) > PROT);
+    const spikes = bg.concat(testPair(refT, 0.22), testPair(pT, 0.22));
+
+    // Non-stationary convolution: every spike gets the wavelet the earth has
+    // turned the source into by the time it gets back from that depth, both
+    // broader and weaker with increasing two-way time.
+    const base = new Float32Array(NT);
+    for (let s = 0; s < spikes.length; s++) {
+      const sp = spikes[s];
+      const wav = SEIS.makeWavelet({ type: 'ricker', f: effFreq(sp.t) });
+      const amp = sp.r * ampDecay(sp.t);
+      const half = wav.halfLength;
+      const i0 = Math.max(0, Math.ceil((sp.t - half - T0) / DT));
+      const i1 = Math.min(NT - 1, Math.floor((sp.t + half - T0) / DT));
+      for (let i = i0; i <= i1; i++) base[i] += amp * wav.fn(T0 + i * DT - sp.t);
+    }
+
+    // Every trace in the section is the same modeled column; only the noise
+    // differs, the way repeat lines shot over one location would differ.
+    const noiseWav = SEIS.makeWavelet({ type: 'ricker', f: S.f0 });
+    const dtn = 0.003, ntn = Math.round((TEND - T0) / dtn);
+    const key = S.f0 + '|' + ntn + '|' + NX;
+    if (CACHE.noiseKey !== key) {
+      CACHE.noise = SEIS.bandLimitedNoise(NX, ntn, dtn, noiseWav, 552031, 3);
+      CACHE.noiseKey = key; CACHE.ntn = ntn; CACHE.dtn = dtn;
+    }
+    const namp = 0.10 / S.snr;
+    const field = new Float32Array(NX * NT);
+    for (let ix = 0; ix < NX; ix++) {
+      for (let it = 0; it < NT; it++) {
+        const p = (it * DT) / CACHE.dtn;
+        const i0 = Math.min(CACHE.ntn - 2, Math.floor(p)), fr = p - i0;
+        const n0 = CACHE.noise[ix * CACHE.ntn + i0], n1 = CACHE.noise[ix * CACHE.ntn + i0 + 1];
+        field[ix * NT + it] = base[it] + namp * (n0 + (n1 - n0) * fr);
+      }
+    }
+    CACHE.field = field; CACHE.nx = NX; CACHE.nLayers = bg.length + 2;
+  }
+
+  /* ------------------------------ geometry ------------------------------- */
+
+  function layout() {
+    const box = $('secCanvas').closest('.plot');
+    const W = Math.max(320, box.clientWidth - 28);
+    const stacked = W < 640;
+    const cmpW = stacked ? W : clamp(Math.round(W * 0.30), 190, 300);
+    const secW = stacked ? W : W - cmpW - 10;
+    const h = clamp(Math.round(secW * 0.62), 320, 520);
+    return { secW, cmpW, h, stacked, topH: clamp(Math.round(secW * 0.20), 160, 220) };
+  }
+
+  /* ------------------------------ drawing --------------------------------- */
+
+  function drawEarth(L) {
+    const ctx = SEIS.fitCanvas($('modelCanvas'), L.secW, L.topH);
+    ctx.clearRect(0, 0, L.secW, L.topH);
+    const m = { l: 52, r: 14, t: 6, b: 16 }, gap = 20;
+    const each = (L.topH - m.t - m.b - gap) / 2;
+    const rV = { x: m.l, y: m.t, w: L.secW - m.l - m.r, h: each };
+    const rR = { x: m.l, y: m.t + each + gap, w: rV.w, h: each };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rV.x, rV.y, rV.w, rV.h); ctx.fillRect(rR.x, rR.y, rR.w, rR.h);
+
+    const N = 140;
+    const vArr = [], rArr = [];
+    let vMax = 0, rMax = S.thick * 1.15;
+    for (let i = 0; i <= N; i++) {
+      const t = T0 + (i / N) * (TEND - T0);
+      const v = velAt(t); vArr.push(v); vMax = Math.max(vMax, v);
+      const q4 = lamAt(t) / 4; rArr.push(q4); rMax = Math.max(rMax, q4);
+    }
+    const xOf = (t) => rV.x + ((t - T0) / (TEND - T0)) * rV.w;
+    const yOfV = (v) => rV.y + rV.h - (v / vMax) * rV.h * 0.92;
+    const yOfR = (r) => rR.y + rR.h - (r / rMax) * rR.h * 0.92;
+
+    ctx.save(); ctx.strokeStyle = '#16191C'; ctx.lineWidth = 1.8; ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const t = T0 + (i / N) * (TEND - T0), x = xOf(t), y = yOfV(vArr[i]);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.restore();
+
+    ctx.save(); ctx.strokeStyle = TEAL; ctx.lineWidth = 1.8; ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const t = T0 + (i / N) * (TEND - T0), x = xOf(t), y = yOfR(rArr[i]);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.restore();
+
+    SEIS.dashedLine(ctx, rR.x, yOfR(S.thick), rR.x + rR.w, yOfR(S.thick), CRIMSON, [4, 3], 1.3);
+    SEIS.tag(ctx, rR.x + 4, Math.max(rR.y + 8, yOfR(S.thick) - 9), 'bed = ' + fmtL(S.thick, 0), CRIMSON);
+
+    [[refT, C_REF], [CACHE.probeT, C_PROBE]].forEach(([t, color]) => {
+      const x = xOf(t);
+      SEIS.dashedLine(ctx, x, rV.y, x, rV.y + rV.h, color, [2, 3], 1.1);
+      SEIS.dashedLine(ctx, x, rR.y, x, rR.y + rR.h, color, [2, 3], 1.1);
+    });
+
+    SEIS.frame(ctx, rV); SEIS.frame(ctx, rR);
+    ctx.save();
+    ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('velocity, ' + Math.round(uL(vArr[0])) + '–' + Math.round(uL(vMax)) + ' ' + U().vlab,
+      rV.x + rV.w / 2, rV.y + rV.h + 3);
+    ctx.fillText('λ/4 vs. bed thickness (dashed)', rR.x + rR.w / 2, rR.y + rR.h + 3);
+    ctx.restore();
+  }
+
+  function drawPulses(L) {
+    const ctx = SEIS.fitCanvas($('wavCanvas'), L.cmpW, L.topH);
+    ctx.clearRect(0, 0, L.cmpW, L.topH);
+    const m = { l: 16, r: 12, t: 6, b: 14 }, gap = 20;
+    const each = (L.topH - m.t - m.b - gap) / 2;
+    const rW = { x: m.l, y: m.t, w: L.cmpW - m.l - m.r, h: each };
+    const rS = { x: m.l, y: m.t + each + gap, w: rW.w, h: each };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rW.x, rW.y, rW.w, rW.h); ctx.fillRect(rS.x, rS.y, rS.w, rS.h);
+
+    const rows = [{ t: refT, color: C_REF }, { t: CACHE.probeT, color: C_PROBE }];
+    const wavs = rows.map((row) => ({ wav: SEIS.makeWavelet({ type: 'ricker', f: effFreq(row.t) }), color: row.color }));
+
+    ctx.save(); ctx.strokeStyle = 'rgba(92,102,112,.4)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(rW.x, rW.y + rW.h / 2); ctx.lineTo(rW.x + rW.w, rW.y + rW.h / 2); ctx.stroke();
+    ctx.restore();
+
+    const span = Math.max.apply(null, wavs.map((w) => w.wav.halfLength));
+    wavs.forEach(({ wav, color }) => {
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 1.8; ctx.beginPath();
+      for (let i = 0; i <= 150; i++) {
+        const tt = -span + (i / 150) * 2 * span;
+        const x = rW.x + (i / 150) * rW.w;
+        const y = rW.y + rW.h / 2 - wav.fn(tt) * rW.h * 0.40;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.restore();
+    });
+
+    const fmax = 100;
+    wavs.forEach(({ wav, color }) => {
+      const sp = SEIS.spectrum(wav, 0.001, 48, fmax);
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.beginPath();
+      sp.forEach((q, i) => {
+        const x = rS.x + (q.f / fmax) * rS.w, y = rS.y + rS.h - q.a * rS.h * 0.88;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke(); ctx.restore();
+    });
+
+    SEIS.frame(ctx, rW); SEIS.frame(ctx, rS);
+    ctx.save();
+    ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('pulse shape, broadening with depth', rW.x + rW.w / 2, rW.y + rW.h + 3);
+    ctx.fillText(effFreq(refT).toFixed(0) + ' vs ' + effFreq(CACHE.probeT).toFixed(0) + ' Hz peak',
+      rS.x + rS.w / 2, rS.y + rS.h + 3);
+    ctx.restore();
+  }
+
+  function drawSection(L) {
+    const ctx = SEIS.fitCanvas($('secCanvas'), L.secW, L.h);
+    ctx.clearRect(0, 0, L.secW, L.h);
+    const m = { l: 58, r: 14, t: 8, b: 34 };
+    const rect = { x: m.l, y: m.t, w: L.secW - m.l - m.r, h: L.h - m.t - m.b };
+    CACHE.rect = rect;
+    const clip = 0.16;
+
+    if (S.disp !== 'wiggle') {
+      SEIS.drawVarDensity(ctx, CACHE.field, CACHE.nx, NT, rect, { cmap: SEIS.COLORMAPS[S.cmap], gain: S.gain, clip });
+    } else {
+      ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    }
+    if (S.disp !== 'vd') {
+      SEIS.drawWiggle(ctx, CACHE.field, CACHE.nx, NT, rect, {
+        step: Math.max(1, Math.round(CACHE.nx / (S.disp === 'wiggle' ? 55 : 24))),
+        clip: clip / S.gain, excursion: 1.5,
+        stroke: S.disp === 'both' ? 'rgba(22,25,28,.5)' : 'rgba(22,25,28,.9)',
+        fill: S.disp === 'both' ? 'rgba(22,25,28,.26)' : 'rgba(22,25,28,.78)',
+      });
+    }
+
+    const yOf = (t) => rect.y + ((t - T0) / (TEND - T0)) * rect.h;
+    [[refT, C_REF, 'REF'], [CACHE.probeT, C_PROBE, 'PROBE']].forEach(([t, color, label]) => {
+      const y = yOf(t);
+      SEIS.dashedLine(ctx, rect.x, y, rect.x + rect.w, y, color, [7, 5], 1.6);
+      SEIS.tag(ctx, rect.x + 4, Math.max(rect.y + 9, y - 10), label, color);
+    });
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisLeft(ctx, rect, T0 * 1000, TEND * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
+    ctx.save();
+    ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('every trace is the same modeled column — only the noise differs',
+      rect.x + rect.w / 2, rect.y + rect.h + 8);
+    ctx.restore();
+  }
+
+  function drawCompare(L) {
+    const ctx = SEIS.fitCanvas($('cmpCanvas'), L.cmpW, L.h);
+    ctx.clearRect(0, 0, L.cmpW, L.h);
+    const m = { l: L.stacked ? 18 : 18, r: 12, t: 10, b: 10 };
+    const rect = { x: m.l, y: m.t, w: L.cmpW - m.l - m.r, h: L.h - m.t - m.b };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+    const rows = [
+      { t: refT, color: C_REF, label: 'Reference · ' + refT.toFixed(2) + ' s' },
+      { t: CACHE.probeT, color: C_PROBE, label: 'Probe · ' + CACHE.probeT.toFixed(2) + ' s' },
+    ];
+    const rowH = rect.h / 2, padTop = 6, padBot = 20;
+
+    rows.forEach((row, ri) => {
+      const dt = dtBedAt(row.t);
+      const fE = effFreq(row.t);
+      const wav = SEIS.makeWavelet({ type: 'ricker', f: fE });
+      const amp = ampDecay(row.t);
+      const sp = [{ t: 0, r: amp }, { t: dt, r: -amp }];
+      const half = wav.halfLength;
+      const t0 = -half * 1.1, t1 = dt + half * 1.1;
+
+      const rr = { x: rect.x, y: rect.y + ri * rowH + (ri ? 6 : 0), w: rect.w, h: rowH - padTop - padBot - (ri ? 6 : 0) };
+      const NT2 = 200;
+      const vals = new Float32Array(NT2);
+      let peak = 1e-6;
+      for (let i = 0; i < NT2; i++) {
+        const tt = t0 + (i / (NT2 - 1)) * (t1 - t0);
+        let v = 0;
+        for (let s = 0; s < sp.length; s++) v += sp[s].r * wav.fn(tt - sp[s].t);
+        vals[i] = v; peak = Math.max(peak, Math.abs(v));
+      }
+      const cx = rr.x + rr.w * 0.34;
+      const sc = (rr.w * 0.58) / peak;
+      const yOf = (i) => rr.y + (i / (NT2 - 1)) * rr.h;
+
+      ctx.save(); ctx.strokeStyle = 'rgba(92,102,112,.35)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, rr.y); ctx.lineTo(cx, rr.y + rr.h); ctx.stroke(); ctx.restore();
+
+      ctx.save(); ctx.strokeStyle = row.color; ctx.lineWidth = 1.8; ctx.beginPath();
+      for (let i = 0; i < NT2; i++) {
+        const x = cx + vals[i] * sc, y = yOf(i);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.restore();
+
+      SEIS.frame(ctx, rr);
+      ctx.save();
+      ctx.font = '10.5px "IBM Plex Mono", monospace'; ctx.fillStyle = row.color;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText(row.label, rr.x + 2, rr.y - 2);
+      ctx.restore();
+      ctx.save();
+      ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('Δt ' + (dt * 1000).toFixed(1) + ' ms  ·  λ/4 ' + fmtL(lamAt(row.t) / 4) +
+        '  ·  h/λ ' + (S.thick / lamAt(row.t)).toFixed(2), rr.x + 2, rr.y + rr.h + 3);
+      ctx.restore();
+    });
+
+    SEIS.frame(ctx, rect);
+  }
+
+  /* -------------------------- legend and readout -------------------------- */
+
+  function updateLegend() {
+    const cmap = SEIS.COLORMAPS[S.cmap];
+    const rgb = (v) => { const c = cmap(v); return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
+    const bits = [];
+    bits.push('<span><i class="sw" style="background:' + rgb(0.85) + '"></i>positive RC (peak)</span>');
+    bits.push('<span><i class="sw" style="background:' + rgb(-0.85) + '"></i>negative RC (trough)</span>');
+    bits.push('<span><i style="border-color:' + C_REF + '"></i>reference bed</span>');
+    bits.push('<span><i style="border-color:' + C_PROBE + '"></i>probe depth</span>');
+    $('secLegend').innerHTML = bits.join('');
+    $('cmpLegend').innerHTML =
+      '<span><i style="border-color:' + C_REF + '"></i>reference</span>' +
+      '<span><i style="border-color:' + C_PROBE + '"></i>probe</span>';
+    $('polNote').textContent = S.pol === 'reverse'
+      ? 'SEG reverse polarity — an impedance increase is a trough'
+      : 'SEG normal polarity (American) — an impedance increase is a peak';
+  }
+
+  const verdictOf = (ratio) => ratio >= 0.25 ? 'Resolved — reads as a clean step'
+    : ratio >= 0.125 ? 'Detectable — visible, but not measurable'
+    : 'Below detection — look to attributes, not your eye';
+
+  function updateReadout() {
+    const lam0 = S.v0 / S.f0;
+    $('rLam0').textContent = fmtL(lam0, 0);
+    $('rQ40').textContent = fmtL(lam0 / 4);
+
+    const pT = CACHE.probeT;
+    $('rProbeT').textContent = Math.round(pT * 1000) + ' ms';
+    $('rDepth').textContent = fmtL(depthAt(CACHE.depthTable, pT), 0);
+
+    const vP = velAt(pT), fP = effFreq(pT), lamP = vP / fP;
+    $('rVprobe').textContent = Math.round(uL(vP)) + ' ' + U().vlab;
+    $('rFprobe').textContent = fP.toFixed(1) + ' Hz (of ' + S.f0 + ' Hz sent)';
+    $('rLamProbe').textContent = fmtL(lamP, 0);
+    $('rQ4probe').textContent = fmtL(lamP / 4);
+
+    const ratioP = S.thick / lamP, ratio0 = S.thick / lam0;
+    $('rRatio').textContent = 'λ/' + (lamP / S.thick).toFixed(1);
+    $('rVerdict').textContent = verdictOf(ratioP) + '  (surface: ' + verdictOf(ratio0) + ')';
+  }
+
+  /* ------------------------------- plumbing -------------------------------- */
+
+  function render(recompute) {
+    if (recompute !== false) compute();
+    const L = layout();
+    $('modelCanvas').parentElement.style.width = L.secW + 'px';
+    $('wavCanvas').parentElement.style.width = L.cmpW + 'px';
+    $('secCanvas').parentElement.style.width = L.secW + 'px';
+    $('cmpCanvas').parentElement.style.width = L.cmpW + 'px';
+    drawEarth(L); drawPulses(L); drawSection(L); drawCompare(L); updateLegend(); updateReadout();
+  }
+  function save() { SEIS.writeState(S, DEF); }
+
+  function syncLabels() {
+    $('f0V').textContent = S.f0 + ' Hz';
+    $('qV').textContent = S.Q.toFixed(0);
+    $('v0V').textContent = Math.round(uL(S.v0)) + ' ' + U().vlab;
+    $('vmaxV').textContent = Math.round(uL(S.vmax)) + ' ' + U().vlab;
+    $('thickV').textContent = fmtL(S.thick, 0);
+    $('probeV').textContent = S.probe.toFixed(2) + ' s';
+    $('snrV').textContent = S.snr.toFixed(1) + ' : 1';
+    $('gainV').textContent = S.gain.toFixed(1) + '×';
+    $('dVD').setAttribute('aria-pressed', S.disp === 'vd');
+    $('dBoth').setAttribute('aria-pressed', S.disp === 'both');
+    $('dWig').setAttribute('aria-pressed', S.disp === 'wiggle');
+    $('pNorm').setAttribute('aria-pressed', S.pol === 'normal');
+    $('pRev').setAttribute('aria-pressed', S.pol === 'reverse');
+    $('polV').textContent = S.pol === 'reverse' ? 'SEG reverse' : 'SEG normal';
+  }
+  function pushToInputs() {
+    $('f0').value = S.f0; $('qslide').value = S.Q; $('v0').value = S.v0; $('vmax').value = S.vmax;
+    $('thick').value = S.thick; $('probe').value = S.probe; $('snr').value = S.snr;
+    $('gain').value = S.gain; $('cmap').value = S.cmap; $('units').value = S.units;
+  }
+  function bump() { syncLabels(); render(); save(); }
+
+  const slide = (id, key) => $(id).addEventListener('input', () => { S[key] = parseFloat($(id).value); bump(); });
+  slide('f0', 'f0'); slide('qslide', 'Q'); slide('v0', 'v0'); slide('vmax', 'vmax');
+  slide('thick', 'thick'); slide('probe', 'probe'); slide('snr', 'snr'); slide('gain', 'gain');
+
+  const toggle = (id, key, val) => $(id).addEventListener('click', () => { S[key] = val; bump(); });
+  toggle('dVD', 'disp', 'vd'); toggle('dBoth', 'disp', 'both'); toggle('dWig', 'disp', 'wiggle');
+  toggle('pNorm', 'pol', 'normal'); toggle('pRev', 'pol', 'reverse');
+
+  $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(); });
+  $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
+  $('newLayers').addEventListener('click', () => { S.seed = Math.floor(Math.random() * 1e6); bump(); });
+
+  $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
+  $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
+  $('pngBtn').addEventListener('click', () => SEIS.savePNG($('secCanvas'), 'depth-section'));
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => render(false), 120); });
+
+  pushToInputs(); syncLabels(); render();
+  document.fonts && document.fonts.ready.then(() => render(false));
+})();
+</script>
+</body>
+</html>
