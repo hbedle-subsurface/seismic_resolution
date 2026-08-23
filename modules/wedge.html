@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The wedge model &amp; tuning — What Can You REALLY See in Seismic?</title>
-<meta name="description" content="Interactive wedge model: watch a thinning bed pass through tuning thickness and stop telling you how thick it is.">
+<meta name="description" content="Interactive wedge model: pick three rock layers, thin the middle one to nothing, and watch the seismic stop telling you how thick it is.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -24,26 +24,41 @@
   <div class="mod-head">
     <p class="eyebrow">Module 02 &nbsp;·&nbsp; Vertical resolution</p>
     <h1>The wedge model and tuning thickness</h1>
-    <p class="sub">A bed thins to nothing. Its top and base reflections move together until they merge, the
-      merged event brightens and then dims, and the thickness you would pick off the section stops changing
-      well before the bed does. Any amplitude map over a thin reservoir carries this effect in it.</p>
+    <p class="sub">Take the middle layer from module 01 and thin it sideways to nothing. Its top and base
+      reflections move together until they merge, the merged event brightens and then dims, and the thickness
+      you would pick off the section stops changing well before the bed does. Set the three rocks yourself:
+      whether the two reflections cancel or reinforce as the bed thins is decided by their impedances, not by
+      a switch.</p>
   </div>
 
-  <div class="lab">
-
-    <!-- ============================ CONTROL RAIL ============================ -->
-    <aside class="rail">
+  <!-- ============================== CONTROLS ============================== -->
+  <section class="controls">
+    <div class="ctl-col">
       <h2>Start from</h2>
       <div class="ctl">
         <select id="preset">
-          <option value="custom">Custom setup</option>
-          <option value="gas">Shallow gas sand, 45 Hz</option>
-          <option value="turb">Deepwater turbidite, 30 Hz</option>
-          <option value="carb">Deep tight carbonate, 18 Hz</option>
-          <option value="coal">Coal seam, 65 Hz</option>
+          <option value="custom">Custom rocks</option>
+          <option value="encased" selected>Sand encased in shale</option>
+          <option value="gas">Gas sand — a bright spot</option>
+          <option value="lime">Limestone between shales</option>
+          <option value="coal">Coal seam</option>
+          <option value="stack">Hardening downward — same polarity</option>
         </select>
       </div>
+      <div class="ctl">
+        <label for="maxh">Thickest end of the wedge <span class="val" id="maxhV">60 m</span></label>
+        <input type="range" id="maxh" min="10" max="200" step="5" value="60">
+      </div>
+      <div class="ctl">
+        <label for="snr">Signal-to-noise <span class="val" id="snrV">clean</span></label>
+        <input type="range" id="snr" min="0" max="12" step="0.5" value="0">
+      </div>
+      <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="pngBtn" type="button">Save wedge as PNG</button>
+      <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
+    </div>
 
+    <div class="ctl-col">
       <h2>The wavelet</h2>
       <canvas id="wavCanvas" aria-label="Wavelet shape and amplitude spectrum"></canvas>
       <div class="ctl" style="margin-top:10px">
@@ -52,54 +67,27 @@
           <button type="button" id="wOrmsby" aria-pressed="false">Ormsby</button>
         </div>
       </div>
-
       <div id="rickerCtl">
         <div class="ctl">
           <label for="freq">Peak frequency <span class="val" id="freqV">30 Hz</span></label>
           <input type="range" id="freq" min="8" max="90" step="1" value="30">
         </div>
       </div>
-
       <div id="ormsbyCtl" hidden>
         <div class="ctl">
-          <label for="f1">Low cut / low pass <span class="val" id="f12V">5 – 10 Hz</span></label>
+          <label>Low cut / low pass <span class="val" id="f12V">5 – 10 Hz</span></label>
           <input type="range" id="f1" min="2" max="24" step="1" value="5">
           <input type="range" id="f2" min="4" max="34" step="1" value="10" style="margin-top:5px">
         </div>
         <div class="ctl">
-          <label for="f3">High pass / high cut <span class="val" id="f34V">40 – 50 Hz</span></label>
+          <label>High pass / high cut <span class="val" id="f34V">40 – 50 Hz</span></label>
           <input type="range" id="f3" min="20" max="90" step="1" value="40">
           <input type="range" id="f4" min="24" max="110" step="1" value="50" style="margin-top:5px">
         </div>
       </div>
+    </div>
 
-      <h2>The bed</h2>
-      <div class="ctl">
-        <label for="vel">Interval velocity <span class="val" id="velV">2500 m/s</span></label>
-        <input type="range" id="vel" min="1500" max="6000" step="50" value="2500">
-      </div>
-      <div class="ctl">
-        <label for="rcv">Reflection strength <span class="val" id="rcvV">0.15</span></label>
-        <input type="range" id="rcv" min="0.02" max="0.4" step="0.01" value="0.15">
-      </div>
-      <div class="ctl">
-        <label>Top and base contrast</label>
-        <div class="seg" role="group" aria-label="Polarity of the base reflection">
-          <button type="button" id="polOpp" aria-pressed="true">Opposite</button>
-          <button type="button" id="polSame" aria-pressed="false">Same</button>
-        </div>
-      </div>
-      <div class="ctl">
-        <label for="maxh">Thickest end of wedge <span class="val" id="maxhV">60 m</span></label>
-        <input type="range" id="maxh" min="10" max="160" step="5" value="60">
-      </div>
-
-      <h2>The data quality</h2>
-      <div class="ctl">
-        <label for="snr">Signal-to-noise <span class="val" id="snrV">clean</span></label>
-        <input type="range" id="snr" min="0" max="12" step="0.5" value="0">
-      </div>
-
+    <div class="ctl-col">
       <h2>Display</h2>
       <div class="ctl">
         <div class="seg" role="group" aria-label="Display style">
@@ -120,62 +108,77 @@
         <label for="gain">Gain <span class="val" id="gainV">1.0×</span></label>
         <input type="range" id="gain" min="0.4" max="4" step="0.1" value="1">
       </div>
-      <label class="check"><input type="checkbox" id="showTrue" checked> Show where the bed really is</label>
+      <div class="ctl">
+        <label>Polarity <span class="val" id="polV">SEG normal</span></label>
+        <div class="seg" role="group" aria-label="Display polarity">
+          <button type="button" id="pNorm" aria-pressed="true">Normal</button>
+          <button type="button" id="pRev" aria-pressed="false">Reverse</button>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="showModel" checked> Show the layer model</label>
       <label class="check"><input type="checkbox" id="showLimits" checked> Show λ/4 and λ/8 markers</label>
-      <label class="check"><input type="checkbox" id="revPol"> Reverse polarity (SEG negative)</label>
       <div class="ctl">
         <label for="units">Units</label>
         <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
       </div>
-
-      <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
-      <button class="btn ghost small" id="pngBtn" type="button">Save wedge as PNG</button>
-      <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
-    </aside>
-
-    <!-- ============================== STAGE =============================== -->
-    <div class="stage">
-
-      <section class="plot">
-        <div class="plot-head">
-          <h3>The wedge</h3>
-          <span class="hint">Click or drag anywhere on the panel to move the marker</span>
-        </div>
-        <canvas id="wedgeCanvas" aria-label="Synthetic seismic wedge model"></canvas>
-        <div class="legend">
-          <span><i style="border-color:#841617"></i>Marker</span>
-          <span><i style="border-color:#16191C;border-top-style:dashed"></i>True top and base</span>
-          <span><i style="border-color:#0B7285;border-top-style:dotted"></i>λ/4 tuning rule of thumb</span>
-          <span><i style="border-color:#8A6D1F;border-top-style:dotted"></i>λ/8 detection limit</span>
-        </div>
-      </section>
-
-      <div class="readout" id="readout">
-        <dl>
-          <dt>Dominant frequency</dt><dd id="rF">30 Hz</dd>
-          <dt>Dominant wavelength λ = V / f</dt><dd id="rLam">83 m</dd>
-          <dt>λ/4 — the rule of thumb</dt><dd id="rQ">20.8 m</dd>
-          <dt>λ/8 — Widess detection limit</dt><dd id="rE">10.4 m</dd>
-          <dt><b>Measured tuning thickness</b></dt><dd class="big" id="rTune">16.2 m</dd>
-          <dt>Marker: true thickness</dt><dd id="rTrue">30 m</dd>
-          <dt>Marker: thickness the seismic reports</dt><dd id="rApp">30 m</dd>
-          <dt>Marker: amplitude vs a thick bed</dt><dd id="rAmp">1.00×</dd>
-        </dl>
-      </div>
-
-      <section class="plot">
-        <div class="plot-head">
-          <h3>What the seismic tells you, versus what is there</h3>
-          <span class="hint">Both plots share the x-axis above</span>
-        </div>
-        <canvas id="curveCanvas" aria-label="Tuning curve and apparent thickness curve"></canvas>
-        <div class="legend">
-          <span><i style="border-color:#841617"></i>Measured from the synthetic</span>
-          <span><i style="border-color:#5C6670;border-top-style:dashed"></i>Truth (1:1)</span>
-          <span><i style="border-color:#0B7285;border-top-style:dotted"></i>λ/4</span>
-        </div>
-      </section>
     </div>
+  </section>
+
+  <!-- ============================ THE ROCKS =============================== -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>The three rocks</h3>
+      <span class="hint">The middle layer is the wedge. Its velocity also sets how thickness converts to time.</span>
+    </div>
+    <div class="tab-wrap">
+      <table class="ltab" id="ltab"></table>
+    </div>
+  </section>
+
+  <!-- ============================== PANELS ================================ -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>The wedge</h3>
+      <span class="hint">Click or drag anywhere on a panel to move the marker</span>
+    </div>
+
+    <div id="modelWrap">
+      <p class="sublabel"><b>1</b> The wedge itself
+        <span class="note">impedance &nbsp;·&nbsp; pale = low, dark = high</span></p>
+      <canvas id="modelCanvas" aria-label="Wedge layer model shaded by acoustic impedance"></canvas>
+    </div>
+
+    <p class="sublabel"><b>2</b> The seismic response
+      <span class="note" id="polNote">reflectivity convolved with the wavelet</span></p>
+    <canvas id="wedgeCanvas" aria-label="Synthetic seismic wedge model"></canvas>
+    <canvas id="cbarCanvas" aria-label="Color bar relating reflection coefficient to display color"></canvas>
+    <div class="legend" id="wedgeLegend"></div>
+  </section>
+
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>What the seismic tells you, versus what is there</h3>
+      <span class="hint">Both plots share the x-axis of the wedge above</span>
+    </div>
+    <canvas id="curveCanvas" aria-label="Tuning curve and apparent thickness curve"></canvas>
+    <div class="legend">
+      <span><i style="border-color:#841617"></i>Measured from the synthetic</span>
+      <span><i style="border-color:#5C6670;border-top-style:dashed"></i>Truth (1:1)</span>
+      <span><i style="border-color:#0B7285;border-top-style:dotted"></i>λ/4</span>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span>Dominant frequency</span><b id="rF">30 Hz</b></div>
+    <div class="stat"><span>Wavelength in the wedge</span><b id="rLam">— m</b></div>
+    <div class="stat"><span>λ/4 — the rule of thumb</span><b id="rQ">— m</b></div>
+    <div class="stat"><span>λ/8 — Widess detection limit</span><b id="rE">— m</b></div>
+    <div class="stat key"><span>Measured tuning thickness</span><b id="rTune">— m</b></div>
+    <div class="stat"><span>Top / base reflection coefficient</span><b id="rRc">— / —</b></div>
+    <div class="stat"><span>Marker: true thickness</span><b id="rTrue">— m</b></div>
+    <div class="stat"><span>Marker: thickness the seismic reports</span><b id="rApp">— m</b></div>
+    <div class="stat"><span>Marker: amplitude vs a thick bed</span><b id="rAmp">—</b></div>
+    <div class="stat wide"><span>Verdict at the marker</span><b id="rVerdict">—</b></div>
   </div>
 
   <!-- ============================== TEACHING ============================== -->
@@ -183,42 +186,50 @@
     <div class="tryit">
       <h3>Try this</h3>
       <ol>
-        <li><b>Find the brightest part of the wedge.</b> Drag the marker to the brightest column.
-          Is it at the thick end? Compare the measured tuning thickness in the readout with λ/4.
-          <span class="ans">The peak sits near λ/5, not λ/4 — the familiar rule of thumb is about 25% optimistic
-            for a Ricker wavelet. Below that thickness the bed keeps thinning but the seismic gets <em>dimmer</em>,
-            not thinner.</span></li>
-        <li><b>Break the thickness map.</b> Watch the lower plot as you drag left from the thick end.
-          Where does the red curve peel away from the dashed 1:1 line?
-          <span class="ans">Right around tuning. Left of that point the reported thickness is essentially constant —
-            it has become a property of your wavelet, not of the rock. Isochron-based thickness maps are
+        <li><b>Find the brightest part of the wedge.</b> Drag the marker to the brightest column. Is it at the
+          thick end? Compare the measured tuning thickness with λ/4.
+          <span class="ans">The peak sits near λ/5, not λ/4 — the familiar rule of thumb is about 25%
+            optimistic for a Ricker wavelet. Below that thickness the bed keeps thinning but the seismic gets
+            dimmer, not thinner.</span></li>
+        <li><b>Break the thickness map.</b> Watch the lower plot as you drag left from the thick end. Where
+          does the red curve peel away from the dashed 1:1 line?
+          <span class="ans">Right around tuning. Left of that point the reported thickness is essentially
+            constant — it has become a property of your wavelet, not of the rock. Isochron thickness maps are
             meaningless below this value.</span></li>
         <li><b>Buy resolution with frequency.</b> Push peak frequency from 20 Hz to 60 Hz and watch the tuning
-          thickness in the readout.
-          <span class="ans">It scales as 1/f. Tripling frequency thins the resolvable bed threefold — which is
-            exactly why broadband processing is worth paying for, and why deep targets are so much harder.</span></li>
-        <li><b>Add some honesty.</b> Set signal-to-noise to about 4 and look for the thin end of the wedge.
+          thickness.
+          <span class="ans">It scales as 1/f. Tripling frequency thins the resolvable bed threefold, which is
+            why broadband processing is worth paying for and why deep targets are so much harder.</span></li>
+        <li><b>Change the rock, not the geometry.</b> Switch from the encased sand to the gas sand and watch
+          the reflection coefficients in the table.
+          <span class="ans">The wedge is the same shape and the tuning thickness barely moves, because tuning
+            depends on wavelength, not on contrast. What changes is how loud the whole thing is. Brightness
+            and resolution are separate questions, and confusing them is how a strong reflector gets mistaken
+            for a well-resolved one.</span></li>
+        <li><b>Make the wedge invisible.</b> Edit the middle layer until its impedance sits between the layers
+          above and below — try the "hardening downward" preset.
+          <span class="ans">Now both reflection coefficients have the same sign, and the wedge behaves in
+            reverse: the two reflections cancel near λ/4 and reinforce as the bed vanishes. Same geometry,
+            opposite amplitude behaviour. Nothing about the wedge changed except the rocks on either side,
+            which is why you cannot read a tuning curve without knowing your impedance profile.</span></li>
+        <li><b>Add some honesty.</b> Set signal-to-noise to about 4 and look for the thin end.
           <span class="ans">The λ/8 detection limit assumes noiseless data. With real noise you lose the thin
-            end long before λ/8. Detectability depends on data quality as much as on physics.</span></li>
-        <li><b>Flip the base contrast to "Same".</b>
-          <span class="ans">A bed whose top and base have the <em>same</em> sign behaves in reverse: the two
-            reflections cancel near λ/4 and reinforce as the bed vanishes. Same rock thickness, opposite
-            amplitude behavior. This is why you must know your polarity and your impedance profile before
-            you interpret any amplitude anomaly.</span></li>
+            end well before λ/8. Detectability depends on data quality as much as on physics.</span></li>
       </ol>
     </div>
 
     <div class="takeaway">
       <h3>What to carry away</h3>
       <ul>
-        <li><b>Resolving and detecting are different jobs.</b> Around λ/4 you stop being able to separate top from
-          base. Down to roughly λ/8 you can still tell that <em>something</em> is there from the amplitude,
-          if the data are clean.</li>
+        <li><b>Resolving and detecting are different jobs.</b> Around λ/4 you stop being able to separate top
+          from base. Down to roughly λ/8 you can still tell that something is there, if the data are clean.</li>
         <li><b>Below tuning, amplitude works as a thickness proxy, but only just.</b> Amplitude falls roughly
           linearly with thickness there, so bright can mean thick. Above tuning that relationship inverts and
           then breaks down.</li>
-        <li><b>A bright spot at tuning does not mean more rock.</b> It is the same rock interfering with itself.
-          Channels routinely look brightest along their thin edges.</li>
+        <li><b>A bright spot at tuning does not mean more rock.</b> It is the same rock interfering with
+          itself. Channels routinely look brightest along their thin edges.</li>
+        <li><b>Tuning thickness is set by the wavelet; loudness is set by the rocks.</b> The two are
+          independent, and only one of them is under the processor's control.</li>
         <li><b>Because λ = V/f, resolution is worst where you usually need it most:</b> deep, where velocity is
           high and attenuation has already removed the high frequencies.</li>
       </ul>
@@ -227,13 +238,18 @@
 
   <details class="notes" id="notes">
     <summary>Method, assumptions, and where to read more</summary>
-    <p>Each trace is a 1D convolutional model: two reflection coefficients, convolved with a zero-phase wavelet.
-      The convolution is done analytically as a sum of shifted, scaled wavelets rather than on a sample grid,
-      so the reflection timing is exact and the tuning curves come out smooth instead of stair-stepped.</p>
-    <p>Amplitude and apparent thickness are picked from the synthetic the same way you would pick them in an
-      interpretation package: the extremum matching the sign of the top reflection, and the time between that
-      extremum and the one matching the base, refined by parabolic interpolation. Apparent thickness converts
-      to length with the same interval velocity, <span class="k">h = V·Δt/2</span>.</p>
+    <p>Three layers, each with a velocity and a density. Acoustic impedance is their product, and the two
+      reflection coefficients follow from <span class="k">R = (I₂ − I₁) / (I₂ + I₁)</span> at the top and base
+      of the wedge. The middle layer's velocity converts thickness to two-way time as <span class="k">2h/V</span>.
+      Whether the wedge tunes at λ/4 or at λ/2 is therefore decided by the rocks you choose, not by a setting:
+      opposite-sign coefficients tune near λ/4, same-sign ones near λ/2.</p>
+    <p>Each trace is convolved analytically, as a sum of shifted and scaled wavelets rather than on a sample
+      grid, so reflector timing is exact and the tuning curves come out smooth instead of stair-stepped. The
+      top of the wedge sits at 50 ms, clear of the start of the display.</p>
+    <p>Amplitude and apparent thickness are picked the way you would pick them in an interpretation package:
+      the extremum matching the sign of the top reflection, and the time between that extremum and the one
+      matching the base, refined by parabolic interpolation. Apparent thickness converts back to length with
+      the same interval velocity.</p>
     <p>Deliberately left out, because each deserves its own module: wavelet phase other than zero, offset and
       NMO stretch, anything 3D, transmission losses and multiples inside the bed, and lateral velocity change.
       This is the textbook case; real data is generally worse rather than better.</p>
@@ -243,19 +259,20 @@
         <em>Geophysics</em>, 47, 1035–1046. The source of the 1/(2.6 f) tuning thickness this page measures.</li>
       <li>Chung, H., and Lawton, D.C., 1995, Frequency characteristics of seismic reflections from thin beds:
         <em>Canadian Journal of Exploration Geophysics</em>, 31, 32–37.</li>
-      <li>Simm, R., and Bacon, M., 2014, <em>Seismic Amplitude: An Interpreter's Handbook</em>, Cambridge.</li>
+      <li>Simm, R., and Bacon, M., 2014, <em>Seismic Amplitude: An Interpreter's Handbook</em>: Cambridge.</li>
     </ul>
   </details>
 
   <div class="pager">
-    <a class="btn ghost" href="../index.html">← All modules</a>
-    <a class="btn" href="../index.html#modules">Next: what a fault looks like →</a>
+    <a class="btn ghost" href="model1d.html">← Where a trace comes from</a>
+    <a class="btn" href="faults.html">Next: can you see the fault? →</a>
   </div>
 
   <footer>
     <div class="foot-grid">
       <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma —
-        with the <a href="http://www.aaspi.ou.edu/">AASPI</a> consortium. Free to use or adapt in your own courses with citation.</p>
+        with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.
+        Free to use or adapt in your own courses with citation.</p>
     </div>
   </footer>
 </div>
@@ -265,53 +282,105 @@
 (function () {
   'use strict';
 
-  /* ------------------------------ state ------------------------------ */
+  // Upper, wedge, lower. The middle one is the wedge, so it has no fixed
+  // thickness; the slider sets how thick its thick end is.
+  const PRESETS = {
+    encased: [
+      { n: 'Shale',     v: 2450, d: 2.38 },
+      { n: 'Sand',      v: 2800, d: 2.32 },
+      { n: 'Shale',     v: 2500, d: 2.40 },
+    ],
+    gas: [
+      { n: 'Shale',     v: 2500, d: 2.40 },
+      { n: 'Gas sand',  v: 1950, d: 2.02 },
+      { n: 'Shale',     v: 2560, d: 2.42 },
+    ],
+    lime: [
+      { n: 'Shale',     v: 2600, d: 2.42 },
+      { n: 'Limestone', v: 4900, d: 2.62 },
+      { n: 'Shale',     v: 2700, d: 2.45 },
+    ],
+    coal: [
+      { n: 'Shale',     v: 2600, d: 2.45 },
+      { n: 'Coal',      v: 2200, d: 1.35 },
+      { n: 'Sandstone', v: 2900, d: 2.35 },
+    ],
+    // Both contrasts positive and of similar size, so the same-sign wedge
+    // reinforces to about 2x as it thins instead of some lopsided number.
+    stack: [
+      { n: 'Shale',     v: 2300, d: 2.30 },
+      { n: 'Sandstone', v: 3000, d: 2.39 },
+      { n: 'Limestone', v: 3800, d: 2.55 },
+    ],
+  };
+
   const DEF = {
     wav: 'ricker', f: 30, f1: 5, f2: 10, f3: 40, f4: 50,
-    v: 2500, rc: 0.15, pol: 'opp', maxh: 60, snr: 0,
-    disp: 'vd', cmap: 'bwr', gain: 1,
-    truth: true, limits: true, rev: false, units: 'm', probe: 0.5,
+    maxh: 60, snr: 0, disp: 'vd', cmap: 'bwr', gain: 1,
+    pol: 'normal', model: true, limits: true, units: 'm',
+    probe: 0.5, preset: 'encased', rocks: '',
   };
   let S = SEIS.readState(DEF);
 
-  const PRESETS = {
-    gas:   { wav:'ricker', f:45, v:2100, rc:0.16, pol:'opp', maxh:40 },
-    turb:  { wav:'ricker', f:30, v:2600, rc:0.10, pol:'opp', maxh:60 },
-    carb:  { wav:'ricker', f:18, v:5200, rc:0.20, pol:'opp', maxh:160 },
-    coal:  { wav:'ricker', f:65, v:2300, rc:0.35, pol:'opp', maxh:25 },
-  };
-
   const $ = (id) => document.getElementById(id);
-  const TTOP = 0.050;           // two-way time of the top reflector, seconds
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const TTOP = 0.050;           // two-way time of the top of the wedge
   const NX = 181;               // traces across the wedge
   const NCURVE = 300;           // thickness samples for the curve panels
 
-  /* ---------------------------- derived ------------------------------ */
+  const CRIMSON = '#841617', TEAL = '#0B7285', OCHRE = '#8A6D1F', SLATE = '#5C6670';
+
+  function packRocks(L) { return L.map((r) => [r.n, r.v, r.d].join('~')).join('!'); }
+  function unpackRocks(str) {
+    try {
+      const out = str.split('!').map((row) => {
+        const [n, v, d] = row.split('~');
+        return { n: n || 'Layer', v: parseFloat(v), d: parseFloat(d) };
+      }).filter((r) => isFinite(r.v) && isFinite(r.d));
+      return out.length === 3 ? out : null;
+    } catch (e) { return null; }
+  }
+
+  let ROCKS = (S.rocks && unpackRocks(S.rocks)) ||
+              JSON.parse(JSON.stringify(PRESETS[S.preset] || PRESETS.encased));
+
+  const U = () => SEIS.UNITS[S.units];
+  const uL = (m) => m * U().len;
+  const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 1 : d) + ' ' + U().lab;
+
+  /* ------------------------------ the rocks ---------------------------- */
+
+  const impedanceOf = (r) => (r.v * r.d * 1000) / 1e6;
+
+  function rockModel() {
+    const ai = ROCKS.map(impedanceOf);
+    const pol = S.pol === 'reverse' ? -1 : 1;
+    return {
+      ai,
+      r1: pol * (ai[1] - ai[0]) / (ai[1] + ai[0]),   // top of the wedge
+      r2: pol * (ai[2] - ai[1]) / (ai[2] + ai[1]),   // base of the wedge
+      rawR1: (ai[1] - ai[0]) / (ai[1] + ai[0]),
+      rawR2: (ai[2] - ai[1]) / (ai[2] + ai[1]),
+      v: ROCKS[1].v,
+      pol,
+    };
+  }
 
   function wavelet() {
-    if (S.wav !== 'ormsby') return SEIS.makeWavelet({ type:'ricker', f:S.f });
-    // corner frequencies must stay strictly increasing, even mid-drag
+    if (S.wav !== 'ormsby') return SEIS.makeWavelet({ type: 'ricker', f: S.f });
     const f1 = S.f1;
     const f2 = Math.max(S.f2, f1 + 2);
     const f3 = Math.max(S.f3, f2 + 2);
     const f4 = Math.max(S.f4, f3 + 2);
-    return SEIS.makeWavelet({ type:'ormsby', f1, f2, f3, f4 });
+    return SEIS.makeWavelet({ type: 'ormsby', f1, f2, f3, f4 });
   }
-  function rcs() {
-    const sign = S.rev ? -1 : 1;
-    const r1 = sign * S.rc;
-    return { r1, r2: S.pol === 'opp' ? -r1 : r1 };
-  }
-  const U = () => SEIS.UNITS[S.units];
-  const uL = (m) => m * U().len;                 // meters -> display units
-  const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 1 : d) + ' ' + U().lab;
 
-  /* ------------------------ picking the events ------------------------ */
+  /* ------------------------ picking the events ------------------------- */
   /* Find local extrema, keep the significant ones, then take the first
      extremum matching the sign of the top RC and the last matching the base. */
 
   function pickEvents(h, wav, R) {
-    const t1 = TTOP, t2 = TTOP + 2 * h / S.v;
+    const t1 = TTOP, t2 = TTOP + 2 * h / R.v;
     const pad = 0.95 * wav.halfLength;
     const dt = 0.0001;
     const a = t1 - pad, b = t2 + pad;
@@ -322,11 +391,12 @@
 
     let gmax = 0;
     for (let i = 0; i <= n; i++) gmax = Math.max(gmax, Math.abs(y[i]));
+    if (gmax < 1e-9) return { amp: 0, sep: 0 };
     const thresh = 0.12 * gmax;
 
     const ext = [];
     for (let i = 1; i < n; i++) {
-      const l = y[i-1], c = y[i], r = y[i+1];
+      const l = y[i - 1], c = y[i], r = y[i + 1];
       if ((c > l && c >= r) || (c < l && c <= r)) {
         if (Math.abs(c) < thresh) continue;
         const den = l - 2 * c + r;
@@ -335,7 +405,7 @@
       }
     }
     const s1 = Math.sign(R.r1), s2 = Math.sign(R.r2);
-    const top  = ext.find((e) => Math.sign(e.v) === s1);
+    const top = ext.find((e) => Math.sign(e.v) === s1);
     let base = null;
     for (let i = ext.length - 1; i >= 0; i--) {
       if (Math.sign(ext[i].v) === s2) { base = ext[i]; break; }
@@ -345,36 +415,35 @@
     return { amp: Math.abs(top.v), sep };
   }
 
-  /* --------------------------- computation ---------------------------- */
+  /* --------------------------- computation ----------------------------- */
 
-  let CACHE = { field:null, noise:null, noiseKey:'', curve:null, peak:1 };
+  let CACHE = { noiseKey: '' };
 
   function compute() {
-    const wav = wavelet(), R = rcs();
-    const maxTWT = 2 * S.maxh / S.v;
+    const wav = wavelet(), R = rockModel();
+    const maxTWT = 2 * S.maxh / R.v;
     const dt = 0.00025;
     const tEnd = TTOP + maxTWT + 1.15 * wav.halfLength;
     const nt = Math.max(60, Math.round(tEnd / dt));
 
-    // wedge amplitude field
     const field = new Float32Array(NX * nt);
     for (let ix = 0; ix < NX; ix++) {
       const h = (ix / (NX - 1)) * S.maxh;
-      const sp = [{ t: TTOP, r: R.r1 }, { t: TTOP + 2 * h / S.v, r: R.r2 }];
+      const sp = [{ t: TTOP, r: R.r1 }, { t: TTOP + 2 * h / R.v, r: R.r2 }];
       for (let it = 0; it < nt; it++) {
         field[ix * nt + it] = SEIS.traceValue(sp, it * dt, wav.fn);
       }
     }
 
-    // band-limited noise, generated coarse then interpolated (keeps sliders live)
+    const scale = Math.max(Math.abs(R.r1), Math.abs(R.r2), 1e-4);
     if (S.snr > 0) {
       const dtn = 0.001, ntn = Math.max(16, Math.round(tEnd / dtn));
       const key = [S.wav, S.f, S.f1, S.f2, S.f3, S.f4, ntn].join('|');
       if (CACHE.noiseKey !== key) {
-        CACHE.noise = SEIS.bandLimitedNoise(NX, ntn, dtn, wav, 20260823);
+        CACHE.noise = SEIS.bandLimitedNoise(NX, ntn, dtn, wav, 20260823, 2);
         CACHE.noiseKey = key; CACHE.noiseNt = ntn; CACHE.noiseDt = dtn;
       }
-      const amp = S.rc / S.snr;
+      const amp = scale / S.snr;
       for (let ix = 0; ix < NX; ix++) {
         for (let it = 0; it < nt; it++) {
           const p = (it * dt) / CACHE.noiseDt;
@@ -386,98 +455,160 @@
       }
     }
 
-    // tuning + apparent-thickness curves (measured on noise-free synthetics)
+    // curves measured on noise-free synthetics
+    const norm = Math.max(Math.abs(R.r1), 1e-6);
     const curve = { h: [], amp: [], app: [] };
     let tunH = 0, tunA = -1;
     for (let i = 0; i <= NCURVE; i++) {
       const h = (i / NCURVE) * S.maxh;
       const e = pickEvents(h, wav, R);
-      const na = e.amp / Math.abs(R.r1);
+      const na = e.amp / norm;
       curve.h.push(h);
       curve.amp.push(na);
-      curve.app.push(S.v * e.sep / 2);
+      curve.app.push(R.v * e.sep / 2);
       if (h > 1e-6 && na > tunA) { tunA = na; tunH = h; }
     }
     curve.tunH = tunH; curve.tunA = tunA;
 
-    CACHE = Object.assign(CACHE, { field, nt, dt, tEnd, curve, wav, R, maxTWT });
+    CACHE = Object.assign(CACHE, { field, nt, dt, tEnd, curve, wav, R, maxTWT, scale });
   }
 
-  /* ----------------------------- drawing ------------------------------ */
+  /* ------------------------------ shading ------------------------------ */
 
-  const CRIMSON = '#841617', TEAL = '#0B7285', OCHRE = '#8A6D1F', SLATE = '#5C6670';
+  const EARTH = [[238,227,197],[212,189,145],[172,149,113],[126,109,88],[78,68,58]];
+  function earth(u) {
+    const p = clamp(u, 0, 1) * (EARTH.length - 1);
+    const i = Math.min(EARTH.length - 2, Math.floor(p)), f = p - i;
+    const a = EARTH[i], b = EARTH[i + 1];
+    return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * f) + ',' +
+                    Math.round(a[1] + (b[1] - a[1]) * f) + ',' +
+                    Math.round(a[2] + (b[2] - a[2]) * f) + ')';
+  }
+  function aiShade(i) {
+    const ai = CACHE.R.ai;
+    const lo = Math.min.apply(null, ai), hi = Math.max.apply(null, ai);
+    return earth(hi > lo ? (ai[i] - lo) / (hi - lo) : 0.4);
+  }
+
+  /* ------------------------------ drawing ------------------------------ */
+
+  function panelWidth() {
+    return Math.max(320, $('wedgeCanvas').closest('.plot').clientWidth - 28);
+  }
+  const MARGIN = { l: 58, r: 14 };
+
+  function drawModel() {
+    const wrap = $('modelWrap');
+    if (!S.model) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+    const w = panelWidth();
+    const h = clamp(Math.round(w * 0.17), 110, 190);
+    const ctx = SEIS.fitCanvas($('modelCanvas'), w, h);
+    ctx.clearRect(0, 0, w, h);
+    const rect = { x: MARGIN.l, y: 6, w: w - MARGIN.l - MARGIN.r, h: h - 6 - 12 };
+    const { tEnd, R } = CACHE;
+    const yOf = (t) => rect.y + (t / tEnd) * rect.h;
+    const W = Math.round(rect.w);
+
+    for (let px = 0; px < W; px++) {
+      const hh = (px / W) * S.maxh;
+      const yTop = yOf(TTOP), yBase = clamp(yOf(TTOP + 2 * hh / R.v), rect.y, rect.y + rect.h);
+      ctx.fillStyle = aiShade(0);
+      ctx.fillRect(rect.x + px, rect.y, 1.02, yTop - rect.y);
+      ctx.fillStyle = aiShade(1);
+      ctx.fillRect(rect.x + px, yTop, 1.02, yBase - yTop);
+      ctx.fillStyle = aiShade(2);
+      ctx.fillRect(rect.x + px, yBase, 1.02, rect.y + rect.h - yBase);
+    }
+    ctx.save();
+    ctx.strokeStyle = 'rgba(40,32,24,.55)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(rect.x, yOf(TTOP)); ctx.lineTo(rect.x + rect.w, yOf(TTOP)); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(rect.x, yOf(TTOP));
+    ctx.lineTo(rect.x + rect.w, clamp(yOf(TTOP + CACHE.maxTWT), rect.y, rect.y + rect.h));
+    ctx.stroke();
+    ctx.restore();
+
+    markers(ctx, rect, false);
+    SEIS.frame(ctx, rect);
+    SEIS.axisLeft(ctx, rect, 0, tEnd * 1000, '', (v) => v.toFixed(0));
+  }
+
+  function markers(ctx, rect, tags) {
+    const { wav, R } = CACHE;
+    if (S.limits) {
+      const lam = R.v / wav.fdom;
+      [[lam / 4, TEAL, 'λ/4'], [lam / 8, OCHRE, 'λ/8']].forEach(([hh, col, lab]) => {
+        if (hh > S.maxh) return;
+        const x = rect.x + (hh / S.maxh) * rect.w;
+        SEIS.dashedLine(ctx, x, rect.y, x, rect.y + rect.h, col, [2, 3], 1.4);
+        if (tags) SEIS.tag(ctx, x + 3, rect.y + 10, lab, col);
+      });
+    }
+    const px = rect.x + S.probe * rect.w;
+    ctx.save();
+    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(px, rect.y); ctx.lineTo(px, rect.y + rect.h); ctx.stroke();
+    ctx.restore();
+  }
 
   function drawWedge() {
-    const c = $('wedgeCanvas');
-    const w = c.parentElement.clientWidth - 30;
-    const hgt = Math.max(230, Math.min(340, w * 0.42));
-    const ctx = SEIS.fitCanvas(c, w, hgt);
-    ctx.clearRect(0, 0, w, hgt);
-
-    const m = { l: 58, r: 14, t: 8, b: 44 };
-    const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: hgt - m.t - m.b };
-    const { field, nt, dt, tEnd, wav, R } = CACHE;
-
-    const peak = Math.abs(R.r1) * (S.pol === 'opp' ? 1.5 : 2.05);
-    CACHE.peak = peak;
+    const w = panelWidth();
+    const h = clamp(Math.round(w * (S.model ? 0.34 : 0.42)), 250, 400);
+    const ctx = SEIS.fitCanvas($('wedgeCanvas'), w, h);
+    ctx.clearRect(0, 0, w, h);
+    const rect = { x: MARGIN.l, y: 8, w: w - MARGIN.l - MARGIN.r, h: h - 8 - 44 };
+    CACHE.rect = rect;
+    const { field, nt, tEnd, scale } = CACHE;
+    const peak = scale * 1.5;
 
     if (S.disp !== 'wiggle') {
-      SEIS.drawVarDensity(ctx, field, NX, nt, rect, {
-        cmap: SEIS.COLORMAPS[S.cmap], gain: S.gain, clip: peak,
-      });
+      SEIS.drawVarDensity(ctx, field, NX, nt, rect,
+        { cmap: SEIS.COLORMAPS[S.cmap], gain: S.gain, clip: peak });
     } else {
       ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
     }
     if (S.disp !== 'vd') {
       SEIS.drawWiggle(ctx, field, NX, nt, rect, {
-        step: S.disp === 'wiggle' ? 3 : 6, clip: peak / S.gain, excursion: 1.5,
+        step: S.disp === 'wiggle' ? 3 : 6, clip: peak / S.gain, excursion: 1.4,
         stroke: S.disp === 'both' ? 'rgba(22,25,28,.5)' : 'rgba(22,25,28,.9)',
-        fill: S.disp === 'both' ? 'rgba(22,25,28,.28)' : 'rgba(22,25,28,.8)',
+        fill: S.disp === 'both' ? 'rgba(22,25,28,.26)' : 'rgba(22,25,28,.78)',
       });
     }
 
-    const xOf = (h) => rect.x + (h / S.maxh) * rect.w;
     const yOf = (t) => rect.y + (t / tEnd) * rect.h;
+    SEIS.dashedLine(ctx, rect.x, yOf(TTOP), rect.x + rect.w, yOf(TTOP), 'rgba(22,25,28,.8)', [6, 4], 1.5);
+    SEIS.dashedLine(ctx, rect.x, yOf(TTOP), rect.x + rect.w,
+                    clamp(yOf(TTOP + CACHE.maxTWT), rect.y, rect.y + rect.h),
+                    'rgba(22,25,28,.8)', [6, 4], 1.5);
 
-    // true bed geometry
-    if (S.truth) {
-      SEIS.dashedLine(ctx, rect.x, yOf(TTOP), rect.x + rect.w, yOf(TTOP), 'rgba(22,25,28,.8)', [6,4], 1.5);
-      SEIS.dashedLine(ctx, rect.x, yOf(TTOP), rect.x + rect.w, yOf(TTOP + CACHE.maxTWT), 'rgba(22,25,28,.8)', [6,4], 1.5);
-    }
-    // resolution markers
-    if (S.limits) {
-      const lam = S.v / wav.fdom;
-      [[lam/4, TEAL, 'λ/4'], [lam/8, OCHRE, 'λ/8']].forEach(([h, col, lab]) => {
-        if (h > S.maxh) return;
-        SEIS.dashedLine(ctx, xOf(h), rect.y, xOf(h), rect.y + rect.h, col, [2,3], 1.4);
-        SEIS.tag(ctx, xOf(h) + 3, rect.y + 10, lab, col);
-      });
-    }
-    // marker
-    const ph = S.probe * S.maxh;
-    ctx.save();
-    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.8;
-    ctx.beginPath(); ctx.moveTo(xOf(ph), rect.y); ctx.lineTo(xOf(ph), rect.y + rect.h); ctx.stroke();
-    ctx.restore();
-
+    markers(ctx, rect, true);
     SEIS.frame(ctx, rect);
     SEIS.axisBottom(ctx, rect, 0, uL(S.maxh), 'True bed thickness (' + U().lab + ')');
     SEIS.axisLeft(ctx, rect, 0, tEnd * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
   }
 
+  function drawBar() {
+    const w = panelWidth();
+    const ctx = SEIS.fitCanvas($('cbarCanvas'), w, 30);
+    ctx.clearRect(0, 0, w, 30);
+    SEIS.drawColorbar(ctx, { x: MARGIN.l, y: 4, w: Math.min(260, w - 70), h: 11 },
+      SEIS.COLORMAPS[S.cmap],
+      { pol: CACHE.R.pol,
+        left: '\u2212 RC  (impedance down)', right: '(impedance up)  + RC' });
+  }
+
   function drawCurves() {
-    const c = $('curveCanvas');
-    const w = c.parentElement.clientWidth - 30;
+    const w = panelWidth();
     const hgt = 330;
-    const ctx = SEIS.fitCanvas(c, w, hgt);
+    const ctx = SEIS.fitCanvas($('curveCanvas'), w, hgt);
     ctx.clearRect(0, 0, w, hgt);
 
-    const m = { l: 58, r: 14 };
     const gap = 46, hEach = (hgt - 34 - gap) / 2;
-    const rA = { x: m.l, y: 6, w: w - m.l - m.r, h: hEach };
-    const rB = { x: m.l, y: 6 + hEach + gap, w: w - m.l - m.r, h: hEach };
-    const { curve, wav } = CACHE;
-    const lam = S.v / wav.fdom;
+    const rA = { x: MARGIN.l, y: 6, w: w - MARGIN.l - MARGIN.r, h: hEach };
+    const rB = { x: MARGIN.l, y: 6 + hEach + gap, w: rA.w, h: hEach };
+    const { curve, wav, R } = CACHE;
+    const lam = R.v / wav.fdom;
 
     const ampMax = Math.max(1.35, Math.ceil(curve.tunA * 10) / 10 + 0.15);
     const xOf = (h) => rA.x + (h / S.maxh) * rA.w;
@@ -488,10 +619,9 @@
     ctx.fillRect(rA.x, rA.y, rA.w, rA.h);
     ctx.fillRect(rB.x, rB.y, rB.w, rB.h);
 
-    // --- panel A: tuning curve
-    SEIS.axisLeft(ctx, rA, 0, ampMax, 'Amplitude', (v) => v.toFixed(1), { flip:true, grid:true });
-    if (S.limits && lam/4 <= S.maxh) SEIS.dashedLine(ctx, xOf(lam/4), rA.y, xOf(lam/4), rA.y+rA.h, TEAL, [2,3]);
-    SEIS.dashedLine(ctx, rA.x, yA(1), rA.x + rA.w, yA(1), 'rgba(92,102,112,.75)', [5,4], 1.2);
+    SEIS.axisLeft(ctx, rA, 0, ampMax, 'Amplitude', (v) => v.toFixed(1), { flip: true, grid: true });
+    if (S.limits && lam / 4 <= S.maxh) SEIS.dashedLine(ctx, xOf(lam / 4), rA.y, xOf(lam / 4), rA.y + rA.h, TEAL, [2, 3]);
+    SEIS.dashedLine(ctx, rA.x, yA(1), rA.x + rA.w, yA(1), 'rgba(92,102,112,.75)', [5, 4], 1.2);
 
     ctx.save();
     ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2.2; ctx.beginPath();
@@ -501,7 +631,6 @@
     });
     ctx.stroke(); ctx.restore();
 
-    // tuning peak marker
     ctx.save();
     ctx.fillStyle = CRIMSON;
     ctx.beginPath(); ctx.arc(xOf(curve.tunH), yA(Math.min(curve.tunA, ampMax)), 4, 0, 6.284); ctx.fill();
@@ -513,10 +642,9 @@
     ctx.fillText('Amplitude of the top reflection (1.0 = an isolated interface)', rA.x + 7, rA.y + 6);
     ctx.restore();
 
-    // --- panel B: apparent vs true thickness
-    SEIS.axisLeft(ctx, rB, 0, uL(S.maxh), 'Reported (' + U().lab + ')', (v) => v.toFixed(0), { flip:true, grid:true });
-    SEIS.dashedLine(ctx, rB.x, yB(0), rB.x + rB.w, yB(S.maxh), 'rgba(92,102,112,.85)', [5,4], 1.3);
-    if (S.limits && lam/4 <= S.maxh) SEIS.dashedLine(ctx, xOf(lam/4), rB.y, xOf(lam/4), rB.y+rB.h, TEAL, [2,3]);
+    SEIS.axisLeft(ctx, rB, 0, uL(S.maxh), 'Reported (' + U().lab + ')', (v) => v.toFixed(0), { flip: true, grid: true });
+    SEIS.dashedLine(ctx, rB.x, yB(0), rB.x + rB.w, yB(S.maxh), 'rgba(92,102,112,.85)', [5, 4], 1.3);
+    if (S.limits && lam / 4 <= S.maxh) SEIS.dashedLine(ctx, xOf(lam / 4), rB.y, xOf(lam / 4), rB.y + rB.h, TEAL, [2, 3]);
 
     ctx.save();
     ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2.2; ctx.beginPath();
@@ -536,50 +664,47 @@
     ctx.fillText('Thickness you would pick from the seismic', rB.x + 7, rB.y + 6);
     ctx.restore();
 
-    // shared marker + x axis
-    const ph = S.probe * S.maxh;
+    const px = xOf(S.probe * S.maxh);
     ctx.save();
     ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.6;
     [rA, rB].forEach((r) => {
-      ctx.beginPath(); ctx.moveTo(xOf(ph), r.y); ctx.lineTo(xOf(ph), r.y + r.h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px, r.y); ctx.lineTo(px, r.y + r.h); ctx.stroke();
     });
     ctx.restore();
     SEIS.axisBottom(ctx, rB, 0, uL(S.maxh), 'True bed thickness (' + U().lab + ')');
   }
 
-  function drawWavelet() {
+  function drawWaveletPreview() {
     const c = $('wavCanvas');
-    const w = c.parentElement.clientWidth - 34;
+    const w = Math.max(150, c.parentElement.clientWidth - 34);
     const ctx = SEIS.fitCanvas(c, w, 92);
     ctx.clearRect(0, 0, w, 92);
-    const wav = wavelet();
+    const wav = CACHE.wav || wavelet();
     const gapW = 12, wW = (w - gapW) * 0.56, sW = w - gapW - wW;
     const rW = { x: 0, y: 4, w: wW, h: 84 }, rS = { x: wW + gapW, y: 4, w: sW, h: 84 };
 
     ctx.fillStyle = '#fff';
     ctx.fillRect(rW.x, rW.y, rW.w, rW.h); ctx.fillRect(rS.x, rS.y, rS.w, rS.h);
 
-    // time domain
     const span = wav.halfLength;
     ctx.save();
     ctx.strokeStyle = 'rgba(92,102,112,.4)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(rW.x, rW.y + rW.h/2); ctx.lineTo(rW.x + rW.w, rW.y + rW.h/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(rW.x, rW.y + rW.h / 2); ctx.lineTo(rW.x + rW.w, rW.y + rW.h / 2); ctx.stroke();
     ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.8; ctx.beginPath();
     for (let i = 0; i <= 160; i++) {
       const t = -span + (i / 160) * 2 * span;
       const x = rW.x + (i / 160) * rW.w;
-      const y = rW.y + rW.h/2 - wav.fn(t) * rW.h * 0.40;
+      const y = rW.y + rW.h / 2 - wav.fn(t) * rW.h * 0.40;
       i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     }
     ctx.stroke(); ctx.restore();
 
-    // spectrum
     const fmax = 120;
     const sp = SEIS.spectrum(wav, 0.0008, 60, fmax);
     ctx.save();
     ctx.fillStyle = 'rgba(132,22,23,.22)'; ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.moveTo(rS.x, rS.y + rS.h);
-    sp.forEach((p, i) => ctx.lineTo(rS.x + (p.f / fmax) * rS.w, rS.y + rS.h - p.a * rS.h * 0.86));
+    sp.forEach((p) => ctx.lineTo(rS.x + (p.f / fmax) * rS.w, rS.y + rS.h - p.a * rS.h * 0.86));
     ctx.lineTo(rS.x + rS.w, rS.y + rS.h); ctx.closePath(); ctx.fill();
     ctx.beginPath();
     sp.forEach((p, i) => {
@@ -592,73 +717,156 @@
     ctx.save();
     ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('shape in time', rW.x + rW.w/2, rW.y + rW.h + 3);
-    ctx.fillText('0 – 120 Hz', rS.x + rS.w/2, rS.y + rS.h + 3);
+    ctx.fillText('shape in time', rW.x + rW.w / 2, rW.y + rW.h + 3);
+    ctx.fillText('0 \u2013 120 Hz', rS.x + rS.w / 2, rS.y + rS.h + 3);
     ctx.restore();
   }
 
-  /* ----------------------------- readout ------------------------------ */
+  /* ------------------------------- table ------------------------------- */
 
-  function updateReadout() {
+  const ROLE = ['Above the wedge', 'The wedge', 'Below the wedge'];
+
+  function buildTable() {
+    const { R } = CACHE;
+    let html = '<thead><tr>' +
+      '<th style="width:20%">Position</th>' +
+      '<th style="width:26%">Rock</th>' +
+      '<th style="width:16%">Velocity</th>' +
+      '<th style="width:14%">Density</th>' +
+      '<th style="width:12%">Impedance</th>' +
+      '<th style="width:12%">RC below</th></tr></thead><tbody>';
+    ROCKS.forEach((r, i) => {
+      const rc = i === 0 ? R.rawR1 : (i === 1 ? R.rawR2 : null);
+      html += '<tr>' +
+        '<td class="name"><span class="chip" style="background:' + aiShade(i) + '"></span>' + ROLE[i] + '</td>' +
+        '<td><input data-k="n" data-i="' + i + '" type="text" value="' + r.n + '" aria-label="Rock name"></td>' +
+        '<td><input data-k="v" data-i="' + i + '" type="number" min="1000" max="7000" step="10" value="' +
+          Math.round(uL(r.v)) + '" aria-label="Velocity"></td>' +
+        '<td><input data-k="d" data-i="' + i + '" type="number" min="1" max="3.2" step="0.01" value="' +
+          r.d.toFixed(2) + '" aria-label="Density"></td>' +
+        '<td class="ro">' + R.ai[i].toFixed(2) + '</td>' +
+        '<td class="ro" style="color:' + (rc === null ? 'var(--slate)' : (rc > 0 ? '#1B4F9C' : '#B02418')) + '">' +
+          (rc === null ? '\u2014' : (rc > 0 ? '+' : '') + rc.toFixed(3)) + '</td></tr>';
+    });
+    html += '</tbody>';
+    $('ltab').innerHTML = html;
+    $('ltab').querySelectorAll('input[data-k]').forEach((el) => {
+      el.addEventListener('change', onEdit);
+      if (el.type === 'number') el.addEventListener('input', onEdit);
+    });
+  }
+
+  function onEdit(e) {
+    const i = parseInt(e.target.dataset.i, 10), k = e.target.dataset.k;
+    if (k === 'n') ROCKS[i].n = e.target.value.slice(0, 22);
+    else {
+      const raw = parseFloat(e.target.value);
+      if (!isFinite(raw)) return;
+      if (k === 'd') ROCKS[i].d = clamp(raw, 1, 3.2);
+      else ROCKS[i].v = clamp(raw / U().vel, 1000, 7000);
+    }
+    S.preset = 'custom'; $('preset').value = 'custom';
+    refresh(k === 'n');
+  }
+
+  /* ------------------------------ readout ------------------------------ */
+
+  function updateLegend() {
+    const cmap = SEIS.COLORMAPS[S.cmap];
+    const rgb = (v) => { const c = cmap(v); return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
+    const p = CACHE.R.pol;
+    $('wedgeLegend').innerHTML =
+      '<span><i class="sw" style="background:' + rgb(0.85 * p) + '"></i>positive RC (' +
+        (p > 0 ? 'peak' : 'trough') + ')</span>' +
+      '<span><i class="sw" style="background:' + rgb(-0.85 * p) + '"></i>negative RC (' +
+        (p > 0 ? 'trough' : 'peak') + ')</span>' +
+      '<span><i style="border-color:' + CRIMSON + '"></i>marker</span>' +
+      '<span><i style="border-color:#16191C;border-top-style:dashed"></i>true top and base</span>' +
+      '<span><i style="border-color:' + TEAL + ';border-top-style:dotted"></i>λ/4</span>' +
+      '<span><i style="border-color:' + OCHRE + ';border-top-style:dotted"></i>λ/8</span>';
+    $('polV').textContent = S.pol === 'reverse' ? 'SEG reverse' : 'SEG normal';
+    $('polNote').textContent = S.pol === 'reverse'
+      ? 'SEG reverse polarity — an impedance increase plots as a trough'
+      : 'SEG normal polarity (American) — an impedance increase plots as a peak';
+  }
+
+  function updateStats() {
     const { curve, wav, R } = CACHE;
-    const lam = S.v / wav.fdom;
+    const lam = R.v / wav.fdom;
     const ph = S.probe * S.maxh;
     const i = Math.round(S.probe * NCURVE);
 
-    $('rF').textContent = wav.fdom.toFixed(0) + ' Hz';
+    $('rF').textContent = Math.round(wav.fdom) + ' Hz';
     $('rLam').textContent = fmtL(lam, 0);
     $('rQ').textContent = fmtL(lam / 4);
     $('rE').textContent = fmtL(lam / 8);
-    $('rTune').textContent = fmtL(curve.tunH) + '  = λ/' + (lam / Math.max(curve.tunH, 1e-6)).toFixed(1);
+    $('rTune').textContent = curve.tunH > 0
+      ? fmtL(curve.tunH) + '  = λ/' + (lam / curve.tunH).toFixed(1) : '\u2014';
+    $('rRc').textContent = (R.rawR1 > 0 ? '+' : '') + R.rawR1.toFixed(3) + '  /  ' +
+                           (R.rawR2 > 0 ? '+' : '') + R.rawR2.toFixed(3) +
+                           (Math.sign(R.rawR1) === Math.sign(R.rawR2) ? '  same sign' : '  opposite');
     $('rTrue').textContent = fmtL(ph);
     const app = curve.app[i];
     $('rApp').textContent = app > 0 ? fmtL(app) : 'one event only';
-    $('rAmp').textContent = curve.amp[i].toFixed(2) + '×';
+    $('rAmp').textContent = curve.amp[i].toFixed(2) + '\u00d7';
+
+    const ratio = ph / lam;
+    $('rVerdict').textContent = ph < 1e-6
+      ? 'Zero thickness — the two reflections have cancelled or merged completely'
+      : ratio >= 0.25
+        ? 'Above tuning — top and base resolve separately, and the picked thickness is real'
+        : ratio >= 0.125
+          ? 'Below tuning — one merged event; the reported thickness is the wavelet, not the rock'
+          : 'Near the detection limit — visible only as amplitude, if the data are clean';
   }
 
-  /* ---------------------------- interaction --------------------------- */
-
-  function probeFrom(canvas, ev, marginL) {
-    const r = canvas.getBoundingClientRect();
-    const x = ev.clientX - r.left - marginL;
-    const wPlot = r.width - marginL - 14;
-    S.probe = Math.max(0, Math.min(1, x / wPlot));
-  }
+  /* ---------------------------- interaction ---------------------------- */
 
   function attachProbe(canvas) {
     let down = false;
-    const go = (ev) => { probeFrom(canvas, ev, 58); render(false); };
+    const go = (ev) => {
+      const r = canvas.getBoundingClientRect();
+      const x = ev.clientX - r.left - MARGIN.l;
+      const wPlot = r.width - MARGIN.l - MARGIN.r;
+      S.probe = clamp(x / wPlot, 0, 1);
+      render();
+    };
     canvas.addEventListener('pointerdown', (e) => {
-      down = true; canvas.setPointerCapture(e.pointerId); go(e);
+      down = true; canvas.setPointerCapture(e.pointerId); e.preventDefault(); go(e);
     });
     canvas.addEventListener('pointermove', (e) => { if (down) go(e); });
-    canvas.addEventListener('pointerup', () => { down = false; save(); });
+    canvas.addEventListener('pointerup', () => { down = false; SEIS.writeState(S, DEF); });
     canvas.addEventListener('pointercancel', () => { down = false; });
   }
 
-  /* ------------------------------ render ------------------------------ */
+  /* ------------------------------ plumbing ----------------------------- */
 
-  function render(recompute) {
-    if (recompute !== false) compute();
-    drawWavelet(); drawWedge(); drawCurves(); updateReadout();
+  function render() {
+    drawWaveletPreview(); drawModel(); drawWedge(); drawBar(); drawCurves();
+    updateLegend(); updateStats();
   }
-  function save() { SEIS.writeState(S, DEF); }
+
+  function refresh(rebuildTable) {
+    compute();
+    if (rebuildTable !== false) buildTable();
+    render();
+    S.rocks = packRocks(ROCKS);
+    SEIS.writeState(S, DEF);
+  }
 
   function syncLabels() {
     $('freqV').textContent = S.f + ' Hz';
-    $('f12V').textContent = S.f1 + ' – ' + S.f2 + ' Hz';
-    $('f34V').textContent = S.f3 + ' – ' + S.f4 + ' Hz';
-    $('velV').textContent = Math.round(uL(S.v)) + ' ' + U().vlab;
-    $('rcvV').textContent = S.rc.toFixed(2);
+    $('f12V').textContent = S.f1 + ' \u2013 ' + S.f2 + ' Hz';
+    $('f34V').textContent = S.f3 + ' \u2013 ' + S.f4 + ' Hz';
     $('maxhV').textContent = fmtL(S.maxh, 0);
-    $('gainV').textContent = S.gain.toFixed(1) + '×';
+    $('gainV').textContent = S.gain.toFixed(1) + '\u00d7';
     $('snrV').textContent = S.snr <= 0 ? 'clean' : S.snr.toFixed(1) + ' : 1';
     $('rickerCtl').hidden = S.wav !== 'ricker';
     $('ormsbyCtl').hidden = S.wav !== 'ormsby';
     $('wRicker').setAttribute('aria-pressed', S.wav === 'ricker');
     $('wOrmsby').setAttribute('aria-pressed', S.wav === 'ormsby');
-    $('polOpp').setAttribute('aria-pressed', S.pol === 'opp');
-    $('polSame').setAttribute('aria-pressed', S.pol === 'same');
+    $('pNorm').setAttribute('aria-pressed', S.pol === 'normal');
+    $('pRev').setAttribute('aria-pressed', S.pol === 'reverse');
     $('dVD').setAttribute('aria-pressed', S.disp === 'vd');
     $('dBoth').setAttribute('aria-pressed', S.disp === 'both');
     $('dWig').setAttribute('aria-pressed', S.disp === 'wiggle');
@@ -667,75 +875,57 @@
   function pushToInputs() {
     $('freq').value = S.f; $('f1').value = S.f1; $('f2').value = S.f2;
     $('f3').value = S.f3; $('f4').value = S.f4;
-    $('vel').value = S.v; $('rcv').value = S.rc; $('maxh').value = S.maxh;
-    $('snr').value = S.snr; $('gain').value = S.gain;
+    $('maxh').value = S.maxh; $('snr').value = S.snr; $('gain').value = S.gain;
     $('cmap').value = S.cmap; $('units').value = S.units;
-    $('showTrue').checked = S.truth; $('showLimits').checked = S.limits;
-    $('revPol').checked = S.rev;
+    $('showModel').checked = S.model; $('showLimits').checked = S.limits;
+    $('preset').value = S.preset;
   }
 
-  function bump() { syncLabels(); render(); save(); }
+  function bump(rebuild) { syncLabels(); refresh(rebuild); }
 
-  /* ------------------------------- wire ------------------------------- */
+  const slide = (id, key) => $(id).addEventListener('input', () => {
+    S[key] = parseFloat($(id).value); bump(false);
+  });
+  slide('freq', 'f'); slide('maxh', 'maxh'); slide('snr', 'snr'); slide('gain', 'gain');
+  ['f1', 'f2', 'f3', 'f4'].forEach((k) => slide(k, k));
 
-  const slide = (id, key, parse) => {
-    $(id).addEventListener('input', () => {
-      S[key] = (parse || parseFloat)($(id).value);
-      $('preset').value = 'custom';
-      bump();
-    });
-  };
-  slide('freq', 'f'); slide('vel', 'v'); slide('rcv', 'rc');
-  slide('maxh', 'maxh'); slide('snr', 'snr'); slide('gain', 'gain');
-  ['f1','f2','f3','f4'].forEach((k) => slide(k, k));
-
-  // keep the Ormsby corner frequencies in order
-  ['f1','f2','f3','f4'].forEach((k) => $(k).addEventListener('input', () => {
-    S.f2 = Math.max(S.f1 + 2, S.f2);
-    S.f3 = Math.max(S.f2 + 2, S.f3);
-    S.f4 = Math.max(S.f3 + 2, S.f4);
-    pushToInputs(); syncLabels();
-  }));
-
-  const toggle = (id, key, val) => $(id).addEventListener('click', () => { S[key] = val; bump(); });
+  const toggle = (id, key, val) => $(id).addEventListener('click', () => { S[key] = val; bump(true); });
   toggle('wRicker', 'wav', 'ricker'); toggle('wOrmsby', 'wav', 'ormsby');
-  toggle('polOpp', 'pol', 'opp');     toggle('polSame', 'pol', 'same');
+  toggle('pNorm', 'pol', 'normal');   toggle('pRev', 'pol', 'reverse');
   toggle('dVD', 'disp', 'vd'); toggle('dBoth', 'disp', 'both'); toggle('dWig', 'disp', 'wiggle');
 
-  $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(); });
-  $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
-  ['showTrue','showLimits','revPol'].forEach((id) => {
-    const key = { showTrue:'truth', showLimits:'limits', revPol:'rev' }[id];
-    $(id).addEventListener('change', () => { S[key] = $(id).checked; bump(); });
-  });
+  $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(false); });
+  $('units').addEventListener('change', () => { S.units = $('units').value; bump(true); });
+  $('showModel').addEventListener('change', () => { S.model = $('showModel').checked; bump(false); });
+  $('showLimits').addEventListener('change', () => { S.limits = $('showLimits').checked; bump(false); });
 
   $('preset').addEventListener('change', () => {
     const p = PRESETS[$('preset').value];
     if (!p) return;
-    Object.assign(S, p);
-    pushToInputs(); bump();
+    S.preset = $('preset').value;
+    ROCKS = JSON.parse(JSON.stringify(p));
+    bump(true);
   });
 
   $('resetBtn').addEventListener('click', () => {
     S = Object.assign({}, DEF);
-    $('preset').value = 'custom';
-    pushToInputs(); bump();
+    ROCKS = JSON.parse(JSON.stringify(PRESETS.encased));
+    pushToInputs(); bump(true);
   });
   $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
   $('pngBtn').addEventListener('click', () => SEIS.savePNG($('wedgeCanvas'), 'wedge-model'));
 
   attachProbe($('wedgeCanvas'));
   attachProbe($('curveCanvas'));
+  attachProbe($('modelCanvas'));
 
   let rt;
-  window.addEventListener('resize', () => {
-    clearTimeout(rt); rt = setTimeout(() => render(false), 120);
-  });
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 120); });
 
   pushToInputs();
   syncLabels();
-  render();
-  document.fonts && document.fonts.ready.then(() => render(false));
+  refresh(true);
+  document.fonts && document.fonts.ready.then(render);
 })();
 </script>
 </body>
