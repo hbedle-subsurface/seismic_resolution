@@ -8,7 +8,7 @@ made, and people who went straight to industry and are now expected to map horiz
 install, no account, no maths prerequisite beyond `λ = V / f`.
 
 Built by Heather Bedle, School of Geosciences, University of Oklahoma, with the
-[AASPI](http://www.aaspi.ou.edu/) consortium.
+[AASPI](https://www.ou.edu/mcee/labs/aaspi) consortium.
 
 ---
 
