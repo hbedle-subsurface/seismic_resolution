@@ -41,6 +41,14 @@
           Click once where the fault meets the top of the section, then a second time further down it.
           The two clicks define the plane. Click again to start over. Some cases have no fault in them,
           and the layer model stays hidden until you reveal.</p>
+        <div class="ctl">
+          <label for="diff">Difficulty</label>
+          <select id="diff">
+            <option value="gentle">Gentle — mostly clear offsets</option>
+            <option value="mixed" selected>Mixed — a fair test</option>
+            <option value="hard">Hard — marginal throws, poor data</option>
+          </select>
+        </div>
         <button class="btn small" id="newCase" type="button">New random case</button>
         <button class="btn ghost small" id="noFault" type="button">There is no fault</button>
         <button class="btn ghost small" id="reveal" type="button">Reveal answer</button>
@@ -209,10 +217,13 @@
             it. They no longer match. The beds are below tuning, so the reflectors merge and interfere.
             Tracking a fault through tuned reflections is much harder than tracking one through clean,
             well-separated ones, and most reservoir intervals look like the former.</span></li>
-        <li><b>Run ten quiz cases.</b>
-          <span class="ans">About a third of them contain no fault. Correlated noise produces convincing
-            fault-like breaks, and going in expecting a fault is a reliable way to map one that isn't
-            there.</span></li>
+        <li><b>Run ten quiz cases on Mixed, then ten on Hard.</b> Keep score honestly.
+          <span class="ans">Roughly a third contain no fault at all, and throws are drawn as a fraction of
+            the wavelength rather than in meters, so most of them sit near the limit instead of being
+            comfortably above it. On Hard, only about one case in twenty is a clean resolved offset.
+            Calling "no fault" on a throw below λ/16 is scored as correct, because past the detection limit
+            that is the defensible answer. Expect a lower score than you think you deserve, and notice how
+            often correlated noise talks you into a fault that isn't there.</span></li>
       </ol>
     </div>
 
@@ -283,7 +294,7 @@
 
   const DEF = {
     thr: 20, dip: 65, f: 35, v: 2800, snr: 8, dx: 12.5,
-    thkMin: 15, thkMax: 60, seed: 7,
+    thkMin: 15, thkMax: 60, seed: 7, diff: 'mixed',
     disp: 'vd', cmap: 'bwr', gain: 1, showF: false, model: true, pol: 'normal', units: 'm',
   };
   let S = SEIS.readState(DEF);
@@ -316,6 +327,9 @@
   const activeSnr   = () => (Q.on && Q.hidden ? Q.hidden.snr  : S.snr);
   const activeXc    = () => (Q.on && Q.hidden ? Q.hidden.xc   : 0.5);
   const activeSeed  = () => (Q.on && Q.hidden ? Q.hidden.seed : S.seed);
+  const activeDip   = () => (Q.on && Q.hidden ? Q.hidden.dip  : S.dip);
+  // +1 puts the hanging wall on the right, -1 on the left
+  const activeDir   = () => (Q.on && Q.hidden ? Q.hidden.dir  : 1);
 
   let CACHE = { noiseKey:'' };
 
@@ -344,15 +358,15 @@
 
   function faultX(t, xcFrac) {
     // planar fault; horizontal position drifts with depth according to the dip
-    const tanDip = Math.tan(S.dip * Math.PI / 180);
-    return xcFrac * SECW + (S.v * (t - TMID) / 2) / tanDip;
+    const tanDip = Math.tan(activeDip() * Math.PI / 180);
+    return xcFrac * SECW + activeDir() * (S.v * (t - TMID) / 2) / tanDip;
   }
 
   // The time at which the fault plane crosses a given trace. Above it the trace
   // is in the hanging wall, below it in the footwall.
   function tCross(x, xcFrac) {
-    const tanDip = Math.tan(S.dip * Math.PI / 180);
-    return TMID + 2 * tanDip * (x - xcFrac * SECW) / S.v;
+    const tanDip = Math.tan(activeDip() * Math.PI / 180);
+    return TMID + 2 * tanDip * activeDir() * (x - xcFrac * SECW) / S.v;
   }
 
   // Which layer a time falls in, in the unfaulted stack.
@@ -449,8 +463,7 @@
     const stacked = W < 640;
     const cmpW = stacked ? W : clamp(Math.round(W * 0.22), 150, 230);
     const secW = stacked ? W : W - cmpW - 10;
-    const showModel = modelVisible();
-    const h = clamp(Math.round(secW * (showModel ? 0.38 : 0.46)), 270, 440);
+    const h = clamp(Math.round(secW * (S.model ? 0.38 : 0.46)), 270, 440);
     return { secW, cmpW, h, stacked, modelH: clamp(Math.round(secW * 0.20), 150, 230) };
   }
 
@@ -458,8 +471,34 @@
 
   const showingTruth = () => (Q.on ? Q.revealed : S.showF);
 
-  // The layer model is the answer, so it stays hidden during a quiz case.
-  const modelVisible = () => S.model && !(Q.on && !Q.revealed);
+  // The layer model gives away the answer, so during a quiz it is covered over
+  // rather than removed. Keeping the panel in place stops the page jumping when
+  // the answer is revealed.
+  const modelMasked = () => Q.on && !Q.revealed;
+
+  function drawMask(ctx, rect, title, sub) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+    ctx.fillStyle = '#E9EBEE';
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.strokeStyle = 'rgba(92,102,112,.20)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let d = -rect.h; d < rect.w; d += 13) {
+      ctx.moveTo(rect.x + d, rect.y + rect.h);
+      ctx.lineTo(rect.x + d + rect.h, rect.y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = '#5C6670';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '12px "IBM Plex Mono", monospace';
+    ctx.fillText(title, rect.x + rect.w / 2, rect.y + rect.h / 2 - 9);
+    if (sub && rect.w > 190) {
+      ctx.font = '11px "IBM Plex Sans", sans-serif';
+      ctx.fillText(sub, rect.x + rect.w / 2, rect.y + rect.h / 2 + 10);
+    }
+    ctx.restore();
+    SEIS.frame(ctx, rect);
+  }
 
   // Earth tones for the model panel, deliberately unlike the seismic colors so
   // the two panels never get mistaken for one another.
@@ -478,13 +517,18 @@
   // backwards, layer by layer: R = (I2 - I1)/(I2 + I1).
   function drawModel(L) {
     const wrap = $('modelWrap');
-    if (!modelVisible()) { wrap.hidden = true; return; }
+    if (!S.model) { wrap.hidden = true; return; }
     wrap.hidden = false;
 
     const ctx = SEIS.fitCanvas($('modelCanvas'), L.secW, L.modelH);
     ctx.clearRect(0, 0, L.secW, L.modelH);
     const m = { l: 58, r: 14, t: 6, b: 12 };
     const rect = { x: m.l, y: m.t, w: L.secW - m.l - m.r, h: L.modelH - m.t - m.b };
+
+    if (modelMasked()) {
+      drawMask(ctx, rect, 'Layers hidden', 'Reveal the answer to compare');
+      return;
+    }
 
     const layers = CACHE.layers;
     const imp = [1];
@@ -572,11 +616,17 @@
   // model, and between them the two panels are the whole of the convolution:
   // these rock layers, through this wavelet, give the section below.
   function drawWavelet(L) {
-    if (!modelVisible()) return;
+    if (!S.model) return;
     const ctx = SEIS.fitCanvas($('wavCanvas'), L.cmpW, L.modelH);
     ctx.clearRect(0, 0, L.cmpW, L.modelH);
 
     const m = { l: 16, r: 12, t: 6, b: 14 };
+    if (modelMasked()) {
+      drawMask(ctx, { x: m.l, y: m.t, w: L.cmpW - m.l - m.r, h: L.modelH - m.t - m.b },
+               'Wavelet hidden', '');
+      return;
+    }
+
     const gap = 20, avail = L.modelH - m.t - m.b - gap;
     const each = avail / 2;
     const rW = { x: m.l, y: m.t, w: L.cmpW - m.l - m.r, h: each };
@@ -802,15 +852,17 @@
     $('rE').textContent = fmtL(lam / 8);
     $('rBeds').textContent = CACHE.nLayers;
     $('rNx').textContent = CACHE.nx + ' at ' + fmtL(S.dx, 1);
-    if (CACHE.dipDrawn !== undefined) {
-      $('rDipLab').textContent = 'Dip as drawn (true ' + S.dip + '°)';
-      $('rDip').textContent = CACHE.dipDrawn.toFixed(0) + '°';
-    }
     if (Q.on && !Q.revealed) {
       $('rRatio').textContent = 'hidden';
       $('rMs').textContent = 'hidden';
+      $('rDipLab').textContent = 'Fault dip';
+      $('rDip').textContent = 'hidden';
       $('rVerdict').textContent = 'Make your call';
       return;
+    }
+    if (CACHE.dipDrawn !== undefined) {
+      $('rDipLab').textContent = 'Dip as drawn (true ' + activeDip() + '°)';
+      $('rDip').textContent = CACHE.dipDrawn.toFixed(0) + '°';
     }
     $('rRatio').textContent = thr > 0 ? 'λ/' + (lam / thr).toFixed(1) : 'no fault';
     $('rMs').textContent = (2000 * thr / S.v).toFixed(1) + ' ms';
@@ -879,14 +931,43 @@
 
   function clearPick() { Q.p1 = null; Q.hover = null; Q.pick = null; }
 
+  // Throw is drawn as a fraction of the wavelength rather than in meters.
+  // Drawing it in meters made most cases trivially easy, because at typical
+  // frequencies almost any throw in a sensible metre range lands well above
+  // λ/4. Bands are [lo, hi, weight] in units of λ.
+  const DIFFICULTY = {
+    gentle: { noFault: 0.25, snr: [6, 16], f: [22, 60],
+              bands: [[0.30, 0.60, 0.55], [0.17, 0.30, 0.33], [0.07, 0.17, 0.12]] },
+    mixed:  { noFault: 0.30, snr: [3, 12], f: [15, 65],
+              bands: [[0.26, 0.50, 0.24], [0.11, 0.26, 0.46], [0.045, 0.11, 0.30]] },
+    hard:   { noFault: 0.35, snr: [2, 7],  f: [12, 55],
+              bands: [[0.22, 0.40, 0.10], [0.09, 0.22, 0.44], [0.035, 0.09, 0.46]] },
+  };
+
+  function drawRatio(cfg, rnd) {
+    let u = rnd(), acc = 0;
+    for (const [lo, hi, w] of cfg.bands) {
+      acc += w;
+      if (u <= acc) return Math.exp(Math.log(lo) + rnd() * (Math.log(hi) - Math.log(lo)));
+    }
+    const last = cfg.bands[cfg.bands.length - 1];
+    return last[0] + rnd() * (last[1] - last[0]);
+  }
+
   function newCase() {
     const rnd = Math.random;
-    const noFault = rnd() < 0.3;
+    const cfg = DIFFICULTY[S.diff] || DIFFICULTY.mixed;
+    const noFault = rnd() < cfg.noFault;
+    const f = Math.round(cfg.f[0] + rnd() * (cfg.f[1] - cfg.f[0]));
+    const lam = S.v / f;
+    const ratio = drawRatio(cfg, rnd);
     Q.hidden = {
-      thr: noFault ? 0 : 3 + rnd() * 45,
-      f: 15 + Math.round(rnd() * 50),
-      snr: 2 + rnd() * 10,
-      xc: 0.3 + rnd() * 0.4,
+      thr: noFault ? 0 : clamp(ratio * lam, 1, 75),
+      f,
+      snr: cfg.snr[0] + rnd() * (cfg.snr[1] - cfg.snr[0]),
+      xc: 0.22 + rnd() * 0.56,
+      dip: 40 + Math.round(rnd() * 48),
+      dir: rnd() < 0.5 ? -1 : 1,
       seed: Math.floor(rnd() * 1e6),
     };
     clearPick();
@@ -910,12 +991,20 @@
     Q.revealed = true; Q.asked++;
     let ok = false, msg = '';
 
+    // A throw below about λ/16 is past the detection limit, so calling it as no
+    // fault is the defensible answer and is scored as correct.
+    const belowDetection = truth > 0 && truth / lam < 0.0625;
+
     if (truth === 0) {
       ok = saidNoFault;
       msg = ok ? 'Correct, there was no fault in that one.'
                : 'No fault in that one. Correlated noise can look a lot like a small offset.';
     } else if (saidNoFault) {
-      msg = 'There was a fault, throw ' + fmtL(truth) + ' (λ/' + (lam / truth).toFixed(1) + ').';
+      ok = belowDetection;
+      msg = (ok ? 'Fair call. ' : '') + 'There was a fault, throw ' + fmtL(truth) +
+            ' (λ/' + (lam / truth).toFixed(1) + ')' +
+            (ok ? ', which is past the detection limit. Nobody picks that one off amplitude alone.'
+                : '. It was there to be seen.');
     } else {
       const errM = Math.abs(pickAt(FRAC_MID) * SECW - faultX(TMID, Q.hidden.xc));
       ok = errM < 150;
@@ -923,8 +1012,10 @@
       const depthM = S.v * (TEND - T0) / 2;
       const yourDip = Math.abs(Math.atan2(depthM, runM) * 180 / Math.PI);
       msg = (ok ? 'Good pick, ' : 'Off target, ') + fmtL(errM, 0) +
-            ' from the fault. True throw ' + fmtL(truth) + ' (λ/' + (lam / truth).toFixed(1) + '). ' +
-            'Your plane dips ' + yourDip.toFixed(0) + '°, the fault dips ' + S.dip + '°.';
+            ' from the fault. True throw ' + fmtL(truth) + ' (λ/' + (lam / truth).toFixed(1) + '), ' +
+            'peak frequency ' + Q.hidden.f + ' Hz. ' +
+            'Your plane dips ' + yourDip.toFixed(0) + '°, the fault dips ' + activeDip() + '°' +
+            (Q.hidden.dir < 0 ? ', hanging wall on the left.' : '.');
     }
     if (ok) Q.right++;
     $('score').textContent = Q.right + ' / ' + Q.asked;
@@ -972,7 +1063,7 @@
     $('thkMin').value = S.thkMin; $('thkMax').value = S.thkMax;
     $('gain').value = S.gain; $('cmap').value = S.cmap;
     $('units').value = S.units; $('showFault').checked = S.showF;
-    $('showModel').checked = S.model;
+    $('showModel').checked = S.model; $('diff').value = S.diff;
   }
   function bump() { syncLabels(); render(); save(); }
 
@@ -988,6 +1079,7 @@
   toggle('pNorm','pol','normal'); toggle('pRev','pol','reverse');
 
   $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(); });
+  $('diff').addEventListener('change', () => { S.diff = $('diff').value; newCase(); save(); });
   $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
   $('showFault').addEventListener('change', () => { S.showF = $('showFault').checked; bump(); });
   $('showModel').addEventListener('change', () => { S.model = $('showModel').checked; bump(); });
