@@ -13,16 +13,16 @@ Built by Heather Bedle, School of Geosciences, University of Oklahoma, with the
 ---
 ## Get started
 
-**[Open the site](https://hbedle-subsurface/seismic_resolution/)**
+**[Open the site](https://hbedle-subsurface.github.io/seismic_resolution/)**
 
 New to this? Go straight to the wedge model — it's the one everything else builds on:
 
-**[Start here: The wedge model & tuning](https://hbedle-subsurface/seismic_resolution/modules/wedge.html)**
+**[Start here: The wedge model & tuning](https://hbedle-subsurface.github.io/seismic_resolution/modules/wedge.html)**
 
 Move the frequency slider, watch a bed thin to nothing, and see the seismic keep
 reporting a thickness that stopped being real. Ten minutes, no install, nothing to set up.
 
-Then try **[Can you see the fault?](https://hbedle-subsurface/seismic_resolution/modules/faults.html)**
+Then try **[Can you see the fault?](https://hbedle-subsurface.github.io/seismic_resolution/modules/faults.html)**
 and turn on quiz mode.
 
 ---
