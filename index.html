@@ -114,8 +114,8 @@
         <span class="flag next">Live</span>
       </a>
 
-      <div class="card planned">
-        <div class="thumb"></div>
+      <a class="card" href="modules/fresnel.html">
+        <canvas class="thumb-canvas" data-thumb="fresnel"></canvas>
         <div class="card-body">
           <div class="card-no">04</div>
           <h3>Horizontal resolution</h3>
@@ -123,8 +123,8 @@
             toward each other until they become one.</p>
           <div class="q">How small a feature can I map in plan view?</div>
         </div>
-        <span class="flag">In progress</span>
-      </div>
+        <span class="flag next">Live</span>
+      </a>
 
       <a class="card" href="modules/depth.html">
         <canvas class="thumb-canvas" data-thumb="depth"></canvas>
@@ -378,11 +378,35 @@
     ctx.stroke(); ctx.restore();
   }
 
+  function thumbFresnel(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const V = 2500, t0 = 0.42, f = 32, sep = 150;
+    const wav = SEIS.makeWavelet({ type: 'ricker', f });
+    const XW = 1400, NX = 150, dx = XW / NX;
+    const tStart = 0.30, tEnd = 0.78, nt = 150, dt = (tEnd - tStart) / nt;
+    const fld = new Float32Array(NX * nt);
+    for (let ix = 0; ix < NX; ix++) {
+      const x = -XW / 2 + (ix + 0.5) * dx;
+      [-sep / 2, sep / 2].forEach((x0) => {
+        const tau = Math.sqrt(t0 * t0 + Math.pow(2 * (x - x0) / V, 2));
+        const hl = wav.halfLength;
+        const i0 = Math.max(0, Math.ceil((tau - hl - tStart) / dt));
+        const i1 = Math.min(nt - 1, Math.floor((tau + hl - tStart) / dt));
+        for (let i = i0; i <= i1; i++) fld[ix * nt + i] += (t0 / tau) * wav.fn(tStart + i * dt - tau);
+      });
+    }
+    SEIS.drawVarDensity(ctx, fld, NX, nt, { x: 0, y: 0, w: w, h: h },
+      { cmap: SEIS.COLORMAPS.bwr, clip: 0.85 });
+  }
+
   function drawThumbs() {
     document.querySelectorAll('.thumb-canvas').forEach((c) => {
       if (c.dataset.thumb === 'wedge') thumbWedge(c);
       else if (c.dataset.thumb === 'fault') thumbFault(c);
       else if (c.dataset.thumb === 'model1d') thumb1d(c);
+      else if (c.dataset.thumb === 'fresnel') thumbFresnel(c);
       else if (c.dataset.thumb === 'depth') thumbDepth(c);
     });
   }
