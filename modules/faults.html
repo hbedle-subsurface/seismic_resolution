@@ -30,27 +30,25 @@
       test your eye against it.</p>
   </div>
 
-  <div class="lab">
+  <!-- ============================== CONTROLS ============================== -->
+  <section class="controls">
 
-    <!-- ============================ CONTROL RAIL ============================ -->
-    <aside class="rail">
+    <div class="ctl-col">
       <h2>Quiz mode</h2>
       <label class="check"><input type="checkbox" id="quiz"> Hide the answer and randomize</label>
       <div id="quizBox" hidden>
         <p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 10px">
-          Drag on the section to draw where you think the fault plane is, then reveal. Redraw as often as
-          you like. Some cases have no fault in them.</p>
+          Click once where the fault meets the top of the section, then a second time further down it.
+          The two clicks define the plane. Click again to start over. Some cases have no fault in them,
+          and the layer model stays hidden until you reveal.</p>
         <button class="btn small" id="newCase" type="button">New random case</button>
         <button class="btn ghost small" id="noFault" type="button">There is no fault</button>
         <button class="btn ghost small" id="reveal" type="button">Reveal answer</button>
-        <div class="readout" style="margin-top:10px">
-          <dl>
-            <dt>Called correctly</dt><dd id="score">0 / 0</dd>
-          </dl>
-        </div>
-        <p id="verdict" style="font-size:13px;margin:9px 0 0;min-height:1.2em"></p>
+        <p id="verdict" style="font-size:13px;margin:10px 0 0;min-height:1.2em"></p>
       </div>
+    </div>
 
+    <div class="ctl-col">
       <h2>The fault</h2>
       <div class="ctl">
         <label for="throw">Throw <span class="val" id="throwV">20 m</span></label>
@@ -61,7 +59,7 @@
         <input type="range" id="dip" min="35" max="90" step="1" value="65">
       </div>
 
-      <h2>The layers</h2>
+      <h2 style="margin-top:20px">The layers</h2>
       <div class="ctl">
         <label for="thkMin">Thinnest bed <span class="val" id="thkMinV">15 m</span></label>
         <input type="range" id="thkMin" min="5" max="100" step="1" value="15">
@@ -71,7 +69,9 @@
         <input type="range" id="thkMax" min="10" max="200" step="5" value="60">
       </div>
       <button class="btn ghost small" id="newLayers" type="button">New layer stack</button>
+    </div>
 
+    <div class="ctl-col">
       <h2>The data</h2>
       <div class="ctl">
         <label for="freq">Peak frequency <span class="val" id="freqV">35 Hz</span></label>
@@ -89,7 +89,13 @@
         <label for="dx">Trace spacing <span class="val" id="dxV">12.5 m</span></label>
         <input type="range" id="dx" min="6.25" max="50" step="6.25" value="12.5">
       </div>
+      <div class="ctl">
+        <label for="units">Units</label>
+        <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
+      </div>
+    </div>
 
+    <div class="ctl-col">
       <h2>Display</h2>
       <div class="ctl">
         <div class="seg" role="group" aria-label="Display style">
@@ -110,45 +116,43 @@
         <label for="gain">Gain <span class="val" id="gainV">1.0×</span></label>
         <input type="range" id="gain" min="0.4" max="4" step="0.1" value="1">
       </div>
+      <label class="check"><input type="checkbox" id="showModel" checked> Show the layer model</label>
       <label class="check"><input type="checkbox" id="showFault"> Draw the true fault plane</label>
-      <div class="ctl">
-        <label for="units">Units</label>
-        <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
-      </div>
-
       <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
       <button class="btn ghost small" id="pngBtn" type="button">Save section as PNG</button>
       <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
-    </aside>
-
-    <!-- ============================== STAGE =============================== -->
-    <div class="stage">
-      <section class="plot">
-        <div class="plot-head">
-          <h3>Seismic section</h3>
-          <span class="hint" id="secHint">The two traces come from the dashed lines, one either side of the fault</span>
-        </div>
-        <div class="sec-row">
-          <canvas id="secCanvas" aria-label="Synthetic seismic section across a normal fault"></canvas>
-          <canvas id="cmpCanvas" aria-label="Traces from either side of the fault, plotted vertically"></canvas>
-        </div>
-        <div class="legend" id="secLegend"></div>
-      </section>
-
-      <div class="readout">
-        <dl>
-          <dt>Dominant wavelength λ = V / f</dt><dd id="rLam">80 m</dd>
-          <dt>λ/4 — throw you can see as a step</dt><dd id="rQ">20 m</dd>
-          <dt>λ/8 — throw you can still detect</dt><dd id="rE">10 m</dd>
-          <dt><b>Throw as a fraction of λ</b></dt><dd class="big" id="rRatio">λ/4.0</dd>
-          <dt>Throw in two-way time</dt><dd id="rMs">14.3 ms</dd>
-          <dt>Beds in the section</dt><dd id="rBeds">9</dd>
-          <dt>Traces across the section</dt><dd id="rNx">120</dd>
-          <dt id="rDipLab">Fault dip as drawn (true 65°)</dt><dd id="rDip">86°</dd>
-          <dt>Verdict</dt><dd id="rVerdict">Resolved</dd>
-        </dl>
-      </div>
     </div>
+
+  </section>
+
+  <!-- =============================== SECTION ============================== -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>Seismic section</h3>
+      <span class="hint" id="secHint">The two traces come from the dashed lines, one either side of the fault</span>
+    </div>
+    <div id="modelWrap">
+      <p class="sublabel">The layer model that went in — acoustic impedance, offset by the fault</p>
+      <canvas id="modelCanvas" aria-label="Blocky layer model showing true bed boundaries and fault offset"></canvas>
+    </div>
+    <div class="sec-row">
+      <canvas id="secCanvas" aria-label="Synthetic seismic section across a normal fault"></canvas>
+      <canvas id="cmpCanvas" aria-label="Traces from either side of the fault, plotted vertically"></canvas>
+    </div>
+    <div class="legend" id="secLegend"></div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span>Wavelength λ = V / f</span><b id="rLam">80 m</b></div>
+    <div class="stat"><span>λ/4 — seen as a step</span><b id="rQ">20 m</b></div>
+    <div class="stat"><span>λ/8 — still detectable</span><b id="rE">10 m</b></div>
+    <div class="stat key"><span>Throw as a fraction of λ</span><b id="rRatio">λ/4.0</b></div>
+    <div class="stat"><span>Throw in two-way time</span><b id="rMs">14.3 ms</b></div>
+    <div class="stat"><span>Beds in the section</span><b id="rBeds">9</b></div>
+    <div class="stat"><span>Traces across section</span><b id="rNx">120</b></div>
+    <div class="stat"><span id="rDipLab">Dip as drawn (true 65°)</span><b id="rDip">86°</b></div>
+    <div class="stat"><span>Called correctly</span><b id="score">0 / 0</b></div>
+    <div class="stat wide"><span>Verdict</span><b id="rVerdict">Resolved</b></div>
   </div>
 
   <!-- ============================== TEACHING ============================== -->
@@ -177,9 +181,10 @@
           <span class="ans">The fault plane turns into a staircase. Trace spacing limits lateral detail the
             same way bandwidth limits vertical detail.</span></li>
         <li><b>Thin the beds.</b> Set the thinnest bed to 8 m and the thickest to 20 m, with frequency at 25 Hz.
-          <span class="ans">The beds are now below tuning, so the reflectors merge and interfere. Tracking a
-            fault through tuned reflections is much harder than tracking one through clean, well-separated
-            ones, and most reservoir intervals look like the former.</span></li>
+          <span class="ans">Count the beds in the layer model, then count the reflectors in the seismic below
+            it. They no longer match. The beds are below tuning, so the reflectors merge and interfere.
+            Tracking a fault through tuned reflections is much harder than tracking one through clean,
+            well-separated ones, and most reservoir intervals look like the former.</span></li>
         <li><b>Run ten quiz cases.</b>
           <span class="ans">About a third of them contain no fault. Correlated noise produces convincing
             fault-like breaks, and going in expecting a fault is a reliable way to map one that isn't
@@ -214,7 +219,7 @@
       amplitude changes from juxtaposition, and the smearing that imperfect migration puts on every real fault.
       Those effects make faults easier to see in some settings and harder in others, but none of them removes
       the resolution floor, which is what this module is about.</p>
-    <p>The display is vertically exaggerated, as nearly all seismic displays are. The readout gives the fault
+    <p>The display is vertically exaggerated, as nearly all seismic displays are. The stat strip gives the fault
       dip as drawn alongside its true dip so you can compare the two. Fault dips read off a section are
       routinely too steep for this reason.</p>
     <ul>
@@ -235,7 +240,7 @@
   <footer>
     <div class="foot-grid">
       <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma —
-        with the <a href="http://www.aaspi.ou.edu/">AASPI</a> consortium.
+        with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.
         Free to use or adapt in your own courses with citation.</p>
     </div>
   </footer>
@@ -249,7 +254,7 @@
   const DEF = {
     thr: 20, dip: 65, f: 35, v: 2800, snr: 8, dx: 12.5,
     thkMin: 15, thkMax: 60, seed: 7,
-    disp: 'vd', cmap: 'bwr', gain: 1, showF: false, units: 'm',
+    disp: 'vd', cmap: 'bwr', gain: 1, showF: false, model: true, units: 'm',
   };
   let S = SEIS.readState(DEF);
 
@@ -264,10 +269,12 @@
   const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670';
   const C_LEFT = '#16191C', C_RIGHT = '#B02418';
 
-  // Quiz state. `pick` is {top, bot}: the horizontal position of the fault plane
-  // the user drew, as a fraction of section width, at the top and bottom of the
-  // display. Storing it as two numbers is what lets the pick have a dip.
-  let Q = { on:false, pick:null, drag:null, revealed:false, hidden:null, asked:0, right:0 };
+  // Quiz state.
+  //   p1   first of the two clicks, {x,y} as fractions of the plot rectangle
+  //   pick the finished plane, {top,bot} as fractions of section width at the
+  //        top and bottom of the display. Two numbers, so the pick has a dip.
+  let Q = { on:false, p1:null, hover:null, pick:null,
+            revealed:false, hidden:null, asked:0, right:0 };
 
   const U = () => SEIS.UNITS[S.units];
   const uL = (m) => m * U().len;
@@ -292,10 +299,14 @@
     const lo = Math.min(S.thkMin, S.thkMax);
     const hi = Math.max(S.thkMin, S.thkMax);
     const out = [];
-    let t = 0.092;
+    let t = 0.092, sign = 1;
     while (t < TEND - 0.03 && out.length < 40) {
       const mag = 0.055 + rnd() * 0.105;
-      out.push({ t, r: rnd() < 0.5 ? -mag : mag });
+      out.push({ t, r: sign * mag });
+      // Signs mostly alternate, the way a sand-shale section does. A pure coin
+      // flip lets impedance wander off in one direction, which makes the layer
+      // model read as a gradient instead of as beds.
+      sign = rnd() < 0.82 ? -sign : sign;
       t += 2 * (lo + rnd() * (hi - lo)) / S.v;
     }
     return out;
@@ -355,7 +366,7 @@
       }
     }
     CACHE.field = field; CACHE.wav = wav; CACHE.xc = xc;
-    CACHE.nx = NX; CACHE.nLayers = layers.length;
+    CACHE.nx = NX; CACHE.nLayers = layers.length; CACHE.layers = layers;
   }
 
   /* ------------------------------ geometry ------------------------------ */
@@ -364,15 +375,105 @@
     const box = $('secCanvas').closest('.plot');
     const W = Math.max(320, box.clientWidth - 28);
     const stacked = W < 640;
-    const cmpW = stacked ? W : clamp(Math.round(W * 0.24), 150, 220);
+    const cmpW = stacked ? W : clamp(Math.round(W * 0.22), 150, 230);
     const secW = stacked ? W : W - cmpW - 10;
-    const h = clamp(Math.round(secW * 0.52), 300, 430);
-    return { secW, cmpW, h, stacked };
+    const showModel = modelVisible();
+    const h = clamp(Math.round(secW * (showModel ? 0.38 : 0.46)), 270, 440);
+    return { secW, cmpW, h, stacked, modelH: clamp(Math.round(secW * 0.20), 150, 230) };
   }
 
   /* ------------------------------ drawing ------------------------------- */
 
   const showingTruth = () => (Q.on ? Q.revealed : S.showF);
+
+  // The layer model is the answer, so it stays hidden during a quiz case.
+  const modelVisible = () => S.model && !(Q.on && !Q.revealed);
+
+  // Earth tones for the model panel, deliberately unlike the seismic colors so
+  // the two panels never get mistaken for one another.
+  const EARTH = [[238,227,197],[212,189,145],[172,149,113],[126,109,88],[78,68,58]];
+  function earth(u) {
+    const p = clamp(u, 0, 1) * (EARTH.length - 1);
+    const i = Math.min(EARTH.length - 2, Math.floor(p)), f = p - i;
+    const a = EARTH[i], b = EARTH[i + 1];
+    return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * f) + ',' +
+                    Math.round(a[1] + (b[1] - a[1]) * f) + ',' +
+                    Math.round(a[2] + (b[2] - a[2]) * f) + ')';
+  }
+
+  // Blocky impedance model on the same axes as the section. Impedance is
+  // recovered from the reflection coefficients by running the usual relation
+  // backwards, layer by layer: R = (I2 - I1)/(I2 + I1).
+  function drawModel(L) {
+    const wrap = $('modelWrap');
+    if (!modelVisible()) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+
+    const ctx = SEIS.fitCanvas($('modelCanvas'), L.secW, L.modelH);
+    ctx.clearRect(0, 0, L.secW, L.modelH);
+    const m = { l: 58, r: 14, t: 6, b: 34 };
+    const rect = { x: m.l, y: m.t, w: L.secW - m.l - m.r, h: L.modelH - m.t - m.b };
+
+    const layers = CACHE.layers;
+    const imp = [1];
+    layers.forEach((l) => {
+      const prev = imp[imp.length - 1];
+      imp.push(prev * (1 + l.r) / (1 - l.r));
+    });
+    const lg = imp.map(Math.log);
+    const mn = Math.min.apply(null, lg), mx = Math.max.apply(null, lg);
+    const shade = (i) => earth((lg[i] - mn) / ((mx - mn) || 1));
+
+    const yOf = (t) => rect.y + ((t - T0) / (TEND - T0)) * rect.h;
+    const dtThrow = 2 * activeThrow() / S.v;
+    const W = Math.round(rect.w);
+
+    for (let px = 0; px < W; px++) {
+      const xm = (px / W) * SECW;
+      let yTop = rect.y;
+      for (let i = 0; i < layers.length; i++) {
+        const bt = xm > faultX(layers[i].t, CACHE.xc) ? layers[i].t + dtThrow : layers[i].t;
+        const yb = clamp(yOf(bt), rect.y, rect.y + rect.h);
+        if (yb > yTop) {
+          ctx.fillStyle = shade(i);
+          ctx.fillRect(rect.x + px, yTop, 1.02, yb - yTop);
+          yTop = yb;
+        }
+      }
+      if (rect.y + rect.h > yTop) {
+        ctx.fillStyle = shade(layers.length);
+        ctx.fillRect(rect.x + px, yTop, 1.02, rect.y + rect.h - yTop);
+      }
+    }
+
+    // hairlines on the bed boundaries, so thin beds stay countable
+    ctx.save();
+    ctx.strokeStyle = 'rgba(40,32,24,.5)'; ctx.lineWidth = 0.8;
+    layers.forEach((l) => {
+      ctx.beginPath();
+      let started = false;
+      for (let px = 0; px <= W; px++) {
+        const xm = (px / W) * SECW;
+        const bt = xm > faultX(l.t, CACHE.xc) ? l.t + dtThrow : l.t;
+        const y = yOf(bt);
+        if (y < rect.y || y > rect.y + rect.h) { started = false; continue; }
+        const x = rect.x + px;
+        started ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        started = true;
+      }
+      ctx.stroke();
+    });
+    ctx.restore();
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisLeft(ctx, rect, T0 * 1000, TEND * 1000, '', (v) => v.toFixed(0));
+    SEIS.axisBottom(ctx, rect, 0, uL(SECW), '', (v) => v.toFixed(0));
+    ctx.save();
+    ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('low impedance', rect.x + rect.w - 6, rect.y + 14);
+    ctx.restore();
+  }
 
   function drawSection(L) {
     const ctx = SEIS.fitCanvas($('secCanvas'), L.secW, L.h);
@@ -405,15 +506,25 @@
                            xOf(faultX(TEND, CACHE.xc)), rect.y + rect.h, TEAL, [7,5], 2);
     }
 
-    // the user's pick, updated live while dragging
-    const pk = Q.drag ? pickFromDrag(Q.drag) : Q.pick;
+    // the pick: finished, or previewed from the first click to the cursor
+    const preview = Q.p1 && Q.hover ? planeFrom(Q.p1, Q.hover) : null;
+    const pk = preview || Q.pick;
     if (Q.on && pk) {
       ctx.save();
       ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2;
+      if (preview) ctx.setLineDash([6, 4]);
       ctx.beginPath();
       ctx.moveTo(rect.x + pk.top * rect.w, rect.y);
       ctx.lineTo(rect.x + pk.bot * rect.w, rect.y + rect.h);
       ctx.stroke(); ctx.restore();
+    }
+    // marker on the first click while the second is pending
+    if (Q.on && Q.p1) {
+      ctx.save();
+      ctx.fillStyle = CRIMSON;
+      ctx.beginPath();
+      ctx.arc(rect.x + Q.p1.x * rect.w, rect.y + Q.p1.y * rect.h, 4.5, 0, 6.284);
+      ctx.fill(); ctx.restore();
     }
 
     // where the two comparison traces come from
@@ -495,7 +606,7 @@
     ctx.restore();
   }
 
-  /* ------------------------------- legend ------------------------------- */
+  /* ------------------------- legend and hint ---------------------------- */
 
   function updateLegend() {
     const bits = [];
@@ -507,9 +618,13 @@
     bits.push('<span><i style="border-color:' + C_RIGHT + ';border-top-style:dashed"></i>Right trace</span>');
     bits.push('<span><i style="border-color:' + TEAL + '"></i>Difference ×2</span>');
     $('secLegend').innerHTML = bits.join('');
-    $('secHint').textContent = Q.on
-      ? 'Drag to draw the fault plane. A single click gives a vertical pick.'
-      : 'The two traces come from the dashed lines, one either side of the fault';
+
+    $('secHint').textContent =
+      !Q.on ? 'The two traces come from the dashed lines, one either side of the fault'
+      : Q.revealed ? 'Answer shown. Start a new case to pick again.'
+      : Q.p1 ? 'Now click a second point further down the fault'
+      : Q.pick ? 'Click again to start a new pick'
+      : 'Click where the fault meets the top of the section';
   }
 
   /* ------------------------------ readout ------------------------------- */
@@ -521,15 +636,15 @@
     $('rQ').textContent = fmtL(lam / 4);
     $('rE').textContent = fmtL(lam / 8);
     $('rBeds').textContent = CACHE.nLayers;
-    $('rNx').textContent = CACHE.nx + '  at ' + fmtL(S.dx, 1);
+    $('rNx').textContent = CACHE.nx + ' at ' + fmtL(S.dx, 1);
     if (CACHE.dipDrawn !== undefined) {
-      $('rDipLab').textContent = 'Fault dip as drawn (true ' + S.dip + '°)';
+      $('rDipLab').textContent = 'Dip as drawn (true ' + S.dip + '°)';
       $('rDip').textContent = CACHE.dipDrawn.toFixed(0) + '°';
     }
     if (Q.on && !Q.revealed) {
       $('rRatio').textContent = 'hidden';
       $('rMs').textContent = 'hidden';
-      $('rVerdict').textContent = 'make your call';
+      $('rVerdict').textContent = 'Make your call';
       return;
     }
     $('rRatio').textContent = thr > 0 ? 'λ/' + (lam / thr).toFixed(1) : 'no fault';
@@ -544,20 +659,23 @@
 
   /* ------------------------------ picking ------------------------------- */
 
-  // Turn a drag into a fault plane, extrapolated to the full height of the
-  // display. A drag with almost no vertical extent counts as a click, which
-  // gives a vertical plane.
-  function pickFromDrag(d) {
-    const dy = d.y1 - d.y0;
-    if (Math.abs(dy) < 0.08) return { top: d.x1, bot: d.x1 };
-    const slope = (d.x1 - d.x0) / dy;
+  // Two clicks define the plane, which is then extrapolated to the full height
+  // of the display. Clicks at nearly the same height would give a meaningless
+  // near-horizontal fault, so those are treated as a vertical plane instead.
+  function planeFrom(a, b) {
+    const dy = b.y - a.y;
+    if (Math.abs(dy) < 0.05) {
+      const x = (a.x + b.x) / 2;
+      return { top: x, bot: x };
+    }
+    const slope = (b.x - a.x) / dy;
     return {
-      top: clamp(d.x0 + slope * (0 - d.y0), -0.6, 1.6),
-      bot: clamp(d.x0 + slope * (1 - d.y0), -0.6, 1.6),
+      top: clamp(a.x + slope * (0 - a.y), -0.6, 1.6),
+      bot: clamp(a.x + slope * (1 - a.y), -0.6, 1.6),
     };
   }
 
-  function dragPoint(ev) {
+  function pointAt(ev) {
     const r = $('secCanvas').getBoundingClientRect();
     const q = CACHE.rect;
     return {
@@ -570,28 +688,31 @@
     const c = $('secCanvas');
     c.addEventListener('pointerdown', (e) => {
       if (!Q.on || Q.revealed || !CACHE.rect) return;
-      const p = dragPoint(e);
-      Q.drag = { x0:p.x, y0:p.y, x1:p.x, y1:p.y };
-      c.setPointerCapture(e.pointerId);
       e.preventDefault();
+      const p = pointAt(e);
+      if (Q.p1) {                 // second click completes the plane
+        Q.pick = planeFrom(Q.p1, p);
+        Q.p1 = null;
+      } else {                    // first click, or starting over
+        Q.p1 = p;
+        Q.pick = null;
+      }
+      Q.hover = p;
       render(false);
     });
     c.addEventListener('pointermove', (e) => {
-      if (!Q.drag) return;
-      const p = dragPoint(e);
-      Q.drag.x1 = p.x; Q.drag.y1 = p.y;
+      if (!Q.on || Q.revealed || !CACHE.rect || !Q.p1) return;
+      Q.hover = pointAt(e);
       render(false);
     });
-    c.addEventListener('pointerup', () => {
-      if (!Q.drag) return;
-      Q.pick = pickFromDrag(Q.drag);
-      Q.drag = null;
-      render(false);
+    c.addEventListener('pointerleave', () => {
+      if (Q.p1) { Q.hover = null; render(false); }
     });
-    c.addEventListener('pointercancel', () => { Q.drag = null; render(false); });
   }
 
   /* -------------------------------- quiz -------------------------------- */
+
+  function clearPick() { Q.p1 = null; Q.hover = null; Q.pick = null; }
 
   function newCase() {
     const rnd = Math.random;
@@ -603,7 +724,8 @@
       xc: 0.3 + rnd() * 0.4,
       seed: Math.floor(rnd() * 1e6),
     };
-    Q.pick = null; Q.drag = null; Q.revealed = false;
+    clearPick();
+    Q.revealed = false;
     $('verdict').textContent = '';
     render();
   }
@@ -615,7 +737,9 @@
 
     if (!saidNoFault && !Q.pick) {
       $('verdict').style.color = 'var(--crimson)';
-      $('verdict').textContent = 'Draw a pick on the section first, or call it as no fault.';
+      $('verdict').textContent = Q.p1
+        ? 'Click a second point to finish the plane, or call it as no fault.'
+        : 'Click two points on the section to draw a fault plane, or call it as no fault.';
       return;
     }
     Q.revealed = true; Q.asked++;
@@ -649,7 +773,7 @@
   function render(recompute) {
     if (recompute !== false) compute();
     const L = layout();
-    drawSection(L); drawCompare(L); updateLegend(); updateReadout();
+    drawModel(L); drawSection(L); drawCompare(L); updateLegend(); updateReadout();
   }
   function save() { SEIS.writeState(S, DEF); }
 
@@ -674,6 +798,7 @@
     $('thkMin').value = S.thkMin; $('thkMax').value = S.thkMax;
     $('gain').value = S.gain; $('cmap').value = S.cmap;
     $('units').value = S.units; $('showFault').checked = S.showF;
+    $('showModel').checked = S.model;
   }
   function bump() { syncLabels(); render(); save(); }
 
@@ -690,6 +815,7 @@
   $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(); });
   $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
   $('showFault').addEventListener('change', () => { S.showF = $('showFault').checked; bump(); });
+  $('showModel').addEventListener('change', () => { S.model = $('showModel').checked; bump(); });
   $('newLayers').addEventListener('click', () => {
     const s = Math.floor(Math.random() * 1e6);
     if (Q.on && Q.hidden) Q.hidden.seed = s; else S.seed = s;
@@ -699,7 +825,7 @@
   $('quiz').addEventListener('change', () => {
     Q.on = $('quiz').checked;
     if (Q.on) newCase();
-    else { Q.hidden = null; Q.pick = null; Q.drag = null; Q.revealed = false; render(); }
+    else { Q.hidden = null; clearPick(); Q.revealed = false; render(); }
     syncLabels();
   });
   $('newCase').addEventListener('click', newCase);
