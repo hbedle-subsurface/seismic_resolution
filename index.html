@@ -126,16 +126,16 @@
         <span class="flag">In progress</span>
       </div>
 
-      <div class="card planned">
-        <div class="thumb"></div>
+      <a class="card" href="modules/depth.html">
+        <canvas class="thumb-canvas" data-thumb="depth"></canvas>
         <div class="card-body">
           <div class="card-no">05</div>
           <h3>Resolution with depth</h3>
           <p>Velocity climbs, the earth attenuates your high frequencies, and λ/4 in meters grows the deeper you dive into the subsurface.</p>
           <div class="q">Why does my deep interpretation feel so much vaguer?</div>
         </div>
-        <span class="flag">In progress</span>
-      </div>
+        <span class="flag next">Live</span>
+      </a>
 
       <div class="card planned">
         <div class="thumb"></div>
@@ -293,6 +293,40 @@
     SEIS.drawVarDensity(ctx, fld, nx, nt, { x:0, y:0, w:w, h:h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.15 });
   }
 
+  function thumbDepth(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const t0 = 0.05, tEnd = 2.6, f0 = 42, Q = 55, v0 = 2000, vmax = 4600;
+    const velAt = (t) => v0 * Math.pow(vmax / v0, Math.max(0, Math.min(t, tEnd)) / tEnd);
+    const effFreq = (t) => {
+      if (t <= 0) return f0;
+      const a = 2 / (f0 * f0), b = Math.PI * t / Q, c = -2;
+      return (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a);
+    };
+    const ampDecay = (t) => (t <= 0 ? 1 : Math.exp(-Math.PI * effFreq(t) * t / Q));
+    const nx = 120, dt = 0.0012, nt = Math.round((tEnd - t0) / dt);
+    const rnd = SEIS.mulberry32(4021);
+    const layers = [];
+    let t = t0 + 0.03, sign = 1;
+    while (t < tEnd - 0.05 && layers.length < 26) {
+      layers.push({ t, r: sign * (0.05 + rnd() * 0.09) });
+      sign = rnd() < 0.8 ? -sign : sign;
+      t += 2 * (18 + rnd() * 45) / velAt(t);
+    }
+    const base = new Float32Array(nt);
+    layers.forEach((L) => {
+      const wav = SEIS.makeWavelet({ type: 'ricker', f: effFreq(L.t) });
+      const amp = L.r * ampDecay(L.t), half = wav.halfLength;
+      const i0 = Math.max(0, Math.ceil((L.t - half - t0) / dt));
+      const i1 = Math.min(nt - 1, Math.floor((L.t + half - t0) / dt));
+      for (let i = i0; i <= i1; i++) base[i] += amp * wav.fn(t0 + i * dt - L.t);
+    });
+    const fld = new Float32Array(nx * nt);
+    for (let ix = 0; ix < nx; ix++) fld.set(base, ix * nt);
+    SEIS.drawVarDensity(ctx, fld, nx, nt, { x: 0, y: 0, w: w, h: h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.11 });
+  }
+
   function thumbWavelet(canvas) {
     const w = canvas.parentElement.clientWidth, h = 118;
     const ctx = SEIS.fitCanvas(canvas, w, h);
@@ -328,6 +362,7 @@
       if (c.dataset.thumb === 'wedge') thumbWedge(c);
       else if (c.dataset.thumb === 'fault') thumbFault(c);
       else if (c.dataset.thumb === 'wavelet') thumbWavelet(c);
+      else if (c.dataset.thumb === 'depth') thumbDepth(c);
     });
   }
   drawThumbs();
