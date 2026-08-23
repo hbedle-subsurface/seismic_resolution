@@ -10,7 +10,7 @@ const SEIS = (function () {
 
   /* ---------------------------------------------------------------------
      WAVELETS
-     All zero-phase, normalised so w(0) = 1.
+     All zero-phase, normalized so w(0) = 1.
      --------------------------------------------------------------------- */
 
   // Ricker: the classic single-parameter wavelet. f = peak frequency (Hz).
@@ -104,6 +104,24 @@ const SEIS = (function () {
     return out;
   }
 
+  /**
+   * Same result as sampleTrace, but each spike only writes over the samples its
+   * wavelet actually reaches. With a few reflectors it makes no difference; with
+   * forty of them it is several times faster, because the cost stops scaling
+   * with the length of the trace.
+   */
+  function traceFromSpikes(spikes, t0, dt, nt, wav) {
+    const out = new Float32Array(nt);
+    const half = wav.halfLength;
+    for (let s = 0; s < spikes.length; s++) {
+      const st = spikes[s].t, sr = spikes[s].r;
+      const i0 = Math.max(0, Math.ceil((st - half - t0) / dt));
+      const i1 = Math.min(nt - 1, Math.floor((st + half - t0) / dt));
+      for (let i = i0; i <= i1; i++) out[i] += sr * wav.fn(t0 + i * dt - st);
+    }
+    return out;
+  }
+
   /* ---------------------------------------------------------------------
      REFLECTION COEFFICIENTS
      --------------------------------------------------------------------- */
@@ -143,7 +161,7 @@ const SEIS = (function () {
    * as vertical striping, which is not what noise on a migrated section
    * looks like — and vertical striping is far too easy to tell apart from a fault.
    *
-   * Returns Float32Array[nx*nt], RMS-normalised to 1.
+   * Returns Float32Array[nx*nt], RMS-normalized to 1.
    */
   function bandLimitedNoise(nx, nt, dt, wav, seed, lateral) {
     const rnd = mulberry32(seed);
@@ -189,7 +207,7 @@ const SEIS = (function () {
   }
 
   /* ---------------------------------------------------------------------
-     COLOUR MAPS
+     COLOR MAPS
      Each returns [r,g,b] for x in [-1, 1].
      --------------------------------------------------------------------- */
 
@@ -217,8 +235,8 @@ const SEIS = (function () {
       [248, 248, 246],
       [214, 138, 122], [176, 36, 24], [92, 14, 12],
     ]),
-    // Grey. Honest, and what a lot of published sections still use.
-    grey: rampMap([
+    // Gray. Honest, and what a lot of published sections still use.
+    gray: rampMap([
       [16, 18, 20], [86, 92, 98], [186, 190, 194],
       [246, 246, 244],
       [186, 190, 194], [86, 92, 98], [16, 18, 20],
@@ -494,7 +512,7 @@ const SEIS = (function () {
 
   return {
     ricker, ormsby, makeWavelet, spectrum,
-    traceValue, sampleTrace, rc,
+    traceValue, sampleTrace, traceFromSpikes, rc,
     mulberry32, gaussRand, bandLimitedNoise,
     COLORMAPS, fitCanvas, drawVarDensity, drawWiggle,
     niceTicks, frame, axisBottom, axisLeft, dashedLine, tag,
