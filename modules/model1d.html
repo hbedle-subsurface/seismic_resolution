@@ -578,19 +578,51 @@
     const rect = panelRect(L.w.syn, L.h, L.stacked ? 52 : 12);
     const { M, trace, nt } = CACHE;
 
-    const peak = Math.max(0.03, M.iface.reduce((m, f) => Math.max(m, Math.abs(f.rc)), 0) * 1.15);
-    const NX = 14;
-    const field = new Float32Array(NX * nt);
-    for (let ix = 0; ix < NX; ix++) field.set(trace, ix * nt);
+    // Scale to the trace itself, not to the largest reflection coefficient.
+    // Interference makes the trace exceed the biggest RC wherever two events
+    // stack, so scaling on RC alone lets the wiggle run off the panel.
+    let peak = 1e-6;
+    for (let i = 0; i < nt; i++) peak = Math.max(peak, Math.abs(trace[i]));
 
-    SEIS.drawVarDensity(ctx, field, NX, nt, rect,
+    // variable density behind, one column stretched across the panel
+    SEIS.drawVarDensity(ctx, trace, 1, nt, rect,
       { cmap: SEIS.COLORMAPS[S.cmap], gain: S.gain, clip: peak });
-    SEIS.drawWiggle(ctx, field, NX, nt, rect,
-      { step: 4, clip: peak / S.gain, excursion: 1.7,
-        stroke: 'rgba(22,25,28,.75)', fill: 'rgba(22,25,28,.30)' });
+
+    const yOf = yScale(rect, M.tEnd);
+    const cx = rect.x + rect.w * 0.5;
+    // Gain drives the color panel over its full range, but the wiggle only
+    // responds up to 1.6x. Beyond that the trace would flat-top against the
+    // panel edge, which reads as a broken plot rather than as a strong event.
+    // At the cap the excursion reaches 96% of the half-panel, so it always fits.
+    const amp = rect.w * 0.30 * Math.min(S.gain, 1.6) / peak;
+    const xOf = (v) => cx + v * amp;
+
+    ctx.save();
+    ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+
+    // positive lobes filled, the way a variable-area display shows a peak
+    ctx.fillStyle = 'rgba(22,25,28,.32)';
+    ctx.beginPath();
+    ctx.moveTo(cx, rect.y);
+    for (let i = 0; i < nt; i++) {
+      ctx.lineTo(xOf(Math.max(0, trace[i])), rect.y + (i / (nt - 1)) * rect.h);
+    }
+    ctx.lineTo(cx, rect.y + rect.h);
+    ctx.closePath(); ctx.fill();
+
+    ctx.strokeStyle = 'rgba(92,102,112,.45)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(22,25,28,.9)'; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let i = 0; i < nt; i++) {
+      const x = xOf(trace[i]), y = rect.y + (i / (nt - 1)) * rect.h;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
 
     // tie each interface back to the event it produced
-    const yOf = yScale(rect, M.tEnd);
     M.iface.forEach((f) => {
       SEIS.dashedLine(ctx, rect.x, yOf(f.t), rect.x + rect.w, yOf(f.t),
                       'rgba(11,114,133,.55)', [3, 4], 1);
@@ -601,7 +633,7 @@
     ctx.save();
     ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('one trace, repeated', rect.x + rect.w / 2, rect.y + rect.h + 6);
+    ctx.fillText('peak amplitude ' + peak.toFixed(3), rect.x + rect.w / 2, rect.y + rect.h + 6);
     ctx.restore();
   }
 
