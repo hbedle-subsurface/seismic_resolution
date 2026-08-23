@@ -6,7 +6,7 @@
 :root {
   --ink:        #16191C;
   --ink-soft:   #2C3239;
-  --paper:      #F3F4F1;
+  --paper:      #F1F3F5;
   --panel:      #FFFFFF;
   --crimson:    #841617;
   --crimson-dp: #5A0E0F;
@@ -459,3 +459,5 @@ details.notes p, details.notes li { font-size: 14px; color: var(--ink-soft); max
   body { background: #fff; }
   .lab { grid-template-columns: 1fr; }
 }
+
+
