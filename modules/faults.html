@@ -115,9 +115,9 @@
       <div class="ctl">
         <label for="cmap">Color map</label>
         <select id="cmap">
-          <option value="bwr">Blue – white – red</option>
-          <option value="cbsafe">Blue – white – orange (colorblind safe)</option>
-          <option value="gray">Grayscale</option>
+          <option value="bwr">Blue peak / red trough</option>
+          <option value="cbsafe">Blue peak / orange trough (colorblind safe)</option>
+          <option value="gray">Grayscale (black peak)</option>
         </select>
       </div>
       <div class="ctl">
@@ -270,11 +270,15 @@
       is shaded by acoustic impedance, a property of the rock: pale for low, dark for high. The seismic is
       colored by reflection coefficient, a property of the boundary between two rocks, so color appears only
       where impedance changes and a thick uniform bed is blank in the middle.</p>
-    <p>Polarity follows the SEG normal convention used in the United States: an increase in impedance gives a
-      positive reflection coefficient, which plots as a peak and is red on the default map. So a pale-over-dark
-      boundary in the model should line up with a red event below it. Switching to reverse polarity flips the
-      seismic and leaves the rock alone, which is the point of the switch. The legend swatches are read from
-      whichever color map is loaded, so they stay correct in grayscale too.</p>
+    <p>Polarity follows the SEG convention. Under normal polarity, the positive standard used in the United
+      States, an increase in acoustic impedance is a positive reflection coefficient and is displayed as a
+      peak: black on a gray section, blue on the default color map. A decrease is a trough, shown red.
+      Reverse polarity flips that, so an impedance increase becomes a trough. Either way the color map itself
+      runs trough to peak and never changes; polarity acts on the traces, not on the colors.</p>
+    <p>The practical check is that a pale-over-dark boundary in the layer model — impedance increasing
+      downward — should line up with a blue event in the section under normal polarity, and a red one under
+      reverse. The legend swatches are sampled through the current polarity and color map, so they stay
+      correct in grayscale and in colorblind-safe mode too.</p>
     <p>The display is vertically exaggerated, as nearly all seismic displays are. The stat strip gives the fault
       dip as drawn alongside its true dip so you can compare the two. Fault dips read off a section are
       routinely too steep for this reason.</p>
@@ -434,14 +438,20 @@
     return sp;
   }
 
-  // Seismic color shows the reflection coefficient, not impedance itself: red
-  // and blue are a positive and a negative RC. Which one corresponds to an
-  // impedance increase depends on the polarity convention, and the caption
-  // above the section spells that out.
+  // Seismic color shows the reflection coefficient, not impedance itself.
+  //
+  // The color maps run trough-to-peak, and polarity decides whether a positive
+  // RC is drawn as a peak or as a trough, so the swatch for a given RC has to
+  // be sampled through the polarity sign rather than assumed.
   function rcColors() {
     const cmap = SEIS.COLORMAPS[S.cmap];
+    const pol = S.pol === 'reverse' ? -1 : 1;
     const rgb = (v) => { const c = cmap(v); return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
-    return { pos: rgb(0.85), neg: rgb(-0.85) };
+    return {
+      pos: rgb(0.85 * pol), neg: rgb(-0.85 * pol),
+      posKick: pol > 0 ? 'peak' : 'trough',
+      negKick: pol > 0 ? 'trough' : 'peak',
+    };
   }
 
   const pickAt = (fy) => Q.pick.top + (Q.pick.bot - Q.pick.top) * fy;
@@ -857,8 +867,8 @@
   function updateLegend() {
     const rc = rcColors();
     const bits = [];
-    bits.push('<span><i class="sw" style="background:' + rc.pos + '"></i>positive RC (peak)</span>');
-    bits.push('<span><i class="sw" style="background:' + rc.neg + '"></i>negative RC (trough)</span>');
+    bits.push('<span><i class="sw" style="background:' + rc.pos + '"></i>positive RC (' + rc.posKick + ')</span>');
+    bits.push('<span><i class="sw" style="background:' + rc.neg + '"></i>negative RC (' + rc.negKick + ')</span>');
     if (Q.on) bits.push('<span><i style="border-color:' + CRIMSON + '"></i>Your pick</span>');
     if (showingTruth()) {
       bits.push('<span><i style="border-color:' + TEAL + ';border-top-style:dashed"></i>True fault plane</span>');
@@ -872,8 +882,8 @@
       '<span><i style="border-color:' + TEAL + '"></i>diff ×2</span>';
 
     $('polNote').textContent = S.pol === 'reverse'
-      ? 'SEG reverse polarity — an impedance increase is a trough'
-      : 'SEG normal polarity (American) — an impedance increase is a peak';
+      ? 'SEG reverse polarity — an impedance increase plots as a trough'
+      : 'SEG normal polarity (American) — an impedance increase plots as a peak';
     $('secHint').textContent =
       !Q.on ? 'The two traces come from the dashed lines, one either side of the fault'
       : Q.revealed ? 'Answer shown. Start a new case to pick again.'
