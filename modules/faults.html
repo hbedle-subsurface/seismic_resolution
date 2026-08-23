@@ -116,6 +116,13 @@
         <label for="gain">Gain <span class="val" id="gainV">1.0×</span></label>
         <input type="range" id="gain" min="0.4" max="4" step="0.1" value="1">
       </div>
+      <div class="ctl">
+        <label>Polarity <span class="val" id="polV">SEG normal</span></label>
+        <div class="seg" role="group" aria-label="Display polarity">
+          <button type="button" id="pNorm" aria-pressed="true">Normal</button>
+          <button type="button" id="pRev" aria-pressed="false">Reverse</button>
+        </div>
+      </div>
       <label class="check"><input type="checkbox" id="showModel" checked> Show the layer model</label>
       <label class="check"><input type="checkbox" id="showFault"> Draw the true fault plane</label>
       <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
@@ -147,7 +154,7 @@
     <div class="sec-row">
       <div class="panel-col">
         <p class="sublabel"><b>3</b> The seismic that comes out
-          <span class="note">layers convolved with the wavelet &nbsp;·&nbsp; what you would interpret</span></p>
+          <span class="note" id="polNote">layers convolved with the wavelet</span></p>
         <canvas id="secCanvas" aria-label="Synthetic seismic section across a normal fault"></canvas>
         <div class="legend" id="secLegend"></div>
       </div>
@@ -236,6 +243,12 @@
       amplitude changes from juxtaposition, and the smearing that imperfect migration puts on every real fault.
       Those effects make faults easier to see in some settings and harder in others, but none of them removes
       the resolution floor, which is what this module is about.</p>
+    <p>Polarity follows the SEG normal convention used in the United States: an increase in acoustic impedance
+      is a positive reflection coefficient and plots as a peak, which on the default blue-white-red map is red.
+      The layer model is shaded by true impedance, pale for low and dark for high, so a pale-over-dark boundary
+      is an impedance increase and should line up with a red event below it. Switching to reverse polarity
+      flips the seismic and leaves the rock alone, which is the point of the switch. The impedance key in the
+      legend is read from whichever color map is loaded, so it stays correct in grayscale too.</p>
     <p>The display is vertically exaggerated, as nearly all seismic displays are. The stat strip gives the fault
       dip as drawn alongside its true dip so you can compare the two. Fault dips read off a section are
       routinely too steep for this reason.</p>
@@ -271,7 +284,7 @@
   const DEF = {
     thr: 20, dip: 65, f: 35, v: 2800, snr: 8, dx: 12.5,
     thkMin: 15, thkMax: 60, seed: 7,
-    disp: 'vd', cmap: 'bwr', gain: 1, showF: false, model: true, units: 'm',
+    disp: 'vd', cmap: 'bwr', gain: 1, showF: false, model: true, pol: 'normal', units: 'm',
   };
   let S = SEIS.readState(DEF);
 
@@ -359,13 +372,26 @@
   // Testing against the pre-throw position alone is what produced a staircase.
   function spikesAt(x, layers, dtThrow, xcFrac) {
     const tc = tCross(x, xcFrac);
+    // Polarity is a display convention, so it flips the seismic and leaves the
+    // rock alone. The layer model always shows true impedance.
+    const pol = S.pol === 'reverse' ? -1 : 1;
     const sp = [];
     for (let i = 0; i < layers.length; i++) {
       const hw = layers[i].t + dtThrow;
-      if (hw < tc) sp.push({ t: hw, r: layers[i].r });
-      else if (layers[i].t > tc) sp.push({ t: layers[i].t, r: layers[i].r });
+      if (hw < tc) sp.push({ t: hw, r: pol * layers[i].r });
+      else if (layers[i].t > tc) sp.push({ t: layers[i].t, r: pol * layers[i].r });
     }
     return sp;
+  }
+
+  // The color this display gives a rise in acoustic impedance. Under SEG normal
+  // polarity (the American convention) an impedance increase is a positive
+  // reflection coefficient, so it plots as a peak.
+  function impedanceColors() {
+    const cmap = SEIS.COLORMAPS[S.cmap];
+    const up = S.pol === 'reverse' ? -0.85 : 0.85;
+    const rgb = (v) => { const c = cmap(v); return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
+    return { up: rgb(up), down: rgb(-up) };
   }
 
   const pickAt = (fy) => Q.pick.top + (Q.pick.bot - Q.pick.top) * fy;
@@ -739,19 +765,25 @@
   /* ------------------------- legend and hint ---------------------------- */
 
   function updateLegend() {
+    const ic = impedanceColors();
     const bits = [];
+    bits.push('<span><i class="sw" style="background:' + ic.up + '"></i>impedance up</span>');
+    bits.push('<span><i class="sw" style="background:' + ic.down + '"></i>impedance down</span>');
     if (Q.on) bits.push('<span><i style="border-color:' + CRIMSON + '"></i>Your pick</span>');
     if (showingTruth()) {
       bits.push('<span><i style="border-color:' + TEAL + ';border-top-style:dashed"></i>True fault plane</span>');
     }
-    bits.push('<span><i style="border-color:' + C_LEFT + ';border-top-style:dashed"></i>Trace 1</span>');
-    bits.push('<span><i style="border-color:' + C_RIGHT + ';border-top-style:dashed"></i>Trace 2</span>');
+    bits.push('<span><i style="border-color:' + C_LEFT + ';border-top-style:dashed"></i>trace 1</span>');
+    bits.push('<span><i style="border-color:' + C_RIGHT + ';border-top-style:dashed"></i>trace 2</span>');
     $('secLegend').innerHTML = bits.join('');
     $('cmpLegend').innerHTML =
-      '<span><i style="border-color:' + C_LEFT + '"></i>Trace 1</span>' +
-      '<span><i style="border-color:' + C_RIGHT + '"></i>Trace 2</span>' +
-      '<span><i style="border-color:' + TEAL + '"></i>Difference ×2</span>';
+      '<span><i style="border-color:' + C_LEFT + '"></i>trace 1</span>' +
+      '<span><i style="border-color:' + C_RIGHT + '"></i>trace 2</span>' +
+      '<span><i style="border-color:' + TEAL + '"></i>diff ×2</span>';
 
+    $('polNote').textContent = S.pol === 'reverse'
+      ? 'SEG reverse polarity — an impedance increase is a trough'
+      : 'SEG normal polarity (American) — an impedance increase is a peak';
     $('secHint').textContent =
       !Q.on ? 'The two traces come from the dashed lines, one either side of the fault'
       : Q.revealed ? 'Answer shown. Start a new case to pick again.'
@@ -906,6 +938,12 @@
   function render(recompute) {
     if (recompute !== false) compute();
     const L = layout();
+    // Columns are sized to their canvas. Without this the legend below a narrow
+    // panel sets the column width and spills past the edge of the box.
+    $('modelCanvas').parentElement.style.width = L.secW + 'px';
+    $('wavCanvas').parentElement.style.width = L.cmpW + 'px';
+    $('secCanvas').parentElement.style.width = L.secW + 'px';
+    $('cmpCanvas').parentElement.style.width = L.cmpW + 'px';
     drawModel(L); drawWavelet(L); drawSection(L); drawCompare(L); updateLegend(); updateReadout();
   }
   function save() { SEIS.writeState(S, DEF); }
@@ -923,6 +961,9 @@
     $('dVD').setAttribute('aria-pressed', S.disp === 'vd');
     $('dBoth').setAttribute('aria-pressed', S.disp === 'both');
     $('dWig').setAttribute('aria-pressed', S.disp === 'wiggle');
+    $('pNorm').setAttribute('aria-pressed', S.pol === 'normal');
+    $('pRev').setAttribute('aria-pressed', S.pol === 'reverse');
+    $('polV').textContent = S.pol === 'reverse' ? 'SEG reverse' : 'SEG normal';
     $('quizBox').hidden = !Q.on;
   }
   function pushToInputs() {
@@ -944,6 +985,7 @@
 
   const toggle = (id, key, val) => $(id).addEventListener('click', () => { S[key] = val; bump(); });
   toggle('dVD','disp','vd'); toggle('dBoth','disp','both'); toggle('dWig','disp','wiggle');
+  toggle('pNorm','pol','normal'); toggle('pRev','pol','reverse');
 
   $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(); });
   $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
