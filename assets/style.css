@@ -285,7 +285,7 @@ footer p { margin: 0 0 6px; max-width: 62ch; }
   font-size: clamp(1.8rem, 3.6vw, 2.5rem); letter-spacing: -0.022em;
   margin: 8px 0 8px; line-height: 1.03;
 }
-.mod-head .sub { margin: 0; color: var(--ink-soft); max-width: 70ch; font-size: 15.5px; }
+.mod-head .sub { margin: 0; color: var(--ink-soft); max-width: 92ch; font-size: 15.5px; }
 
 .lab {
   display: grid;
@@ -436,12 +436,28 @@ footer p { margin: 0 0 6px; max-width: 62ch; }
   .sec-row { flex-direction: column; gap: 14px; }
 }
 
-/* the layer-model panel that sits above the section */
-#modelWrap { margin-bottom: 15px; }
+/* stacked panels: layer model, seismic, traces */
+#modelWrap { margin-bottom: 16px; }
+.panel-col { flex: none; min-width: 0; }
+.hint-line {
+  font-family: var(--mono); font-size: 10.5px; color: var(--slate);
+  margin: -4px 0 12px;
+}
 .sublabel {
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .07em;
-  text-transform: uppercase; color: var(--slate);
-  margin: 0 0 6px;
+  text-transform: uppercase; color: var(--ink-soft);
+  margin: 0 0 6px; display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+}
+.sublabel b {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; flex: none;
+  background: var(--crimson); color: #fff;
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
+  letter-spacing: 0; border-radius: 50%;
+}
+.sublabel .note {
+  text-transform: none; letter-spacing: 0; color: var(--slate);
+  font-size: 10.5px;
 }
 
 .legend {
@@ -453,7 +469,11 @@ footer p { margin: 0 0 6px; max-width: 62ch; }
 .legend i { width: 15px; height: 0; border-top-width: 2px; border-top-style: solid; display: inline-block; }
 
 /* teaching blocks */
-.teach { display: grid; grid-template-columns: 1.32fr 1fr; gap: 22px; padding: 30px 0 10px; }
+.teach { display: grid; grid-template-columns: 1.12fr 1fr; gap: 22px; padding: 30px 0 10px; }
+@media (min-width: 1100px) {
+  .takeaway ul { columns: 2; column-gap: 26px; }
+  .takeaway li { break-inside: avoid; }
+}
 
 .tryit {
   background: var(--cream); border: 1px solid var(--cream-edge);
@@ -487,7 +507,7 @@ details.notes summary {
   cursor: pointer; font-family: var(--mono); font-size: 11px;
   letter-spacing: .13em; text-transform: uppercase; color: var(--crimson);
 }
-details.notes p, details.notes li { font-size: 14px; color: var(--ink-soft); max-width: 78ch; }
+details.notes p, details.notes li { font-size: 14px; color: var(--ink-soft); max-width: 92ch; }
 
 .pager {
   display: flex; justify-content: space-between; gap: 14px;
