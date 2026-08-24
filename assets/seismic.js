@@ -381,6 +381,43 @@ const SEIS = (function () {
     ]),
   };
 
+  /**
+   * Sequential maps, for quantities that run from low to high rather than
+   * negative to positive: thickness, amplitude magnitude, depth. Viridis and
+   * cividis are both perceptually uniform and safe for colour-vision
+   * deficiency; cividis is optimised for it specifically. Rainbow maps are
+   * avoided because they invent boundaries where the data has none.
+   */
+  const SEQMAPS = {
+    viridis: rampMapSeq([
+      [68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],
+      [31,158,137],[53,183,121],[109,205,89],[180,222,44],[253,231,37],
+    ]),
+    cividis: rampMapSeq([
+      [0,32,76],[0,67,88],[0,89,100],[62,109,105],[95,127,98],
+      [128,146,89],[165,166,76],[203,187,60],[243,209,39],[255,233,69],
+    ]),
+    warm: rampMapSeq([
+      [252,250,246],[253,231,160],[247,190,90],[233,131,60],[196,60,45],[110,16,20],
+    ]),
+  };
+
+  // like rampMap, but the input runs 0..1 instead of -1..1
+  function rampMapSeq(stops) {
+    return function (u) {
+      const v = Math.max(0, Math.min(1, u));
+      const p = v * (stops.length - 1);
+      const i = Math.min(stops.length - 2, Math.floor(p));
+      const f = p - i;
+      const a = stops[i], b = stops[i + 1];
+      return [
+        Math.round(lerp(a[0], b[0], f)),
+        Math.round(lerp(a[1], b[1], f)),
+        Math.round(lerp(a[2], b[2], f)),
+      ];
+    };
+  }
+
   /* ---------------------------------------------------------------------
      CANVAS HELPERS
      --------------------------------------------------------------------- */
@@ -681,7 +718,7 @@ const SEIS = (function () {
     ricker, ormsby, makeWavelet, spectrum,
     traceValue, sampleTrace, traceFromSpikes, rc,
     mulberry32, gaussRand, bandLimitedNoise, fft, fkSpectrum, phaseRotate,
-    COLORMAPS, fitCanvas, drawVarDensity, drawWiggle,
+    COLORMAPS, SEQMAPS, fitCanvas, drawVarDensity, drawWiggle,
     niceTicks, frame, axisBottom, axisLeft, dashedLine, tag, drawColorbar,
     UNITS, readState, writeState, copyLink, savePNG,
   };
