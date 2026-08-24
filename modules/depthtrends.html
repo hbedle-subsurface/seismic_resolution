@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the earth changes with depth — What Can You REALLY See in Seismic?</title>
+<meta name="description" content="Build an earth model from the surface down: compaction trends in velocity and density, an overpressured zone, depth to time, and what attenuation does to your bandwidth.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>What can you <b>really</b> see in seismic?</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="#notes">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 00 &nbsp;·&nbsp; Start here</p>
+    <h1>How the earth changes as you go down</h1>
+    <p class="sub">Before any of the resolution questions make sense, you need a feel for the earth the sound
+      is travelling through. Rocks get faster and denser with burial, seismic is recorded in time rather than
+      depth, and the earth quietly eats your high frequencies on the way down. Build a column here from the
+      surface — or the sea surface — to five kilometres, and watch all three happen at once.</p>
+  </div>
+
+  <!-- ============================ THE IDEA FIRST =========================== -->
+  <div class="teach" style="padding-top:6px">
+    <div class="tryit">
+      <h3>Start here — three things happen with depth</h3>
+      <p style="margin-top:0;font-size:14.5px"><b>Rocks compact.</b> Pile sediment on top of sediment and the
+        grains pack tighter, water is squeezed out, and the rock gets both faster and denser. Velocity climbs
+        roughly in a straight line with depth, and density follows it. That is the background trend, and most
+        of the earth obeys it.</p>
+      <p style="font-size:14.5px"><b>Time is not depth.</b> Seismic arrives in two-way time. Because velocity
+        keeps rising, a second of time near the surface covers far less rock than a second of time at four
+        kilometres. Every thickness you read off a section in milliseconds has to be converted with a
+        velocity that is itself changing.</p>
+      <p style="font-size:14.5px;margin-bottom:0"><b>The earth absorbs energy.</b> It takes the high
+        frequencies first, so the pulse that started sharp arrives at depth long and smooth. This is
+        attenuation, measured by a number called Q, and it is the reason deep data always looks softer than
+        shallow data.</p>
+    </div>
+    <div class="takeaway">
+      <h3>Why it matters for everything else</h3>
+      <p style="margin-top:0;font-size:14.5px">Those three trends fight each other in exactly the wrong
+        direction. Resolution depends on wavelength, <span class="k">λ = V / f</span>. Going down, the
+        velocity on top of that fraction gets <em>bigger</em> and the frequency underneath it gets
+        <em>smaller</em>. Both push the wavelength up.</p>
+      <p style="font-size:14.5px">So the thinnest bed you can resolve grows steadily with depth — often from
+        ten metres near the surface to fifty or more at four kilometres. That is not a failure of processing
+        or of the interpreter. It is the earth.</p>
+      <p style="font-size:14.5px;margin-bottom:0">Watch the last panel as you drag the depth marker down. It
+        is the single most useful plot on this page, and it is the reason every other module on this site has
+        a depth caveat in it.</p>
+    </div>
+  </div>
+
+  <!-- ============================== CONTROLS ============================== -->
+  <section class="controls">
+    <div class="ctl-col">
+      <h2>Start from</h2>
+      <div class="ctl">
+        <select id="preset">
+          <option value="gom" selected>Deepwater Gulf of Mexico</option>
+          <option value="shelf">Shallow shelf</option>
+          <option value="land">Onshore, no water</option>
+          <option value="nsea">North Sea</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="water">Water depth <span class="val" id="waterV">1500 m</span></label>
+        <input type="range" id="water" min="0" max="3000" step="25" value="1500">
+      </div>
+      <div class="ctl">
+        <label for="zmax">Model down to <span class="val" id="zmaxV">6000 m</span></label>
+        <input type="range" id="zmax" min="2000" max="9000" step="250" value="6000">
+      </div>
+      <div class="ctl">
+        <label for="units">Units</label>
+        <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>The compaction trend</h2>
+      <div class="ctl">
+        <label for="v0">Velocity at the top of the rock <span class="val" id="v0V">1700 m/s</span></label>
+        <input type="range" id="v0" min="1500" max="3000" step="25" value="1700">
+      </div>
+      <div class="ctl">
+        <label for="grad">How fast it climbs <span class="val" id="gradV">0.55 m/s per m</span></label>
+        <input type="range" id="grad" min="0.1" max="1.2" step="0.01" value="0.55">
+      </div>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:0">
+        Density follows the velocity through Gardner's relation, and shear velocity through the mudrock
+        line. Both are rules of thumb, and both are close enough to reason with.</p>
+    </div>
+
+    <div class="ctl-col">
+      <h2>An overpressured zone</h2>
+      <label class="check"><input type="checkbox" id="op" checked> Put one in</label>
+      <div class="ctl">
+        <label for="opTop">Top of the zone <span class="val" id="opTopV">3400 m</span></label>
+        <input type="range" id="opTop" min="500" max="8000" step="50" value="3400">
+      </div>
+      <div class="ctl">
+        <label for="opThick">How thick it is <span class="val" id="opThickV">900 m</span></label>
+        <input type="range" id="opThick" min="200" max="2500" step="50" value="900">
+      </div>
+      <div class="ctl">
+        <label for="opAmp">How strong the reversal is <span class="val" id="opAmpV">18%</span></label>
+        <input type="range" id="opAmp" min="2" max="35" step="1" value="18">
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Attenuation</h2>
+      <div class="ctl">
+        <label for="q">Q — how little the rock absorbs <span class="val" id="qV">150</span></label>
+        <input type="range" id="q" min="20" max="400" step="5" value="150">
+      </div>
+      <div class="ctl">
+        <label for="f0">Frequency leaving the source <span class="val" id="f0V">45 Hz</span></label>
+        <input type="range" id="f0" min="15" max="90" step="1" value="45">
+      </div>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 8px">
+        A high Q means the rock absorbs little. Hard rock is 200 and up; soft, gassy, shallow sediment can be
+        under 50.</p>
+      <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
+    </div>
+  </section>
+
+  <!-- ============================== THE LOGS ============================== -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>The column you just built</h3>
+      <span class="hint">Click any panel to move the depth marker</span>
+    </div>
+    <div class="sec-row" id="logRow">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> The earth
+          <span class="note">shaded by impedance</span></p>
+        <canvas id="earthCanvas" aria-label="Earth column shaded by acoustic impedance"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> Velocity
+          <span class="note">Vp and Vs</span></p>
+        <canvas id="velCanvas" aria-label="P and S velocity against depth"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> Density</p>
+        <canvas id="rhoCanvas" aria-label="Density against depth"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>4</b> Impedance
+          <span class="note">Vp × density</span></p>
+        <canvas id="aiCanvas" aria-label="Acoustic impedance against depth"></canvas>
+      </div>
+    </div>
+    <div class="legend" id="logLegend"></div>
+  </section>
+
+  <!-- ========================== TIME AND BANDWIDTH ========================= -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>What that means for your data</h3>
+    </div>
+    <p class="hint-line">Depth becomes time, the pulse loses its high frequencies, and the thinnest bed you can resolve grows.</p>
+    <div class="sec-row" id="dataRow">
+      <div class="panel-col">
+        <p class="sublabel"><b>5</b> Depth to time</p>
+        <canvas id="twtCanvas" aria-label="Two-way time against depth"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>6</b> Frequency left
+          <span class="note">after the earth absorbs</span></p>
+        <canvas id="freqCanvas" aria-label="Peak frequency against depth"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>7</b> The pulse itself
+          <span class="note">at the surface, and at your marker</span></p>
+        <canvas id="pulseCanvas" aria-label="The wavelet at the surface and at depth"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>8</b> Thinnest bed you can resolve
+          <span class="note">λ/4</span></p>
+        <canvas id="resCanvas" aria-label="Quarter wavelength against depth"></canvas>
+      </div>
+    </div>
+    <div class="legend" id="dataLegend"></div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span>Depth at the marker</span><b id="rZ">— m</b></div>
+    <div class="stat"><span>Two-way time there</span><b id="rT">— s</b></div>
+    <div class="stat"><span>Vp / Vs</span><b id="rV">— / —</b></div>
+    <div class="stat"><span>Vp/Vs ratio</span><b id="rRatio">—</b></div>
+    <div class="stat"><span>Density</span><b id="rRho">— g/cc</b></div>
+    <div class="stat"><span>Impedance</span><b id="rAI">—</b></div>
+    <div class="stat"><span>Peak frequency left</span><b id="rF">— Hz</b></div>
+    <div class="stat"><span>Wavelength there</span><b id="rLam">— m</b></div>
+    <div class="stat key"><span>Thinnest bed you could resolve</span><b id="rRes">— m</b></div>
+    <div class="stat wide"><span>Compared with the shallow section</span><b id="rVerdict">—</b></div>
+  </div>
+
+  <!-- ============================== TEACHING ============================== -->
+  <div class="teach">
+    <div class="tryit">
+      <h3>Try this</h3>
+      <ol>
+        <li><b>Drag the depth marker from top to bottom</b> and watch the last stat cell.
+          <span class="ans">The thinnest resolvable bed grows several times over between the shallow section
+            and the deep one. Nothing about the equipment changed. This single number explains why a
+            prospect that looked crisp at 1.5 s is a smear at 4 s.</span></li>
+        <li><b>Find the overpressured zone in panel 2.</b> It is the kick to the left in the velocity curve.
+          <span class="ans">Compaction reverses because the pore fluid is carrying some of the weight the
+            grains should be carrying, so the rock stays looser than its depth suggests. Velocity drops,
+            density drops with it, and drilling into it without knowing is how wells get into
+            trouble. On seismic it appears as a velocity inversion, and picking it early is one of the
+            genuinely high-value things an interpreter does.</span></li>
+        <li><b>Watch what it does to impedance in panel 4.</b>
+          <span class="ans">There is a strong negative reflection at the top of the zone and a positive one
+            at its base, because impedance falls and then recovers. That pair is often the clearest thing on
+            the section, and it is a fluid-pressure boundary rather than a rock-type boundary.</span></li>
+        <li><b>Turn the water depth down to zero.</b>
+          <span class="ans">The whole time axis shifts up by the two-way time through the water, and the
+            shear velocity curve now starts at the surface instead of at the seabed. Water carries no shear
+            wave at all, which is why marine streamer data records only P waves.</span></li>
+        <li><b>Take Q from 300 down to 50</b> and watch panels 6, 7 and 8 together.
+          <span class="ans">The pulse visibly fattens and the resolvable bed thickness grows. Gassy or very
+            soft shallow sediment can do this, and everything beneath it is degraded — the damage is done on
+            the way through and no processing fully undoes it.</span></li>
+        <li><b>Push the velocity gradient from 0.3 up to 1.0.</b>
+          <span class="ans">A fast-compacting section reaches high velocity sooner, so it runs out of
+            resolution sooner. Slow, undercompacted sections keep their resolution deeper. Two basins at the
+            same depth can be very different targets.</span></li>
+      </ol>
+    </div>
+
+    <div class="takeaway">
+      <h3>What to carry away</h3>
+      <ul>
+        <li><b>Velocity and density climb together with burial</b>, and impedance climbs faster than either,
+          because it is their product.</li>
+        <li><b>A millisecond is not a fixed thickness.</b> It is worth more rock the deeper you go, because
+          velocity keeps rising.</li>
+        <li><b>Overpressure reverses the trend</b>, and shows up as a velocity and impedance inversion — one
+          of the few places seismic tells you about fluids rather than rock.</li>
+        <li><b>Q describes how much energy the rock absorbs.</b> High frequencies go first, so bandwidth
+          narrows steadily on the way down.</li>
+        <li><b>Deep resolution is worse for two reasons at once</b>, higher velocity and lower frequency, and
+          both act on the same wavelength.</li>
+      </ul>
+    </div>
+  </div>
+
+  <details class="notes" id="notes">
+    <summary>Method, assumptions, and where to read more</summary>
+    <p>Velocity below the seabed follows a linear compaction trend,
+      <span class="k">V = V₀ + k·z</span>. Density comes from Gardner's relation,
+      <span class="k">ρ = 0.31·V<sup>0.25</sup></span> with V in m/s, which is the metric form of the
+      original ft/s expression. Shear velocity uses Castagna's mudrock line,
+      <span class="k">Vs = (Vp − 1360)/1.16</span>. Water is 1500 m/s, 1.03 g/cc, and carries no shear wave.
+      All three are rules of thumb that hold for clastic sections and fail for carbonates, evaporites and
+      anything unusual — they are here to give the right shape, not the right number for your field.</p>
+    <p>The overpressured zone multiplies the velocity trend by a smooth raised-cosine trough. Density falls
+      with it through Gardner, which gives a drop of a few per cent for a substantial velocity reversal, and
+      that is about what is observed.</p>
+    <p>Two-way time is integrated down the column as <span class="k">Σ 2·dz/V</span>. Attenuation is
+      constant-Q: the amplitude spectrum is multiplied by <span class="k">exp(−π f t*)</span> where
+      <span class="k">t* = Σ dt/Q</span> along the path, with water treated as lossless. For a Ricker source
+      the surviving peak frequency then has a closed form, which is checked here against a numerical search
+      of the attenuated spectrum and agrees to better than a tenth of a hertz.</p>
+    <p>What this does <em>not</em> include, and it matters: processing. Inverse-Q filtering and spectral
+      whitening recover part of the lost bandwidth, so real processed data at depth usually looks better than
+      the raw physics here suggests. What is shown is what the earth does before anybody tries to correct it.
+      Also left out are velocity dispersion, which accompanies attenuation, and the anisotropy that makes
+      real velocities depend on direction.</p>
+    <ul>
+      <li>Gardner, G.H.F., Gardner, L.W., and Gregory, A.R., 1974, Formation velocity and density:
+        <em>Geophysics</em>, 39, 770–780.</li>
+      <li>Castagna, J.P., Batzle, M.L., and Eastwood, R.L., 1985, Relationships between compressional and
+        shear-wave velocities: <em>Geophysics</em>, 50, 571–581.</li>
+      <li>Dutta, N.C., 2002, Geopressure prediction using seismic data: <em>Geophysics</em>, 67, 2012–2041.</li>
+      <li>Sheriff, R.E., and Geldart, L.P., 1995, <em>Exploration Seismology</em>, 2nd ed.: Cambridge.</li>
+    </ul>
+  </details>
+
+  <div class="pager">
+    <a class="btn ghost" href="../index.html">← All modules</a>
+    <a class="btn" href="model1d.html">Next: where a trace comes from →</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma —
+        with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.
+        Free to use or adapt in your own courses with citation.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/seismic.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const PRESETS = {
+    gom:   { water: 1500, v0: 1700, grad: 0.55, op: true,  opTop: 3400, opThick: 900, opAmp: 18, q: 150 },
+    shelf: { water: 120,  v0: 1800, grad: 0.62, op: true,  opTop: 2600, opThick: 700, opAmp: 12, q: 170 },
+    land:  { water: 0,    v0: 2200, grad: 0.50, op: false, opTop: 3000, opThick: 800, opAmp: 15, q: 200 },
+    nsea:  { water: 110,  v0: 1750, grad: 0.68, op: true,  opTop: 3000, opThick: 800, opAmp: 15, q: 180 },
+  };
+
+  const DEF = {
+    preset: 'gom', water: 1500, zmax: 6000, v0: 1700, grad: 0.55,
+    op: true, opTop: 3400, opThick: 900, opAmp: 18,
+    q: 150, f0: 45, units: 'm', probe: 0.55,
+  };
+  let S = SEIS.readState(DEF);
+
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670', OCHRE = '#8A6D1F';
+  const WATER = '#7FB3CC';
+  const N = 420;
+
+  const U = () => SEIS.UNITS[S.units];
+  const uL = (m) => m * U().len;
+  const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 0 : d) + ' ' + U().lab;
+
+  const EARTH = [[238,227,197],[212,189,145],[172,149,113],[126,109,88],[78,68,58]];
+  function earth(u) {
+    const p = clamp(u, 0, 1) * (EARTH.length - 1);
+    const i = Math.min(EARTH.length - 2, Math.floor(p)), f = p - i;
+    const a = EARTH[i], b = EARTH[i + 1];
+    return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * f) + ',' +
+                    Math.round(a[1] + (b[1] - a[1]) * f) + ',' +
+                    Math.round(a[2] + (b[2] - a[2]) * f) + ')';
+  }
+
+  /* ------------------------------- physics ----------------------------- */
+
+  // how much of the overpressure trough applies at this depth
+  function opFactor(z) {
+    if (!S.op) return 0;
+    const a = S.opTop, b = S.opTop + S.opThick;
+    if (z <= a || z >= b) return 0;
+    return 0.5 - 0.5 * Math.cos(2 * Math.PI * (z - a) / S.opThick);
+  }
+
+  // Peak frequency surviving constant-Q attenuation, for a Ricker source.
+  // Maximising ln[f^2 exp(-f^2/f0^2) exp(-pi f t*)] gives a quadratic in f.
+  function peakFreq(f0, tstar) {
+    const a = 2 / (f0 * f0), b = Math.PI * tstar;
+    return (-b + Math.sqrt(b * b + 8 * a)) / (2 * a);
+  }
+
+  let CACHE = {};
+
+  function compute() {
+    const rows = [];
+    let twt = 0, tstar = 0;
+    const dz = S.zmax / N;
+    for (let i = 0; i <= N; i++) {
+      const z = i * dz;
+      let vp, vs, rho, isWater = z < S.water;
+      if (isWater) {
+        vp = 1500; vs = 0; rho = 1.03;
+      } else {
+        vp = (S.v0 + S.grad * (z - S.water)) * (1 - (S.opAmp / 100) * opFactor(z));
+        vp = Math.max(1400, vp);
+        vs = Math.max(0, (vp - 1360) / 1.16);
+        rho = 0.31 * Math.pow(vp, 0.25);
+      }
+      if (i > 0) {
+        const dt = 2 * dz / vp;
+        twt += dt;
+        tstar += dt / (isWater ? 10000 : S.q);
+      }
+      const f = peakFreq(S.f0, tstar);
+      rows.push({ z, vp, vs, rho, ai: vp * rho / 1000, twt, tstar, f, lam: vp / f, isWater });
+    }
+    // the shallowest rock, for comparison
+    let shallow = rows.find((r) => !r.isWater) || rows[0];
+    CACHE = { rows, shallow };
+  }
+
+  const at = (frac) => CACHE.rows[clamp(Math.round(frac * N), 0, N)];
+
+  /* ------------------------------- layout ------------------------------ */
+
+  function layout(sel, n) {
+    const box = $(sel).closest('.plot');
+    const W = Math.max(300, box.clientWidth - 28);
+    const stacked = W < 780;
+    const each = stacked ? W : Math.floor((W - 10 * (n - 1)) / n);
+    return { stacked, each, h: stacked ? 300 : clamp(Math.round(W * 0.30), 280, 400) };
+  }
+
+  /* ------------------------------ drawing ------------------------------ */
+
+  function frameOf(w, h, left) {
+    return { x: left, y: 8, w: w - left - 12, h: h - 8 - 42 };
+  }
+  const yOfZ = (rect, z) => rect.y + (z / S.zmax) * rect.h;
+
+  function probeLine(ctx, rect) {
+    const y = yOfZ(rect, at(S.probe).z);
+    ctx.save();
+    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(rect.x, y); ctx.lineTo(rect.x + rect.w, y); ctx.stroke();
+    ctx.restore();
+  }
+
+  function opBand(ctx, rect) {
+    if (!S.op) return;
+    const y0 = yOfZ(rect, clamp(S.opTop, 0, S.zmax));
+    const y1 = yOfZ(rect, clamp(S.opTop + S.opThick, 0, S.zmax));
+    if (y1 <= y0) return;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(138,109,31,.85)'; ctx.lineWidth = 1.2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(rect.x, y0); ctx.lineTo(rect.x + rect.w, y0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(rect.x, y1); ctx.lineTo(rect.x + rect.w, y1); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawEarth(L) {
+    const w = L.each, h = L.h;
+    const ctx = SEIS.fitCanvas($('earthCanvas'), w, h);
+    ctx.clearRect(0, 0, w, h);
+    const rect = frameOf(w, h, 56);
+    const { rows } = CACHE;
+    let lo = 1e9, hi = -1e9;
+    rows.forEach((r) => { if (!r.isWater) { lo = Math.min(lo, r.ai); hi = Math.max(hi, r.ai); } });
+    if (!(hi > lo)) { lo = 0; hi = 1; }
+
+    for (let i = 0; i < N; i++) {
+      const r = rows[i];
+      const y0 = yOfZ(rect, r.z), y1 = yOfZ(rect, rows[i + 1].z);
+      ctx.fillStyle = r.isWater ? WATER : earth((r.ai - lo) / (hi - lo));
+      ctx.fillRect(rect.x, y0, rect.w, y1 - y0 + 1);
+    }
+    if (S.water > 0 && S.water < S.zmax) {
+      const y = yOfZ(rect, S.water);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(22,25,28,.8)'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(rect.x, y); ctx.lineTo(rect.x + rect.w, y); ctx.stroke();
+      ctx.font = '10px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = 'rgba(22,25,28,.85)';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText('seabed', rect.x + 6, y - 3);
+      ctx.fillStyle = 'rgba(22,25,28,.7)';
+      ctx.textBaseline = 'top';
+      ctx.fillText('water', rect.x + 6, rect.y + 4);
+      ctx.restore();
+    }
+    if (S.op) {
+      const y0 = yOfZ(rect, clamp(S.opTop, 0, S.zmax));
+      ctx.save();
+      ctx.font = '10px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = 'rgba(60,46,10,.95)';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('overpressure', rect.x + 6, y0 + 4);
+      ctx.restore();
+    }
+    opBand(ctx, rect); probeLine(ctx, rect);
+    SEIS.frame(ctx, rect);
+    SEIS.axisLeft(ctx, rect, 0, uL(S.zmax), 'Depth (' + U().lab + ')', (v) => v.toFixed(0));
+    CACHE.rect = rect;
+  }
+
+  function curvePanel(id, L, opts) {
+    const w = L.each, h = L.h;
+    const ctx = SEIS.fitCanvas($(id), w, h);
+    ctx.clearRect(0, 0, w, h);
+    const rect = frameOf(w, h, L.stacked ? 56 : 40);
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    const { rows } = CACHE;
+
+    let lo = opts.min !== undefined ? opts.min : 1e9;
+    let hi = opts.max !== undefined ? opts.max : -1e9;
+    if (opts.min === undefined) {
+      opts.series.forEach((s) => rows.forEach((r) => {
+        const v = s.get(r);
+        if (v === null || !isFinite(v)) return;
+        lo = Math.min(lo, v); hi = Math.max(hi, v);
+      }));
+      const pad = (hi - lo) * 0.12 || 1;
+      lo = Math.max(0, lo - pad); hi += pad;
+    }
+    const xOf = (v) => rect.x + ((v - lo) / ((hi - lo) || 1)) * rect.w;
+
+    opBand(ctx, rect);
+    opts.series.forEach((s) => {
+      ctx.save();
+      ctx.strokeStyle = s.color; ctx.lineWidth = s.width || 2;
+      if (s.dash) ctx.setLineDash(s.dash);
+      ctx.beginPath();
+      let pen = false;
+      rows.forEach((r) => {
+        const v = s.get(r);
+        if (v === null || !isFinite(v)) { if (pen) { ctx.stroke(); ctx.beginPath(); pen = false; } return; }
+        const x = clamp(xOf(v), rect.x, rect.x + rect.w), y = yOfZ(rect, r.z);
+        pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        pen = true;
+      });
+      ctx.stroke(); ctx.restore();
+    });
+
+    // the value at the marker
+    const p = at(S.probe);
+    opts.series.forEach((s) => {
+      const v = s.get(p);
+      if (v === null || !isFinite(v)) return;
+      ctx.save();
+      ctx.fillStyle = s.color;
+      ctx.beginPath(); ctx.arc(clamp(xOf(v), rect.x, rect.x + rect.w), yOfZ(rect, p.z), 3.6, 0, 6.284);
+      ctx.fill(); ctx.restore();
+    });
+
+    probeLine(ctx, rect);
+    SEIS.frame(ctx, rect);
+    SEIS.axisBottom(ctx, rect, lo, hi, opts.label, opts.fmt);
+    SEIS.axisLeft(ctx, rect, 0, uL(S.zmax), L.stacked ? 'Depth (' + U().lab + ')' : '', (v) => v.toFixed(0));
+    return rect;
+  }
+
+  function drawPulse(L) {
+    const w = L.each, h = L.h;
+    const ctx = SEIS.fitCanvas($('pulseCanvas'), w, h);
+    ctx.clearRect(0, 0, w, h);
+    const rect = frameOf(w, h, L.stacked ? 56 : 40);
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    const p = at(S.probe);
+
+    const span = Math.max(3.2 / p.f, 3.2 / S.f0);
+    const cx = rect.x + rect.w / 2;
+    const yOf = (t) => rect.y + rect.h / 2 + (t / (2 * span)) * rect.h;
+    const xOf = (v) => cx + v * rect.w * 0.40;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(92,102,112,.4)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
+    ctx.restore();
+
+    const drawOne = (f, color, width, dash) => {
+      const wav = SEIS.makeWavelet({ type: 'ricker', f });
+      ctx.save();
+      ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+      ctx.strokeStyle = color; ctx.lineWidth = width;
+      if (dash) ctx.setLineDash(dash);
+      ctx.beginPath();
+      for (let i = 0; i <= 260; i++) {
+        const t = -span + (i / 260) * 2 * span;
+        const x = xOf(wav.fn(t)), y = yOf(t);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    drawOne(S.f0, 'rgba(92,102,112,.85)', 1.6, [5, 4]);
+    drawOne(p.f, CRIMSON, 2.2, null);
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisLeft(ctx, rect, -span * 1000, span * 1000, 'ms', (v) => v.toFixed(0));
+    ctx.save();
+    ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(S.f0 + ' Hz  \u2192  ' + p.f.toFixed(0) + ' Hz', cx, rect.y + rect.h + 6);
+    ctx.restore();
+  }
+
+  /* ------------------------------ readouts ----------------------------- */
+
+  function updateLegend() {
+    $('logLegend').innerHTML =
+      '<span><i style="border-color:' + CRIMSON + '"></i>Vp, density, impedance</span>' +
+      '<span><i style="border-color:' + TEAL + '"></i>Vs</span>' +
+      '<span><i class="sw" style="background:' + WATER + '"></i>water</span>' +
+      (S.op ? '<span><i style="border-color:' + OCHRE + ';border-top-style:dashed"></i>overpressured zone</span>' : '') +
+      '<span><i style="border-color:' + CRIMSON + '"></i>depth marker</span>';
+    $('dataLegend').innerHTML =
+      '<span><i style="border-color:#5C6670;border-top-style:dashed"></i>the pulse as it set out</span>' +
+      '<span><i style="border-color:' + CRIMSON + '"></i>the pulse at your marker</span>';
+  }
+
+  function updateStats() {
+    const p = at(S.probe), sh = CACHE.shallow;
+    $('rZ').textContent = fmtL(p.z) + (p.isWater ? '  (in the water)' : '');
+    $('rT').textContent = p.twt.toFixed(2) + ' s';
+    $('rV').textContent = Math.round(uL(p.vp)) + ' / ' +
+      (p.vs > 0 ? Math.round(uL(p.vs)) : 'none') + ' ' + U().vlab;
+    $('rRatio').textContent = p.vs > 0 ? (p.vp / p.vs).toFixed(2) : 'water carries no shear wave';
+    $('rRho').textContent = p.rho.toFixed(2) + ' g/cc';
+    $('rAI').textContent = (p.vp * p.rho / 1000).toFixed(2) + ' \u00d7 10\u2076';
+    $('rF').textContent = p.f.toFixed(0) + ' Hz  of ' + S.f0;
+    $('rLam').textContent = fmtL(p.lam);
+    $('rRes').textContent = fmtL(p.lam / 4);
+
+    const ratio = (p.lam / 4) / (sh.lam / 4);
+    $('rVerdict').textContent = p.isWater
+      ? 'The marker is still in the water column — drag it below the seabed to see rock properties'
+      : ratio > 1.05
+        ? 'Beds here must be ' + ratio.toFixed(1) + ' times thicker than at the top of the rock before you ' +
+          'could resolve them — ' + fmtL(p.lam / 4) + ' against ' + fmtL(sh.lam / 4) + ' up there'
+        : 'About the same resolution as the top of the rock, because you are still shallow';
+  }
+
+  /* ---------------------------- interaction ---------------------------- */
+
+  function attachProbe(id) {
+    const c = $(id);
+    const go = (ev) => {
+      const r = c.getBoundingClientRect(), q = CACHE.rect;
+      if (!q) return;
+      const scale = r.height / (parseFloat(c.style.height) || r.height);
+      S.probe = clamp((ev.clientY - r.top - q.y * scale) / (q.h * scale), 0, 1);
+      render(); SEIS.writeState(S, DEF);
+    };
+    let down = false;
+    c.addEventListener('pointerdown', (e) => { down = true; c.setPointerCapture(e.pointerId); e.preventDefault(); go(e); });
+    c.addEventListener('pointermove', (e) => { if (down) go(e); });
+    c.addEventListener('pointerup', () => { down = false; });
+    c.addEventListener('pointercancel', () => { down = false; });
+  }
+
+  /* ------------------------------ plumbing ----------------------------- */
+
+  function render() {
+    const L1 = layout('earthCanvas', 4);
+    $('logRow').querySelectorAll('.panel-col').forEach((c) => { c.style.width = L1.each + 'px'; });
+    drawEarth(L1);
+    curvePanel('velCanvas', L1, {
+      label: 'Velocity (' + U().vlab + ')', fmt: (v) => v.toFixed(0), min: 0,
+      max: Math.max.apply(null, CACHE.rows.map((r) => uL(r.vp))) * 1.08,
+      series: [
+        { get: (r) => uL(r.vp), color: CRIMSON, width: 2.2 },
+        { get: (r) => (r.vs > 0 ? uL(r.vs) : null), color: TEAL, width: 2 },
+      ],
+    });
+    curvePanel('rhoCanvas', L1, {
+      label: 'Density (g/cc)', fmt: (v) => v.toFixed(2),
+      series: [{ get: (r) => r.rho, color: CRIMSON, width: 2.2 }],
+    });
+    curvePanel('aiCanvas', L1, {
+      label: 'Impedance (\u00d710\u2076)', fmt: (v) => v.toFixed(1),
+      series: [{ get: (r) => r.vp * r.rho / 1000, color: CRIMSON, width: 2.2 }],
+    });
+
+    const L2 = layout('twtCanvas', 4);
+    $('dataRow').querySelectorAll('.panel-col').forEach((c) => { c.style.width = L2.each + 'px'; });
+    curvePanel('twtCanvas', L2, {
+      label: 'Two-way time (s)', fmt: (v) => v.toFixed(1), min: 0,
+      max: CACHE.rows[N].twt * 1.05,
+      series: [{ get: (r) => r.twt, color: CRIMSON, width: 2.2 }],
+    });
+    curvePanel('freqCanvas', L2, {
+      label: 'Peak frequency (Hz)', fmt: (v) => v.toFixed(0), min: 0, max: S.f0 * 1.1,
+      series: [{ get: (r) => r.f, color: CRIMSON, width: 2.2 }],
+    });
+    drawPulse(L2);
+    curvePanel('resCanvas', L2, {
+      label: '\u03bb/4 (' + U().lab + ')', fmt: (v) => v.toFixed(0), min: 0,
+      max: Math.max.apply(null, CACHE.rows.map((r) => uL(r.lam / 4))) * 1.1,
+      series: [{ get: (r) => uL(r.lam / 4), color: CRIMSON, width: 2.4 }],
+    });
+
+    updateLegend(); updateStats();
+  }
+  function refresh() { compute(); render(); SEIS.writeState(S, DEF); }
+
+  function syncLabels() {
+    $('waterV').textContent = fmtL(S.water);
+    $('zmaxV').textContent = fmtL(S.zmax);
+    $('v0V').textContent = Math.round(uL(S.v0)) + ' ' + U().vlab;
+    $('gradV').textContent = S.grad.toFixed(2) + (S.units === 'm' ? ' m/s per m' : ' ft/s per ft');
+    $('opTopV').textContent = fmtL(S.opTop);
+    $('opThickV').textContent = fmtL(S.opThick);
+    $('opAmpV').textContent = S.opAmp + '%';
+    $('qV').textContent = S.q;
+    $('f0V').textContent = S.f0 + ' Hz';
+  }
+  function pushToInputs() {
+    $('water').value = S.water; $('zmax').value = S.zmax;
+    $('v0').value = S.v0; $('grad').value = S.grad;
+    $('op').checked = S.op; $('opTop').value = S.opTop;
+    $('opThick').value = S.opThick; $('opAmp').value = S.opAmp;
+    $('q').value = S.q; $('f0').value = S.f0;
+    $('units').value = S.units; $('preset').value = S.preset;
+  }
+  function bump() { syncLabels(); refresh(); }
+
+  const slide = (id, key) => $(id).addEventListener('input', () => {
+    S[key] = parseFloat($(id).value);
+    if (id !== 'zmax' && id !== 'q' && id !== 'f0') { S.preset = 'custom'; }
+    bump();
+  });
+  slide('water', 'water'); slide('zmax', 'zmax'); slide('v0', 'v0'); slide('grad', 'grad');
+  slide('opTop', 'opTop'); slide('opThick', 'opThick'); slide('opAmp', 'opAmp');
+  slide('q', 'q'); slide('f0', 'f0');
+
+  $('op').addEventListener('change', () => { S.op = $('op').checked; bump(); });
+  $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
+  $('preset').addEventListener('change', () => {
+    const p = PRESETS[$('preset').value];
+    if (!p) return;
+    S.preset = $('preset').value;
+    Object.assign(S, p);
+    pushToInputs(); bump();
+  });
+  $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
+  $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
+
+  ['earthCanvas', 'velCanvas', 'rhoCanvas', 'aiCanvas',
+   'twtCanvas', 'freqCanvas', 'resCanvas'].forEach(attachProbe);
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+
+  pushToInputs(); syncLabels(); refresh();
+  document.fonts && document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>
