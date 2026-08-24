@@ -99,7 +99,6 @@
             reflection coefficients to a synthetic trace, with nothing hidden in between.</p>
           <div class="q">Why does that formation top have no reflector?</div>
         </div>
-        <span class="flag next">Live</span>
       </a>
 
       <a class="card" href="modules/wedge.html">
@@ -111,7 +110,6 @@
             tricks you into thinking your bed is thicker.</p>
           <div class="q">Why is the thin edge of my channel the brightest part?</div>
         </div>
-        <span class="flag next">Start here</span>
       </a>
 
       <a class="card" href="modules/faults.html">
@@ -123,7 +121,6 @@
             and sometimes hides no fault at all.</p>
           <div class="q">How small a fault am I missing?</div>
         </div>
-        <span class="flag next">Live</span>
       </a>
 
       <a class="card" href="modules/fresnel.html">
@@ -135,7 +132,6 @@
             Migration is the focus ring. Watch two features merge as they close.</p>
           <div class="q">How small a feature can I map in plan view?</div>
         </div>
-        <span class="flag next">Live</span>
       </a>
 
       <a class="card" href="modules/depth.html">
@@ -146,7 +142,6 @@
           <p>Velocity climbs, the earth attenuates your high frequencies, and λ/4 in meters grows the deeper you dive into the subsurface.</p>
           <div class="q">Why does my deep interpretation feel so much vaguer?</div>
         </div>
-        <span class="flag next">Live</span>
       </a>
 
       <a class="card" href="modules/mapres.html">
@@ -158,7 +153,6 @@
             distributaries stop looking like one.</p>
           <div class="q">Where does my channel really end?</div>
         </div>
-        <span class="flag next">Live</span>
       </a>
 
       <a class="card" href="modules/mapview.html">
@@ -170,7 +164,6 @@
             exactly how a thickness map goes wrong.</p>
           <div class="q">Does bright mean thick?</div>
         </div>
-        <span class="flag next">Live</span>
       </a>
 
       <a class="card" href="modules/phase.html">
@@ -182,10 +175,20 @@
             picked horizons often disagree.</p>
           <div class="q">Am I picking the top of the sand, or near it?</div>
         </div>
-        <span class="flag next">Live</span>
       </a>
 
     </div>
+  </section>
+
+  <section class="disclaimer">
+    <h4>What this is, and what it is not</h4>
+    <p>These modules are <b>teaching models, built to make ideas visible</b>. Every one of them is a
+      deliberate simplification: they leave out noise, dip, anisotropy, multiples, velocity error and most of
+      what a processing sequence actually does, and each module says in its own notes which of those it has
+      set aside and why.</p>
+    <p>They are not processing or interpretation software, and the numbers they produce describe the model on
+      the screen rather than any real survey. Use them to build intuition and to see why a limit exists —
+      then check your own data, with your own velocities, before you act on anything.</p>
   </section>
 
   <footer>
@@ -309,34 +312,38 @@
     const w = canvas.parentElement.clientWidth, h = 118;
     const ctx = SEIS.fitCanvas(canvas, w, h);
     ctx.clearRect(0, 0, w, h);
-    const t0 = 0.05, tEnd = 2.6, f0 = 42, Q = 55, v0 = 2000, vmax = 4600;
-    const velAt = (t) => v0 * Math.pow(vmax / v0, Math.max(0, Math.min(t, tEnd)) / tEnd);
-    const effFreq = (t) => {
-      if (t <= 0) return f0;
-      const a = 2 / (f0 * f0), b = Math.PI * t / Q, c = -2;
-      return (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a);
+    // one column of rock, imaged with a wavelet that lengthens as it goes down:
+    // crisp banding at the top, merged mush at the bottom
+    const T0 = 0.04, TEND = 3.2, NT = 300, v0 = 2000, vmax = 4800, f0 = 40, Q = 80;
+    const velAt = (t) => v0 * Math.pow(vmax / v0, t / TEND);
+    const effF = (t) => {
+      const a = 2 / (f0 * f0), b = Math.PI * t / Q;
+      return (-b + Math.sqrt(b * b + 8 * a)) / (2 * a);
     };
-    const ampDecay = (t) => (t <= 0 ? 1 : Math.exp(-Math.PI * effFreq(t) * t / Q));
-    const nx = 120, dt = 0.0012, nt = Math.round((tEnd - t0) / dt);
-    const rnd = SEIS.mulberry32(4021);
-    const layers = [];
-    let t = t0 + 0.03, sign = 1;
-    while (t < tEnd - 0.05 && layers.length < 26) {
-      layers.push({ t, r: sign * (0.05 + rnd() * 0.09) });
-      sign = rnd() < 0.8 ? -sign : sign;
+    const rnd = SEIS.mulberry32(5);
+    const spikes = [];
+    let t = T0 + 0.05, sign = 1;
+    while (t < TEND - 0.05 && spikes.length < 170) {
+      spikes.push({ t, r: sign * (0.05 + rnd() * 0.09) });
+      sign = rnd() < 0.75 ? -sign : sign;
       t += 2 * (18 + rnd() * 45) / velAt(t);
     }
-    const base = new Float32Array(nt);
-    layers.forEach((L) => {
-      const wav = SEIS.makeWavelet({ type: 'ricker', f: effFreq(L.t) });
-      const amp = L.r * ampDecay(L.t), half = wav.halfLength;
-      const i0 = Math.max(0, Math.ceil((L.t - half - t0) / dt));
-      const i1 = Math.min(nt - 1, Math.floor((L.t + half - t0) / dt));
-      for (let i = i0; i <= i1; i++) base[i] += amp * wav.fn(t0 + i * dt - L.t);
-    });
-    const fld = new Float32Array(nx * nt);
-    for (let ix = 0; ix < nx; ix++) fld.set(base, ix * nt);
-    SEIS.drawVarDensity(ctx, fld, nx, nt, { x: 0, y: 0, w: w, h: h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.11 });
+    const dt = (TEND - T0) / NT;
+    const trace = new Float32Array(NT);
+    for (let i = 0; i < NT; i++) {
+      const tt = T0 + i * dt;
+      const wav = SEIS.makeWavelet({ type: 'ricker', f: effF(tt) });
+      let v = 0;
+      for (let k = 0; k < spikes.length; k++) {
+        const d = tt - spikes[k].t;
+        if (Math.abs(d) < wav.halfLength) v += spikes[k].r * wav.fn(d);
+      }
+      trace[i] = v;
+    }
+    const nx = 44, fld = new Float32Array(nx * NT);
+    for (let ix = 0; ix < nx; ix++) fld.set(trace, ix * NT);
+    SEIS.drawVarDensity(ctx, fld, nx, NT, { x: 0, y: 0, w: w, h: h },
+      { cmap: SEIS.COLORMAPS.bwr, clip: 0.17 });
   }
 
   function thumb1d(canvas) {
@@ -480,40 +487,54 @@
     octx.putImageData(img, 0, 0);
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(off2, 0, 0, w, h);
+    // the channel that is really there, over the one the seismic shows
+    ctx.save();
+    ctx.strokeStyle = 'rgba(22,25,28,.6)'; ctx.lineWidth = 1.1;
+    ctx.setLineDash([4, 3]);
+    [-1, 1].forEach((side) => [0, 1].forEach((br) => {
+      ctx.beginPath();
+      let pen = false;
+      for (let i = 0; i < NXn; i++) {
+        const fx = (i + 0.5) / NXn, ls = shape(fx);
+        if (!ls) { if (pen) { ctx.stroke(); pen = false; } continue; }
+        const Lb = ls[Math.min(br, ls.length - 1)];
+        const x = fx * w, y = ((Lb.y + side * Lb.w / 2) / YD) * h;
+        pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        pen = true;
+      }
+      if (pen) ctx.stroke();
+    }));
+    ctx.restore();
   }
 
   function thumbPhase(canvas) {
     const w = canvas.parentElement.clientWidth, h = 118;
     const ctx = SEIS.fitCanvas(canvas, w, h);
     ctx.clearRect(0, 0, w, h);
-    // the same wavelet at four rotations, sliding off the boundary
+    // the same reflection at three rotations: the event slides off the boundary
     const base = SEIS.makeWavelet({ type: 'ricker', f: 30 });
-    const phases = [0, 45, 90, 135];
-    const span = 0.05;
-    const yOf = (t) => h / 2 + (t / (2 * span)) * h;
-    ctx.save();
-    ctx.strokeStyle = 'rgba(11,114,133,.9)'; ctx.lineWidth = 1.4;
-    ctx.setLineDash([4, 3]);
-    ctx.beginPath(); ctx.moveTo(0, yOf(0)); ctx.lineTo(w, yOf(0)); ctx.stroke();
-    ctx.restore();
+    const phases = [0, 90, 180];
+    const span = 0.055, NT = 160, colW = w / phases.length;
     phases.forEach((d, k) => {
       const wv = SEIS.phaseRotate(base, d);
-      const cx = (k + 0.5) * (w / phases.length);
+      const col = new Float32Array(NT);
       let mx = 1e-6;
-      for (let t = -span; t <= span; t += 0.0005) mx = Math.max(mx, Math.abs(wv.fn(t)));
-      ctx.save();
-      ctx.strokeStyle = 'rgba(92,102,112,.3)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke();
-      ctx.strokeStyle = '#841617'; ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      for (let i = 0; i <= 200; i++) {
-        const t = -span + (i / 200) * 2 * span;
-        const x = cx + (wv.fn(t) / mx) * (w / phases.length) * 0.36;
-        const y = yOf(t);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      for (let i = 0; i < NT; i++) {
+        const t = -span + (2 * span * i) / (NT - 1);
+        col[i] = wv.fn(t);
+        mx = Math.max(mx, Math.abs(col[i]));
       }
-      ctx.stroke(); ctx.restore();
+      const nx = 24, fld = new Float32Array(nx * NT);
+      for (let ix = 0; ix < nx; ix++) fld.set(col, ix * NT);
+      SEIS.drawVarDensity(ctx, fld, nx, NT,
+        { x: k * colW, y: 0, w: colW - 2, h: h },
+        { cmap: SEIS.COLORMAPS.bwr, clip: mx * 1.05 });
     });
+    ctx.save();
+    ctx.strokeStyle = '#0B7285'; ctx.lineWidth = 2;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+    ctx.restore();
   }
 
   function thumbDepth0(canvas) {
@@ -553,6 +574,61 @@
       ctx.beginPath(); ctx.moveTo(0, (z / zmax) * h); ctx.lineTo(w, (z / zmax) * h); ctx.stroke();
     });
     ctx.restore();
+  }
+
+  function thumbMapView(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    // a channel whose bright rails run along its flanks, not down its axis
+    const V = 2600, f = 30, hmax = 42, wid = 620, sinu = 240, taper = 0.30;
+    const YD = 1700, XD = 2 * YD;
+    const wav = SEIS.makeWavelet({ type: 'ricker', f });
+    const thk = (fx, fy) => {
+      const yc = YD / 2 + sinu * Math.sin(2 * Math.PI * fx * 1.15);
+      const d = Math.abs(fy * YD - yc), hw = wid / 2;
+      if (d >= hw) return 0;
+      return hmax * (taper + (1 - taper) * (1 - fx)) * Math.pow(1 - (d / hw) * (d / hw), 0.7);
+    };
+    const NL = 90, hTop = hmax * 1.05, lut = new Float32Array(NL + 1);
+    for (let i = 0; i <= NL; i++) {
+      const gap = 2 * ((i / NL) * hTop) / V;
+      let best = 0;
+      for (let tt = -wav.halfLength; tt <= gap + wav.halfLength; tt += 0.0006) {
+        const v = 0.13 * wav.fn(tt) - 0.13 * wav.fn(tt - gap);
+        if (v > best) best = v;
+      }
+      lut[i] = best;
+    }
+    const ampOf = (hh) => {
+      const q = Math.max(0, Math.min(1, hh / hTop)) * NL;
+      const i = Math.min(NL - 1, Math.floor(q)), fr = q - i;
+      return lut[i] + (lut[i + 1] - lut[i]) * fr;
+    };
+    const stops = [[252,250,246],[253,231,160],[247,190,90],[233,131,60],[196,60,45],[110,16,20]];
+    const NXm = 150, NYm = 90;
+    const vals = new Float32Array(NXm * NYm);
+    let mx = 1e-9;
+    for (let iy = 0; iy < NYm; iy++) for (let ix = 0; ix < NXm; ix++) {
+      const a = ampOf(thk((ix + 0.5) / NXm, (iy + 0.5) / NYm));
+      vals[iy * NXm + ix] = a; mx = Math.max(mx, a);
+    }
+    const off = document.createElement('canvas');
+    off.width = NXm; off.height = NYm;
+    const octx = off.getContext('2d');
+    const img = octx.createImageData(NXm, NYm);
+    for (let i = 0; i < NXm * NYm; i++) {
+      const q = Math.max(0, Math.min(1, vals[i] / mx)) * (stops.length - 1);
+      const k = Math.min(stops.length - 2, Math.floor(q)), fr = q - k;
+      const a = stops[k], b = stops[k + 1];
+      img.data[i * 4] = a[0] + (b[0] - a[0]) * fr;
+      img.data[i * 4 + 1] = a[1] + (b[1] - a[1]) * fr;
+      img.data[i * 4 + 2] = a[2] + (b[2] - a[2]) * fr;
+      img.data[i * 4 + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, 0, 0, w, h);
   }
 
   function drawThumbs() {
