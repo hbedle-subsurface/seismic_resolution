@@ -135,8 +135,7 @@
 
     <div class="sec-row" id="pulseRow">
       <div class="panel-col">
-        <p class="sublabel"><b>1</b> The pulse, broadening with depth
-          <span class="note">what the earth has done to it by the time it comes back</span></p>
+        <p class="sublabel"><b>1</b> The pulse, broadening with depth</p>
         <canvas id="wavCanvas" aria-label="Wavelet shape and spectrum at the reference and probe depths"></canvas>
       </div>
     </div>
@@ -147,13 +146,11 @@
         <canvas id="velCanvas" aria-label="Velocity against two-way time"></canvas>
       </div>
       <div class="panel-col">
-        <p class="sublabel"><b>3</b> λ/4
-          <span class="note">against your bed</span></p>
+        <p class="sublabel"><b>3</b> λ/4 vs your bed</p>
         <canvas id="lamCanvas" aria-label="Quarter wavelength against two-way time, with the bed thickness marked"></canvas>
       </div>
       <div class="panel-col">
-        <p class="sublabel"><b>4</b> The rock
-          <span class="note">drawn in time, like the seismic</span></p>
+        <p class="sublabel"><b>4</b> The rock</p>
         <canvas id="lithoCanvas" aria-label="One-dimensional earth model beside the seismic"></canvas>
       </div>
       <div class="panel-col" id="secCol">
@@ -528,11 +525,12 @@
     const rect = timeRect(w, h, 62);
     ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 
+    // km/s rather than m/s: "2.4" fits a narrow panel, "2400" does not
     const N = 160;
     let vMin = 1e9, vMax = 0;
     const arr = [];
     for (let i = 0; i <= N; i++) {
-      const t = T0 + (i / N) * (TEND - T0), v = uL(velAt(t));
+      const t = T0 + (i / N) * (TEND - T0), v = uL(velAt(t)) / 1000;
       arr.push({ t, v }); vMin = Math.min(vMin, v); vMax = Math.max(vMax, v);
     }
     const pad = (vMax - vMin) * 0.10 || 1;
@@ -548,7 +546,9 @@
 
     markerLines(ctx, rect);
     SEIS.frame(ctx, rect);
-    SEIS.axisBottom(ctx, rect, lo, hi, 'Velocity (' + U().vlab + ')', (v) => v.toFixed(0), { ticks: 2 });
+    SEIS.axisBottom(ctx, rect, lo, hi,
+      'Velocity (' + (S.units === 'm' ? 'km/s' : 'kft/s') + ')',
+      (v) => v.toFixed(1), { ticks: 2 });
     timeAxis(ctx, rect, true);
   }
 
@@ -603,7 +603,7 @@
 
     markerLines(ctx, rect);
     SEIS.frame(ctx, rect);
-    SEIS.axisBottom(ctx, rect, 0, hi, 'λ/4 (' + U().lab + ')', (v) => v.toFixed(0), { ticks: 2 });
+    SEIS.axisBottom(ctx, rect, 0, hi, 'λ/4 (' + U().lab + ')', (v) => v.toFixed(0), { ticks: 3 });
     timeAxis(ctx, rect, L.stacked);
   }
 
@@ -642,7 +642,8 @@
       ctx.strokeStyle = color; ctx.lineWidth = 1.8;
       ctx.strokeRect(rect.x, y0, rect.w, Math.max(y1 - y0, 1));
       ctx.restore();
-      SEIS.tag(ctx, rect.x + rect.w + 3, (y0 + y1) / 2, fmtL(S.thick, 0), color);
+      SEIS.tag(ctx, rect.x + 3, clamp((y0 + y1) / 2, rect.y + 8, rect.y + rect.h - 8),
+               fmtL(S.thick, 0), color);
     });
 
     SEIS.frame(ctx, rect);
@@ -754,7 +755,7 @@
   function drawCompare(L) {
     const ctx = SEIS.fitCanvas($('cmpCanvas'), L.cmpW, L.h);
     ctx.clearRect(0, 0, L.cmpW, L.h);
-    const m = { l: L.stacked ? 18 : 18, r: 12, t: 10, b: 10 };
+    const m = { l: 18, r: 12, t: 24, b: 10 };
     const rect = { x: m.l, y: m.t, w: L.cmpW - m.l - m.r, h: L.h - m.t - m.b };
     ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 
@@ -847,9 +848,7 @@
     $('cmpLegend').innerHTML =
       '<span><i style="border-color:' + C_REF + '"></i>reference</span>' +
       '<span><i style="border-color:' + C_PROBE + '"></i>probe</span>';
-    $('polNote').textContent = S.pol === 'reverse'
-      ? 'SEG reverse polarity — an impedance increase is a trough'
-      : 'SEG normal polarity (American) — an impedance increase is a peak';
+    $('polNote').textContent = S.pol === 'reverse' ? 'reverse polarity' : 'normal polarity';
   }
 
   const verdictOf = (ratio) => ratio >= 0.25 ? 'Resolved — reads as a clean step'
