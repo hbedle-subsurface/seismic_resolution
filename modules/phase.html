@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phase, polarity &amp; well ties — What Can You REALLY See in Seismic?</title>
+<meta name="description" content="Rotate the wavelet and watch the apparent bed boundary move: why well ties and picked horizons often disagree.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>What can you <b>really</b> see in seismic?</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="#notes">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 08 &nbsp;·&nbsp; Phase and polarity</p>
+    <h1>Am I picking the top of the sand, or near it?</h1>
+    <p class="sub">Every other module has assumed a zero-phase wavelet, where the peak sits exactly on the
+      boundary that made it. Real data is rarely quite zero phase. Rotate the wavelet here and watch the
+      event slide away from the rock that produced it, while looking every bit as crisp and confident as
+      before. Nothing warns you. The horizon is simply in the wrong place.</p>
+  </div>
+
+  <!-- ============================== CONTROLS ============================== -->
+  <section class="controls">
+    <div class="ctl-col">
+      <h2>The wavelet</h2>
+      <div class="ctl">
+        <label for="phase">Phase rotation <span class="val" id="phaseV">0°</span></label>
+        <input type="range" id="phase" min="-180" max="180" step="1" value="0">
+      </div>
+      <div class="seg" role="group" aria-label="Common phases" style="margin-bottom:12px">
+        <button type="button" id="p0">0°</button>
+        <button type="button" id="p90">+90°</button>
+        <button type="button" id="pm90">−90°</button>
+        <button type="button" id="p180">180°</button>
+      </div>
+      <div class="ctl">
+        <label for="freq">Peak frequency <span class="val" id="freqV">30 Hz</span></label>
+        <input type="range" id="freq" min="10" max="70" step="1" value="30">
+      </div>
+      <div class="ctl">
+        <label>Polarity <span class="val" id="polV">SEG normal</span></label>
+        <div class="seg" role="group" aria-label="Display polarity">
+          <button type="button" id="pNorm" aria-pressed="true">Normal</button>
+          <button type="button" id="pRev" aria-pressed="false">Reverse</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>The well</h2>
+      <div class="ctl">
+        <label for="preset">Layer stack</label>
+        <select id="preset">
+          <option value="simple" selected>One clean sand</option>
+          <option value="stack">Three stacked sands</option>
+          <option value="thin">A thin sand near tuning</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="vel">Velocity for depth conversion <span class="val" id="velV">2600 m/s</span></label>
+        <input type="range" id="vel" min="1600" max="4500" step="50" value="2600">
+      </div>
+      <div class="ctl">
+        <label for="units">Units</label>
+        <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Tie the well</h2>
+      <label class="check"><input type="checkbox" id="tie"> Hide the phase and let me match it</label>
+      <div id="tieBox" hidden>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 10px">
+          The grey trace is the field seismic, recorded at a phase you cannot see. Rotate your wavelet until
+          the red synthetic sits on top of it.</p>
+        <button class="btn small" id="newCase" type="button">New field trace</button>
+        <button class="btn ghost small" id="reveal" type="button">How did I do?</button>
+        <p id="verdict" style="font-size:13px;margin:10px 0 0;min-height:1.2em"></p>
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Display</h2>
+      <div class="ctl">
+        <label for="cmap">Color map</label>
+        <select id="cmap">
+          <option value="bwr">Blue peak / red trough</option>
+          <option value="cbsafe">Blue peak / orange trough (colorblind safe)</option>
+          <option value="gray">Grayscale (black peak)</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" id="showPick" checked> Mark the peaks you would pick</label>
+      <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="pngBtn" type="button">Save the tie as PNG</button>
+      <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
+    </div>
+  </section>
+
+  <!-- =============================== PANELS =============================== -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>The well, and the seismic beside it</h3>
+    </div>
+    <p class="hint-line" id="hintLine">Teal marks where the rock actually changes. Crimson marks where you would put the horizon.</p>
+    <div class="sec-row" id="panelRow">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> The well
+          <span class="note">impedance, and the tops you would log</span></p>
+        <canvas id="wellCanvas" aria-label="Impedance log with formation tops"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The seismic
+          <span class="note" id="secNote">synthetic at your phase</span></p>
+        <canvas id="secCanvas" aria-label="Synthetic seismic trace at the chosen phase"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> The wavelet
+          <span class="note">and where its peak sits</span></p>
+        <canvas id="wavCanvas" aria-label="The rotated wavelet"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>4</b> How far the pick moves
+          <span class="note">against phase</span></p>
+        <canvas id="curveCanvas" aria-label="Pick shift against phase rotation"></canvas>
+      </div>
+    </div>
+    <div class="legend" id="mainLegend"></div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span>Phase rotation</span><b id="rPhase">0°</b></div>
+    <div class="stat"><span>Period at peak frequency</span><b id="rT">— ms</b></div>
+    <div class="stat key"><span>Peak sits this far off the boundary</span><b id="rShift">— ms</b></div>
+    <div class="stat"><span>That is this much depth</span><b id="rDepth">— m</b></div>
+    <div class="stat"><span>Amplitude at the true boundary</span><b id="rAt0">—</b></div>
+    <div class="stat"><span>Nearest trough sits at</span><b id="rTrough">— ms</b></div>
+    <div class="stat wide"><span>Verdict</span><b id="rVerdict">—</b></div>
+  </div>
+
+  <!-- ============================== TEACHING ============================== -->
+  <div class="teach">
+    <div class="tryit">
+      <h3>Try this</h3>
+      <ol>
+        <li><b>Start at zero phase and look at panel 2.</b> Where is the peak relative to the teal line?
+          <span class="ans">Exactly on it. This is the case everyone draws on the whiteboard, and it is the
+            reason zero phase is what processing aims for: the event and the rock are in the same place, so
+            picking the peak means picking the top of the sand.</span></li>
+        <li><b>Rotate to 30°, then 60°, then 90°</b>, watching the readout for how far the peak has moved.
+          <span class="ans">The event slides steadily away from the boundary — around 6 ms by 90°, which is
+            eight or nine meters of depth at normal velocities. The event never looks wrong. It stays sharp
+            and confident, just in the wrong place, and a horizon picked on it inherits the whole error.</span></li>
+        <li><b>Stop at exactly 90° and look at the true boundary.</b>
+          <span class="ans">The amplitude there is zero. The boundary sits on a zero crossing with a peak on
+            one side and a trough on the other, and the two are mirror images, so there is nothing in the
+            data to tell you which one to pick. Ninety-degree data is the worst case for tying a well, and it
+            is common, because that is what you get from minimum-phase data that has not been fully
+            converted.</span></li>
+        <li><b>Go to 180° and compare with the reverse polarity button.</b>
+          <span class="ans">They are the same thing. A 180° rotation is a polarity flip, which is why the two
+            get confused so often. Anything between 0 and 180 is a partial flip, and there is no name for
+            it — only a number.</span></li>
+        <li><b>Switch the well to the thin sand.</b>
+          <span class="ans">Now two problems compound. Tuning has already merged the top and base into one
+            event, and phase then moves that merged event off both boundaries. Working out where the sand
+            really is from the seismic alone becomes impossible, which is precisely why thin reservoirs need
+            well control.</span></li>
+        <li><b>Then tie a well properly.</b> Turn on the matching game and rotate until the two traces sit on
+          top of each other.
+          <span class="ans">This is what a well tie is: finding the rotation that makes the synthetic and the
+            seismic agree. Get it right and every horizon you pick is in the right place. Get it wrong by 40°
+            and every depth you post is wrong by the same few meters, consistently, across the whole
+            survey.</span></li>
+      </ol>
+    </div>
+
+    <div class="takeaway">
+      <h3>What to carry away</h3>
+      <ul>
+        <li><b>Zero phase means the peak is on the boundary.</b> That is the whole point of it, and it is an
+          assumption you should check rather than inherit.</li>
+        <li><b>Phase error becomes depth error</b>, systematically and in the same direction everywhere. It
+          does not average out across a survey.</li>
+        <li><b>At 90° the boundary is a zero crossing</b>, with a peak and a trough on either side and no way
+          to choose between them from the amplitude.</li>
+        <li><b>180° of phase and reversed polarity are the same operation.</b> Knowing which convention your
+          data uses is the first question, not a detail.</li>
+        <li><b>A well tie is a phase measurement.</b> That is what it is for, and it is why an untied survey
+          cannot give you reliable depths no matter how good the imaging.</li>
+      </ul>
+    </div>
+  </div>
+
+  <details class="notes" id="notes">
+    <summary>Method, assumptions, and where to read more</summary>
+    <p>Phase rotation is done exactly, in the frequency domain: the wavelet is transformed, positive
+      frequencies are multiplied by e<sup>−iφ</sup> and negative ones by the conjugate, and it is transformed
+      back. That is equivalent to <span class="k">w·cos φ − H{w}·sin φ</span>, where H is the Hilbert
+      transform. It is checked against the cases with known answers — a 0° rotation reproduces the wavelet,
+      180° negates it, and 90° comes out antisymmetric to within rounding.</p>
+    <p>The well is a stack of layers with impedances, exactly as in module 01, and the synthetic is the
+      reflection coefficients convolved with the rotated wavelet. The pick shift quoted is the time of the
+      largest positive lobe of the rotated wavelet, which is where an interpreter tracking a peak would put
+      the horizon. Depth error uses the velocity you set, as <span class="k">V·Δt/2</span>.</p>
+    <p>Left out: phase that varies with frequency, which is what most real data actually has and which no
+      single rotation can fix; phase drift with depth as the earth absorbs high frequencies; the stretch and
+      squeeze part of a real tie; and the fact that the sonic log itself needs correcting before any of this
+      works. The single constant rotation used here is the easy case.</p>
+    <ul>
+      <li>White, R., and Simm, R., 2003, Tutorial: Good practice in well ties: <em>First Break</em>, 21, 75–83.</li>
+      <li>Simm, R., and Bacon, M., 2014, <em>Seismic Amplitude: An Interpreter's Handbook</em>: Cambridge.</li>
+      <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.: AAPG/SEG.</li>
+    </ul>
+  </details>
+
+  <div class="pager">
+    <a class="btn ghost" href="mapview.html">← Tuning in map view</a>
+    <a class="btn" href="../index.html#modules">All modules →</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma —
+        with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.
+        Free to use or adapt in your own courses with citation.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/seismic.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const DEF = {
+    phase: 0, f: 30, v: 2600, pol: 'normal',
+    preset: 'simple', cmap: 'bwr', pick: true, units: 'm',
+  };
+  let S = SEIS.readState(DEF);
+
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670';
+  const TTOP = 0.050, DT = 0.0002;
+
+  // impedance in 10^6 units, thickness in metres; the first and last layers are
+  // half-spaces, as in module 01
+  const PRESETS = {
+    simple: [
+      { n: 'Shale', h: 0,  ai: 5.90 },
+      { n: 'Sand',  h: 70, ai: 6.85 },
+      { n: 'Shale', h: 0,  ai: 6.05 },
+    ],
+    stack: [
+      { n: 'Shale', h: 0,  ai: 5.85 },
+      { n: 'Sand A', h: 55, ai: 6.75 },
+      { n: 'Shale', h: 40, ai: 6.00 },
+      { n: 'Sand B', h: 45, ai: 6.90 },
+      { n: 'Shale', h: 35, ai: 6.10 },
+      { n: 'Sand C', h: 50, ai: 6.70 },
+      { n: 'Shale', h: 0,  ai: 6.15 },
+    ],
+    thin: [
+      { n: 'Shale', h: 0,  ai: 5.95 },
+      { n: 'Sand',  h: 16, ai: 6.95 },
+      { n: 'Shale', h: 0,  ai: 6.05 },
+    ],
+  };
+
+  let TIE = { on: false, hidden: null, revealed: false };
+
+  const U = () => SEIS.UNITS[S.units];
+  const uL = (m) => m * U().len;
+  const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 1 : d) + ' ' + U().lab;
+
+  /* ------------------------------- model ------------------------------- */
+
+  function wellModel() {
+    const L = PRESETS[S.preset] || PRESETS.simple;
+    const pol = S.pol === 'reverse' ? -1 : 1;
+    const iface = [];
+    let t = TTOP;
+    for (let i = 0; i < L.length - 1; i++) {
+      if (i > 0) t += 2 * L[i].h / S.v;
+      iface.push({
+        t,
+        rc: pol * (L[i + 1].ai - L[i].ai) / (L[i + 1].ai + L[i].ai),
+        name: L[i + 1].n,
+      });
+    }
+    const last = iface.length ? iface[iface.length - 1].t : TTOP;
+    return { L, iface, tEnd: Math.max(0.30, last + 0.09), pol };
+  }
+
+  // where the largest positive and largest negative lobes of the wavelet sit
+  function lobesOf(wav) {
+    let pv = -1e9, pt = 0, tv = 1e9, tt = 0;
+    const span = Math.min(wav.halfLength, 0.09);
+    for (let t = -span; t <= span; t += 0.00002) {
+      const v = wav.fn(t);
+      if (v > pv) { pv = v; pt = t; }
+      if (v < tv) { tv = v; tt = t; }
+    }
+    return { pt, pv, tt, tv, at0: wav.fn(0) };
+  }
+
+  let CACHE = {};
+
+  function compute() {
+    const M = wellModel();
+    const base = SEIS.makeWavelet({ type: 'ricker', f: S.f });
+    const wav = SEIS.phaseRotate(base, S.phase);
+    const nt = Math.round(M.tEnd / DT);
+    const spikes = M.iface.map((f) => ({ t: f.t, r: f.rc }));
+    const syn = SEIS.traceFromSpikes(spikes, 0, DT, nt, wav);
+
+    // the field trace: the same rock, recorded at a phase you cannot see
+    let field = null;
+    if (TIE.on && TIE.hidden !== null) {
+      const fw = SEIS.phaseRotate(base, TIE.hidden);
+      field = SEIS.traceFromSpikes(spikes, 0, DT, nt, fw);
+    }
+
+    const lob = lobesOf(wav);
+    // how the pick drifts across the whole phase range
+    const curve = [];
+    for (let d = -180; d <= 180; d += 5) {
+      const w = SEIS.phaseRotate(base, d);
+      const l = lobesOf(w);
+      curve.push({ d, pt: l.pt });
+    }
+    CACHE = { M, base, wav, nt, syn, field, lob, curve };
+  }
+
+  /* ------------------------------- layout ------------------------------ */
+
+  function layout() {
+    const box = $('wellCanvas').closest('.plot');
+    const W = Math.max(300, box.clientWidth - 28);
+    const stacked = W < 820;
+    if (stacked) return { stacked, w: { well: W, sec: W, wav: W, curve: W }, h: 300 };
+    const avail = W - 30;
+    const well = Math.round(avail * 0.20);
+    const sec = Math.round(avail * 0.30);
+    const wav = Math.round(avail * 0.22);
+    return { stacked, w: { well, sec, wav, curve: avail - well - sec - wav },
+             h: clamp(Math.round(W * 0.30), 280, 400) };
+  }
+
+  /* ------------------------------ drawing ------------------------------ */
+
+  const EARTH = [[238,227,197],[212,189,145],[172,149,113],[126,109,88],[78,68,58]];
+  function earth(u) {
+    const p = clamp(u, 0, 1) * (EARTH.length - 1);
+    const i = Math.min(EARTH.length - 2, Math.floor(p)), f = p - i;
+    const a = EARTH[i], b = EARTH[i + 1];
+    return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * f) + ',' +
+                    Math.round(a[1] + (b[1] - a[1]) * f) + ',' +
+                    Math.round(a[2] + (b[2] - a[2]) * f) + ')';
+  }
+
+  function drawWell(L) {
+    const ctx = SEIS.fitCanvas($('wellCanvas'), L.w.well, L.h);
+    ctx.clearRect(0, 0, L.w.well, L.h);
+    const m = { l: 52, r: 10, t: 8, b: 40 };
+    const rect = { x: m.l, y: m.t, w: L.w.well - m.l - m.r, h: L.h - m.t - m.b };
+    const { M } = CACHE;
+    const yOf = (t) => rect.y + (t / M.tEnd) * rect.h;
+
+    const ais = M.L.map((l) => l.ai);
+    const lo = Math.min.apply(null, ais), hi = Math.max.apply(null, ais);
+    for (let i = 0; i < M.L.length; i++) {
+      const top = i === 0 ? 0 : M.iface[i - 1].t;
+      const bot = i < M.iface.length ? M.iface[i].t : M.tEnd;
+      ctx.fillStyle = earth(hi > lo ? (M.L[i].ai - lo) / (hi - lo) : 0.4);
+      ctx.fillRect(rect.x, yOf(top), rect.w, yOf(bot) - yOf(top));
+      if (bot - top > 0.012) {
+        ctx.save();
+        ctx.beginPath(); ctx.rect(rect.x, yOf(top), rect.w, yOf(bot) - yOf(top)); ctx.clip();
+        ctx.fillStyle = M.L[i].ai > (lo + hi) / 2 ? 'rgba(255,255,255,.92)' : 'rgba(28,22,16,.85)';
+        ctx.font = '10.5px "IBM Plex Sans", sans-serif';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(M.L[i].n, rect.x + 6, (yOf(top) + yOf(bot)) / 2);
+        ctx.restore();
+      }
+    }
+    // the tops, as the well would give them
+    M.iface.forEach((f) => {
+      SEIS.dashedLine(ctx, rect.x, yOf(f.t), rect.x + rect.w, yOf(f.t), TEAL, [4, 3], 1.6);
+    });
+    SEIS.frame(ctx, rect);
+    SEIS.axisLeft(ctx, rect, 0, M.tEnd * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
+  }
+
+  function drawSection(L) {
+    const ctx = SEIS.fitCanvas($('secCanvas'), L.w.sec, L.h);
+    ctx.clearRect(0, 0, L.w.sec, L.h);
+    const m = { l: L.stacked ? 52 : 16, r: 12, t: 8, b: 40 };
+    const rect = { x: m.l, y: m.t, w: L.w.sec - m.l - m.r, h: L.h - m.t - m.b };
+    const { M, syn, field, nt, lob } = CACHE;
+
+    let peak = 1e-6;
+    for (let i = 0; i < nt; i++) peak = Math.max(peak, Math.abs(syn[i]));
+    if (field) for (let i = 0; i < nt; i++) peak = Math.max(peak, Math.abs(field[i]));
+
+    // a short panel of identical traces, so it reads as seismic
+    const NXs = 10;
+    const fld = new Float32Array(NXs * nt);
+    for (let ix = 0; ix < NXs; ix++) fld.set(syn, ix * nt);
+    SEIS.drawVarDensity(ctx, fld, NXs, nt, rect, { cmap: SEIS.COLORMAPS[S.cmap], clip: peak });
+
+    const yOf = (t) => rect.y + (t / M.tEnd) * rect.h;
+    const cx = rect.x + rect.w / 2;
+    const amp = rect.w * 0.36 / peak;
+
+    ctx.save();
+    ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+    if (field) {
+      ctx.strokeStyle = 'rgba(60,66,72,.85)'; ctx.lineWidth = 3.2;
+      ctx.beginPath();
+      for (let i = 0; i < nt; i++) {
+        const x = cx + field[i] * amp, y = yOf(i * DT);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    for (let i = 0; i < nt; i++) {
+      const x = cx + syn[i] * amp, y = yOf(i * DT);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // where the rock changes, and where the horizon would go
+    M.iface.forEach((f) => {
+      SEIS.dashedLine(ctx, rect.x, yOf(f.t), rect.x + rect.w, yOf(f.t), TEAL, [4, 3], 1.6);
+      if (S.pick) {
+        const pt = f.t + (f.rc > 0 ? lob.pt : lob.tt);
+        if (pt > 0 && pt < M.tEnd) {
+          ctx.save();
+          ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.moveTo(rect.x, yOf(pt)); ctx.lineTo(rect.x + rect.w, yOf(pt)); ctx.stroke();
+          ctx.restore();
+        }
+      }
+    });
+
+    SEIS.frame(ctx, rect);
+    if (L.stacked) SEIS.axisLeft(ctx, rect, 0, M.tEnd * 1000, '', (v) => v.toFixed(0));
+  }
+
+  function drawWavelet(L) {
+    const ctx = SEIS.fitCanvas($('wavCanvas'), L.w.wav, L.h);
+    ctx.clearRect(0, 0, L.w.wav, L.h);
+    const m = { l: 44, r: 12, t: 8, b: 40 };
+    const rect = { x: m.l, y: m.t, w: L.w.wav - m.l - m.r, h: L.h - m.t - m.b };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    const { wav, lob } = CACHE;
+
+    const span = Math.min(wav.halfLength, 2.6 / S.f);
+    const yOf = (t) => rect.y + rect.h / 2 + (t / (2 * span)) * rect.h;
+    const scale = Math.max(Math.abs(lob.pv), Math.abs(lob.tv), 1e-6);
+    const cx = rect.x + rect.w / 2;
+    const xOf = (v) => cx + (v / scale) * rect.w * 0.42;
+
+    // the boundary itself sits at t = 0
+    SEIS.dashedLine(ctx, rect.x, yOf(0), rect.x + rect.w, yOf(0), TEAL, [4, 3], 1.6);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(92,102,112,.4)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i <= 300; i++) {
+      const t = -span + (i / 300) * 2 * span;
+      const x = xOf(wav.fn(t)), y = yOf(t);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // the peak, and how far it is from the boundary
+    ctx.save();
+    ctx.fillStyle = CRIMSON;
+    ctx.beginPath(); ctx.arc(xOf(lob.pv), yOf(lob.pt), 4, 0, 6.284); ctx.fill();
+    if (Math.abs(lob.pt) > 0.0005) {
+      ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.2; ctx.setLineDash([2, 2]);
+      ctx.beginPath(); ctx.moveTo(rect.x, yOf(lob.pt)); ctx.lineTo(rect.x + rect.w, yOf(lob.pt)); ctx.stroke();
+    }
+    ctx.restore();
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisLeft(ctx, rect, -span * 1000, span * 1000, 'ms from the boundary', (v) => v.toFixed(0));
+  }
+
+  function drawCurve(L) {
+    const ctx = SEIS.fitCanvas($('curveCanvas'), L.w.curve, L.h);
+    ctx.clearRect(0, 0, L.w.curve, L.h);
+    const m = { l: 50, r: 12, t: 8, b: 40 };
+    const rect = { x: m.l, y: m.t, w: L.w.curve - m.l - m.r, h: L.h - m.t - m.b };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    const { curve, lob } = CACHE;
+
+    let mx = 1e-6;
+    curve.forEach((p) => { mx = Math.max(mx, Math.abs(p.pt)); });
+    const xOf = (d) => rect.x + ((d + 180) / 360) * rect.w;
+    const yOf = (t) => rect.y + rect.h / 2 - (t / (mx * 1.15)) * rect.h / 2;
+
+    SEIS.dashedLine(ctx, rect.x, yOf(0), rect.x + rect.w, yOf(0), 'rgba(92,102,112,.6)', [4, 3], 1.1);
+    [-90, 0, 90].forEach((d) => {
+      SEIS.dashedLine(ctx, xOf(d), rect.y, xOf(d), rect.y + rect.h, 'rgba(92,102,112,.25)', [2, 3], 1);
+    });
+
+    // the curve breaks where the largest positive lobe jumps to the other side
+    ctx.save();
+    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    let pen = false;
+    curve.forEach((p, i) => {
+      if (i > 0 && Math.abs(p.pt - curve[i - 1].pt) > mx * 0.7) { ctx.stroke(); pen = false; }
+      const x = xOf(p.d), y = yOf(p.pt);
+      pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      pen = true;
+    });
+    if (pen) ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = CRIMSON;
+    ctx.beginPath(); ctx.arc(xOf(S.phase), yOf(lob.pt), 4.5, 0, 6.284); ctx.fill();
+    ctx.restore();
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisBottom(ctx, rect, -180, 180, 'Phase rotation (degrees)', (v) => v.toFixed(0));
+    SEIS.axisLeft(ctx, rect, -mx * 1.15 * 1000, mx * 1.15 * 1000, 'Pick shift (ms)', (v) => v.toFixed(0), { flip: true });
+  }
+
+  /* ------------------------------ readouts ----------------------------- */
+
+  function updateLegend() {
+    $('mainLegend').innerHTML =
+      '<span><i style="border-color:' + TEAL + ';border-top-style:dashed"></i>where the rock changes</span>' +
+      (S.pick ? '<span><i style="border-color:' + CRIMSON + '"></i>where you would pick</span>' : '') +
+      (TIE.on ? '<span><i style="border-color:#3C4248"></i>the field seismic</span>' : '') +
+      '<span><i style="border-color:' + CRIMSON + '"></i>your synthetic</span>';
+    $('secNote').textContent = TIE.on
+      ? 'match the red synthetic to the grey field trace'
+      : 'synthetic at your phase';
+    $('hintLine').textContent = TIE.on
+      ? 'Rotate your wavelet until the two traces sit on top of each other, then check how close you got.'
+      : 'Teal marks where the rock actually changes. Crimson marks where you would put the horizon.';
+    $('tieBox').hidden = !TIE.on;
+    $('polV').textContent = S.pol === 'reverse' ? 'SEG reverse' : 'SEG normal';
+  }
+
+  function updateStats() {
+    const { lob } = CACHE;
+    const T = 1 / S.f;
+    $('rPhase').textContent = (S.phase > 0 ? '+' : '') + S.phase + '\u00b0';
+    $('rT').textContent = (T * 1000).toFixed(1) + ' ms';
+    $('rShift').textContent = (lob.pt * 1000).toFixed(1) + ' ms  = ' +
+      (Math.abs(lob.pt) / T).toFixed(2) + ' of a period';
+    $('rDepth').textContent = fmtL(Math.abs(lob.pt) * S.v / 2);
+    const scale = Math.max(Math.abs(lob.pv), Math.abs(lob.tv), 1e-9);
+    $('rAt0').textContent = (lob.at0 / scale).toFixed(2) + ' of the peak';
+    $('rTrough').textContent = (lob.tt * 1000).toFixed(1) + ' ms';
+
+    const a = Math.abs(S.phase);
+    $('rVerdict').textContent = a < 8
+      ? 'Zero phase — the peak sits on the boundary and a picked peak is the top of the sand'
+      : a > 172
+        ? 'Fully flipped — this is a polarity reversal, so the boundary is a trough, not a peak'
+        : Math.abs(Math.abs(lob.at0) / scale) < 0.12
+          ? 'Ninety degrees — the boundary is at a zero crossing, with a peak and a trough either side and nothing to choose between them'
+          : 'The peak is ' + Math.abs(lob.pt * 1000).toFixed(1) + ' ms off the boundary, which is ' +
+            fmtL(Math.abs(lob.pt) * S.v / 2) + ' of depth error on every pick';
+  }
+
+  /* -------------------------------- tie -------------------------------- */
+
+  function newCase() {
+    let d = Math.round((Math.random() * 300 - 150));
+    if (Math.abs(d) < 20) d += d < 0 ? -25 : 25;
+    TIE.hidden = d;
+    TIE.revealed = false;
+    $('verdict').textContent = '';
+    S.phase = 0; $('phase').value = 0;
+    bump();
+  }
+
+  function reveal() {
+    if (TIE.hidden === null || TIE.revealed) return;
+    TIE.revealed = true;
+    let err = S.phase - TIE.hidden;
+    err = ((err % 360) + 540) % 360 - 180;
+    const base = SEIS.makeWavelet({ type: 'ricker', f: S.f });
+    const mine = lobesOf(SEIS.phaseRotate(base, S.phase));
+    const truth = lobesOf(SEIS.phaseRotate(base, TIE.hidden));
+    const dt = Math.abs(mine.pt - truth.pt);
+    const ok = Math.abs(err) <= 15;
+    $('verdict').textContent = (ok ? 'Good tie. ' : 'Not quite. ') +
+      'The field trace was rotated ' + TIE.hidden + '\u00b0 and you set ' + S.phase +
+      '\u00b0, so you are out by ' + Math.abs(err).toFixed(0) + '\u00b0. Every horizon you picked would sit ' +
+      (dt * 1000).toFixed(1) + ' ms, or ' + fmtL(dt * S.v / 2) + ', from where it belongs.';
+    $('verdict').style.color = ok ? '#1F6F43' : 'var(--crimson)';
+    bump();
+  }
+
+  /* ------------------------------ plumbing ----------------------------- */
+
+  function render() {
+    const L = layout();
+    const cols = $('panelRow').querySelectorAll('.panel-col');
+    ['well', 'sec', 'wav', 'curve'].forEach((k, i) => {
+      if (cols[i]) cols[i].style.width = L.w[k] + 'px';
+    });
+    drawWell(L); drawSection(L); drawWavelet(L); drawCurve(L);
+    updateLegend(); updateStats();
+  }
+  function refresh() { compute(); render(); SEIS.writeState(S, DEF); }
+
+  function syncLabels() {
+    $('phaseV').textContent = (S.phase > 0 ? '+' : '') + S.phase + '\u00b0';
+    $('freqV').textContent = S.f + ' Hz';
+    $('velV').textContent = Math.round(uL(S.v)) + ' ' + U().vlab;
+    $('pNorm').setAttribute('aria-pressed', S.pol === 'normal');
+    $('pRev').setAttribute('aria-pressed', S.pol === 'reverse');
+  }
+  function pushToInputs() {
+    $('phase').value = S.phase; $('freq').value = S.f; $('vel').value = S.v;
+    $('preset').value = S.preset; $('cmap').value = S.cmap;
+    $('units').value = S.units; $('showPick').checked = S.pick;
+  }
+  function bump() { syncLabels(); refresh(); }
+
+  const slide = (id, key) => $(id).addEventListener('input', () => {
+    S[key] = parseFloat($(id).value); bump();
+  });
+  slide('phase', 'phase'); slide('freq', 'f'); slide('vel', 'v');
+
+  [['p0', 0], ['p90', 90], ['pm90', -90], ['p180', 180]].forEach(([id, d]) => {
+    $(id).addEventListener('click', () => { S.phase = d; $('phase').value = d; bump(); });
+  });
+  $('pNorm').addEventListener('click', () => { S.pol = 'normal'; bump(); });
+  $('pRev').addEventListener('click', () => { S.pol = 'reverse'; bump(); });
+
+  $('preset').addEventListener('change', () => { S.preset = $('preset').value; bump(); });
+  $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(); });
+  $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
+  $('showPick').addEventListener('change', () => { S.pick = $('showPick').checked; render(); });
+  $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
+  $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
+  $('pngBtn').addEventListener('click', () => SEIS.savePNG($('secCanvas'), 'well-tie'));
+
+  $('tie').addEventListener('change', () => {
+    TIE.on = $('tie').checked;
+    if (TIE.on) newCase(); else { TIE.hidden = null; TIE.revealed = false; bump(); }
+  });
+  $('newCase').addEventListener('click', newCase);
+  $('reveal').addEventListener('click', reveal);
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+
+  pushToInputs(); syncLabels(); refresh();
+  document.fonts && document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>
