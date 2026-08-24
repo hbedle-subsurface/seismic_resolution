@@ -78,6 +78,18 @@
     <p class="eyebrow">The modules — in the order they build on each other</p>
     <div class="card-grid">
 
+      <a class="card" href="modules/depthtrends.html">
+        <canvas class="thumb-canvas" data-thumb="depth0"></canvas>
+        <div class="card-body">
+          <div class="card-no">00</div>
+          <h3>How the earth changes with depth</h3>
+          <p>Build a column from the sea surface down to five kilometres. Compaction, an overpressured zone,
+            depth into time, and what attenuation does to your bandwidth.</p>
+          <div class="q">Why does deep data always look softer?</div>
+        </div>
+        <span class="flag next">Start here</span>
+      </a>
+
       <a class="card" href="modules/model1d.html">
         <canvas class="thumb-canvas" data-thumb="model1d"></canvas>
         <div class="card-body">
@@ -87,7 +99,7 @@
             reflection coefficients to a synthetic trace, with nothing hidden in between.</p>
           <div class="q">Why does that formation top have no reflector?</div>
         </div>
-        <span class="flag next">Start here</span>
+        <span class="flag next">Live</span>
       </a>
 
       <a class="card" href="modules/wedge.html">
@@ -504,6 +516,45 @@
     });
   }
 
+  function thumbDepth0(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const water = 1500, zmax = 6000, v0 = 1700, k = 0.55;
+    const opTop = 3400, opThick = 900, opAmp = 0.18;
+    const opF = (z) => (z <= opTop || z >= opTop + opThick) ? 0
+      : 0.5 - 0.5 * Math.cos(2 * Math.PI * (z - opTop) / opThick);
+    const vOf = (z) => z < water ? 1500
+      : Math.max(1400, (v0 + k * (z - water)) * (1 - opAmp * opF(z)));
+    const vmax = vOf(zmax) * 1.06;
+    // water band
+    ctx.fillStyle = 'rgba(127,179,204,.55)';
+    ctx.fillRect(0, 0, w, (water / zmax) * h);
+    ctx.save();
+    ctx.fillStyle = 'rgba(132,22,23,.14)';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    for (let i = 0; i <= 160; i++) {
+      const z = (i / 160) * zmax;
+      ctx.lineTo((vOf(z) / vmax) * w, (z / zmax) * h);
+    }
+    ctx.lineTo(0, h); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#841617'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i <= 160; i++) {
+      const z = (i / 160) * zmax;
+      const x = (vOf(z) / vmax) * w, y = (z / zmax) * h;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(138,109,31,.9)'; ctx.lineWidth = 1.2;
+    ctx.setLineDash([4, 3]);
+    [opTop, opTop + opThick].forEach((z) => {
+      ctx.beginPath(); ctx.moveTo(0, (z / zmax) * h); ctx.lineTo(w, (z / zmax) * h); ctx.stroke();
+    });
+    ctx.restore();
+  }
+
   function drawThumbs() {
     document.querySelectorAll('.thumb-canvas').forEach((c) => {
       if (c.dataset.thumb === 'wedge') thumbWedge(c);
@@ -512,6 +563,7 @@
       else if (c.dataset.thumb === 'fresnel') thumbFresnel(c);
       else if (c.dataset.thumb === 'mapres') thumbMapRes(c);
       else if (c.dataset.thumb === 'phase') thumbPhase(c);
+      else if (c.dataset.thumb === 'depth0') thumbDepth0(c);
       else if (c.dataset.thumb === 'mapview') thumbMapView(c);
       else if (c.dataset.thumb === 'depth') thumbDepth(c);
     });
