@@ -83,7 +83,8 @@
       <div id="tieBox" hidden>
         <p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 10px">
           The grey trace is the field seismic, recorded at a phase you cannot see. Rotate your wavelet until
-          the red synthetic sits on top of it.</p>
+          the red line sits centred along the middle of the grey band. Use <b>Trace size</b> if the wiggles
+          are too small to judge.</p>
         <button class="btn small" id="newCase" type="button">New field trace</button>
         <button class="btn ghost small" id="reveal" type="button">How did I do?</button>
         <p id="verdict" style="font-size:13px;margin:10px 0 0;min-height:1.2em"></p>
@@ -100,7 +101,12 @@
           <option value="gray">Grayscale (black peak)</option>
         </select>
       </div>
+      <div class="ctl">
+        <label for="tgain">Trace size <span class="val" id="tgainV">1.0×</span></label>
+        <input type="range" id="tgain" min="0.4" max="3" step="0.1" value="1">
+      </div>
       <label class="check"><input type="checkbox" id="showPick" checked> Mark the peaks you would pick</label>
+      <label class="check"><input type="checkbox" id="fade" checked> Fade the color behind the traces</label>
       <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
       <button class="btn ghost small" id="pngBtn" type="button">Save the tie as PNG</button>
       <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
@@ -245,7 +251,7 @@
 
   const DEF = {
     phase: 0, f: 30, v: 2600, pol: 'normal',
-    preset: 'simple', cmap: 'bwr', pick: true, units: 'm',
+    preset: 'simple', cmap: 'bwr', pick: true, tgain: 1, fade: true, units: 'm',
   };
   let S = SEIS.readState(DEF);
 
@@ -419,30 +425,46 @@
     const fld = new Float32Array(NXs * nt);
     for (let ix = 0; ix < NXs; ix++) fld.set(syn, ix * nt);
     SEIS.drawVarDensity(ctx, fld, NXs, nt, rect, { cmap: SEIS.COLORMAPS[S.cmap], clip: peak });
+    // A crimson line on deep red measures about 1.1:1 against its background,
+    // which is no contrast at all. Washing the colour out leaves it as context
+    // instead of camouflage; harder while matching, when two traces have to be
+    // told apart at once.
+    if (S.fade) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,' + (field ? 0.68 : 0.42) + ')';
+      ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+      ctx.restore();
+    }
 
     const yOf = (t) => rect.y + (t / M.tEnd) * rect.h;
     const cx = rect.x + rect.w / 2;
-    const amp = rect.w * 0.36 / peak;
+    const amp = rect.w * 0.36 * clamp(S.tgain, 0.4, 3) / peak;
 
-    ctx.save();
-    ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
-    if (field) {
-      ctx.strokeStyle = 'rgba(60,66,72,.85)'; ctx.lineWidth = 3.2;
-      ctx.beginPath();
-      for (let i = 0; i < nt; i++) {
-        const x = cx + field[i] * amp, y = yOf(i * DT);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    // Each trace is drawn twice: a white outline first, then the colour on top.
+    // A red line on a red background is invisible however thick it is, and the
+    // halo makes both legible whatever the colour map is doing underneath.
+    const wiggle = (data, colour, width) => {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      for (const pass of [0, 1]) {
+        ctx.strokeStyle = pass === 0 ? 'rgba(255,255,255,.92)' : colour;
+        ctx.lineWidth = pass === 0 ? width + 2.6 : width;
+        ctx.beginPath();
+        for (let i = 0; i < nt; i++) {
+          const x = cx + data[i] * amp, y = yOf(i * DT);
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
-    }
-    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    for (let i = 0; i < nt; i++) {
-      const x = cx + syn[i] * amp, y = yOf(i * DT);
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-    ctx.restore();
+      ctx.restore();
+    };
+    // Grey chosen where the two trade-offs cross: light enough to separate
+    // from the crimson synthetic (2.2:1), dark enough to hold against the
+    // washed-out background (2.3:1). Darker and it merges with the red line,
+    // lighter and it disappears into the panel.
+    if (field) wiggle(field, '#6E7780', 3.6);
+    wiggle(syn, CRIMSON, 1.9);
 
     // where the rock changes, and where the horizon would go
     M.iface.forEach((f) => {
@@ -557,7 +579,7 @@
     $('mainLegend').innerHTML =
       '<span><i style="border-color:' + TEAL + ';border-top-style:dashed"></i>where the rock changes</span>' +
       (S.pick ? '<span><i style="border-color:' + CRIMSON + '"></i>where you would pick</span>' : '') +
-      (TIE.on ? '<span><i style="border-color:#3C4248"></i>the field seismic</span>' : '') +
+      (TIE.on ? '<span><i style="border-color:#6E7780"></i>the field seismic</span>' : '') +
       '<span><i style="border-color:' + CRIMSON + '"></i>your synthetic</span>';
     $('secNote').textContent = TIE.on
       ? 'match the red synthetic to the grey field trace'
@@ -637,6 +659,7 @@
 
   function syncLabels() {
     $('phaseV').textContent = (S.phase > 0 ? '+' : '') + S.phase + '\u00b0';
+    $('tgainV').textContent = S.tgain.toFixed(1) + '\u00d7';
     $('freqV').textContent = S.f + ' Hz';
     $('velV').textContent = Math.round(uL(S.v)) + ' ' + U().vlab;
     $('pNorm').setAttribute('aria-pressed', S.pol === 'normal');
@@ -646,6 +669,7 @@
     $('phase').value = S.phase; $('freq').value = S.f; $('vel').value = S.v;
     $('preset').value = S.preset; $('cmap').value = S.cmap;
     $('units').value = S.units; $('showPick').checked = S.pick;
+    $('tgain').value = S.tgain; $('fade').checked = S.fade;
   }
   function bump() { syncLabels(); refresh(); }
 
@@ -653,6 +677,8 @@
     S[key] = parseFloat($(id).value); bump();
   });
   slide('phase', 'phase'); slide('freq', 'f'); slide('vel', 'v');
+  $('tgain').addEventListener('input', () => { S.tgain = parseFloat($('tgain').value); syncLabels(); render(); });
+  $('fade').addEventListener('change', () => { S.fade = $('fade').checked; render(); });
 
   [['p0', 0], ['p90', 90], ['pm90', -90], ['p180', 180]].forEach(([id, d]) => {
     $(id).addEventListener('click', () => { S.phase = d; $('phase').value = d; bump(); });
