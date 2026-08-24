@@ -1,581 +1,688 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>What Can You REALLY See in Seismic?</title>
-<meta name="description" content="Hands-on browser experiments in seismic resolution: tuning, wedge models, fault visibility. No install, no math prerequisite. University of Oklahoma / AASPI.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css">
-</head>
-<body>
+/* ===========================================================================
+   seismic.js — shared math + plotting core
+   "What Can You REALLY See in Seismic?"
+   Heather Bedle / AASPI / University of Oklahoma
+   Vanilla JS, no dependencies, no build step.
+   =========================================================================== */
 
-<div class="wrap">
-  <header class="masthead">
-    <a class="brand" href="index.html"><span class="dot"></span>University of Oklahoma &nbsp;·&nbsp; <b>AASPI</b></a>
-    <nav>
-      <a href="#modules">Modules</a>
-      <a href="#who">Start with the basics</a>
-      <a href="modules/wedge.html">Start</a>
-    </nav>
-  </header>
-
-  <!-- =============================== HERO =============================== -->
-  <section class="hero">
-    <div class="hero-grid">
-      <div>
-        <p class="eyebrow">Seismic interpretation, from the ground up</p>
-        <h1 class="title">What can you <em>really</em> see in seismic?</h1>
-        <p class="lede">Seismic data does not show you the earth. It shows you the earth
-          <strong>convolved with a wavelet</strong> — and that wavelet is key in determining which subsurface features you get to
-          resolve, which faults you get to map, and which bright spots are rock rather than arithmetic.</p>
-        <p class="lede">These are experiments, not lectures. Move a slider, watch a rock layer or a fault disappear,
-          and find out where your data stops telling the truth and starts to trick you!</p>
-        <p>
-          <a class="btn" href="modules/wedge.html">Open the wedge model</a>
-          <a class="btn ghost" href="modules/faults.html" style="margin-left:8px">Can you see the fault?</a>
-        </p>
-      </div>
-
-      <div class="hero-panel">
-        <canvas id="heroCanvas" aria-label="Animated wedge model: two reflections merging as frequency drops"></canvas>
-        <div class="hero-cap">
-          <span>One bed thinning to zero, drawn over and over</span>
-          <span>peak frequency <b id="heroF">40 Hz</b> &nbsp;·&nbsp; thinnest resolvable bed <b id="heroR">16 m</b></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================== PRIMER ============================== -->
-  <section class="primer" id="who">
-    <div class="primer-grid">
-      <div>
-        <h3>The only equation you need</h3>
-        <span class="eq">λ = V / f</span>
-        <p>Wavelength equals velocity over frequency. A 3000 m/s layer imaged at 30 Hz gives a 100 m wavelength.
-          Nearly every limit on this site is some fraction of that one number.</p>
-      </div>
-      <div>
-        <h3>The rule of thumb</h3>
-        <span class="eq">λ / 4</span>
-        <p>Beds thinner than about a quarter of a wavelength stop showing you a separate top and base.
-          Twenty-five meters, in that example. The modules show you how optimistic even this is.</p>
-      </div>
-      <div>
-        <h3>The thing people miss</h3>
-        <span class="eq">detect ≠ resolve</span>
-        <p>You can often tell that a thin bed is <em>there</em> long after you have lost the ability to say how
-          thick it really is. Confusing the two is how thickness maps can often go wrong.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================= MODULES ============================== -->
-  <section class="modules" id="modules">
-    <p class="eyebrow">The modules — in the order they build on each other</p>
-    <div class="card-grid">
-
-      <a class="card" href="modules/depthtrends.html">
-        <canvas class="thumb-canvas" data-thumb="depth0"></canvas>
-        <div class="card-body">
-          <div class="card-no">00</div>
-          <h3>How the earth changes with depth</h3>
-          <p>Build a column from the sea surface down to five kilometres. Compaction, an overpressured zone,
-            depth into time, and what attenuation does to your bandwidth.</p>
-          <div class="q">Why does deep data always look softer?</div>
-        </div>
-        <span class="flag next">Start here</span>
-      </a>
-
-      <a class="card" href="modules/model1d.html">
-        <canvas class="thumb-canvas" data-thumb="model1d"></canvas>
-        <div class="card-body">
-          <div class="card-no">01</div>
-          <h3>Where a seismic trace comes from</h3>
-          <p>One column of rock. Set thickness, velocity and density, and follow it through impedance and
-            reflection coefficients to a synthetic trace, with nothing hidden in between.</p>
-          <div class="q">Why does that formation top have no reflector?</div>
-        </div>
-        <span class="flag next">Live</span>
-      </a>
-
-      <a class="card" href="modules/wedge.html">
-        <canvas class="thumb-canvas" data-thumb="wedge"></canvas>
-        <div class="card-body">
-          <div class="card-no">02</div>
-          <h3>The wedge model &amp; tuning</h3>
-          <p>Thin a bed to nothing and watch the reflections merge, brighten, then fade — while the seismic
-            tricks you into thinking your bed is thicker.</p>
-          <div class="q">Why is the thin edge of my channel the brightest part?</div>
-        </div>
-        <span class="flag next">Start here</span>
-      </a>
-
-      <a class="card" href="modules/faults.html">
-        <canvas class="thumb-canvas" data-thumb="fault"></canvas>
-        <div class="card-body">
-          <div class="card-no">03</div>
-          <h3>Can you see the fault?</h3>
-          <p>Test out throw, frequency, and noise against your own eyes. Includes a quiz mode that hides the answer —
-            and sometimes hides no fault at all.</p>
-          <div class="q">How small a fault am I missing?</div>
-        </div>
-        <span class="flag next">Live</span>
-      </a>
-
-      <a class="card" href="modules/fresnel.html">
-        <canvas class="thumb-canvas" data-thumb="fresnel"></canvas>
-        <div class="card-body">
-          <div class="card-no">04</div>
-          <h3>Horizontal resolution</h3>
-          <p>One trace does not see one point — it sees a patch the size of several football fields.
-            Migration is the focus ring. Watch two features merge as they close.</p>
-          <div class="q">How small a feature can I map in plan view?</div>
-        </div>
-        <span class="flag next">Live</span>
-      </a>
-
-      <a class="card" href="modules/depth.html">
-        <canvas class="thumb-canvas" data-thumb="depth"></canvas>
-        <div class="card-body">
-          <div class="card-no">05</div>
-          <h3>Resolution with depth</h3>
-          <p>Velocity climbs, the earth attenuates your high frequencies, and λ/4 in meters grows the deeper you dive into the subsurface.</p>
-          <div class="q">Why does my deep interpretation feel so much vaguer?</div>
-        </div>
-        <span class="flag next">Live</span>
-      </a>
-
-      <a class="card" href="modules/mapres.html">
-        <canvas class="thumb-canvas" data-thumb="mapres"></canvas>
-        <div class="card-body">
-          <div class="card-no">06</div>
-          <h3>Resolution in map view</h3>
-          <p>A channel that narrows and splits in two. Watch where it appears to end, and where the two
-            distributaries stop looking like one.</p>
-          <div class="q">Where does my channel really end?</div>
-        </div>
-        <span class="flag next">Live</span>
-      </a>
-
-      <a class="card" href="modules/mapview.html">
-        <canvas class="thumb-canvas" data-thumb="mapview"></canvas>
-        <div class="card-body">
-          <div class="card-no">07</div>
-          <h3>Tuning in map view</h3>
-          <p>A channel with real thickness variation, turned into an amplitude extraction — so you can see
-            exactly how a thickness map goes wrong.</p>
-          <div class="q">Does bright mean thick?</div>
-        </div>
-        <span class="flag next">Live</span>
-      </a>
-
-      <a class="card" href="modules/phase.html">
-        <canvas class="thumb-canvas" data-thumb="phase"></canvas>
-        <div class="card-body">
-          <div class="card-no">08</div>
-          <h3>Phase, polarity &amp; well ties</h3>
-          <p>Rotate the wavelet and watch the apparent bed boundary move. Demonstrates why well ties and
-            picked horizons often disagree.</p>
-          <div class="q">Am I picking the top of the sand, or near it?</div>
-        </div>
-        <span class="flag next">Live</span>
-      </a>
-
-    </div>
-  </section>
-
-  <footer>
-    <div class="foot-grid">
-      <div>
-        <p><strong>Built for teaching by Heather Bedle</strong>, School of Geosciences, University of Oklahoma,
-          with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
-        <p>Everything runs in your browser — no install, no account, no data leaves your machine.
-          Free to use or adapt in your own courses with citation.</p>
-      </div>
-      <div>
-        <p>Every module has a <em>Copy link to this setup</em> button, so you can hand students a link that
-          opens on an exact configuration.</p>
-      </div>
-    </div>
-  </footer>
-</div>
-
-<script src="assets/seismic.js"></script>
-<script>
-(function () {
+const SEIS = (function () {
   'use strict';
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ------------------------- animated hero wedge ------------------------- */
-  const hero = document.getElementById('heroCanvas');
-  const NX = 150, V = 2600, MAXH = 55, TTOP = 0.045;
+  /* ---------------------------------------------------------------------
+     WAVELETS
+     All zero-phase, normalized so w(0) = 1.
+     --------------------------------------------------------------------- */
 
-  function wedgeField(f, nt, dt) {
-    const wav = SEIS.makeWavelet({ type: 'ricker', f });
-    const out = new Float32Array(NX * nt);
-    for (let ix = 0; ix < NX; ix++) {
-      const h = (ix / (NX - 1)) * MAXH;
-      const sp = [{ t: TTOP, r: 0.14 }, { t: TTOP + 2 * h / V, r: -0.14 }];
-      for (let it = 0; it < nt; it++) out[ix * nt + it] = SEIS.traceValue(sp, it * dt, wav.fn);
+  // Ricker: the classic single-parameter wavelet. f = peak frequency (Hz).
+  function ricker(t, f) {
+    const a = Math.PI * Math.PI * f * f * t * t;
+    return (1 - 2 * a) * Math.exp(-a);
+  }
+
+  function sinc(x) {
+    if (Math.abs(x) < 1e-12) return 1;
+    return Math.sin(x) / x;
+  }
+
+  // Ormsby trapezoidal bandpass: f1 low-cut, f2 low-pass, f3 high-pass, f4 high-cut.
+  function ormsbyRaw(t, f1, f2, f3, f4) {
+    const term = (f) => Math.PI * f * f * Math.pow(sinc(Math.PI * f * t), 2);
+    return (
+      (term(f4) - term(f3)) / (f4 - f3) -
+      (term(f2) - term(f1)) / (f2 - f1)
+    );
+  }
+
+  function ormsby(t, f1, f2, f3, f4) {
+    const norm = ormsbyRaw(0, f1, f2, f3, f4);
+    return ormsbyRaw(t, f1, f2, f3, f4) / norm;
+  }
+
+  /**
+   * Build a wavelet evaluator from a config object.
+   * cfg = { type:'ricker', f:30 }  or  { type:'ormsby', f1:5,f2:10,f3:40,f4:50 }
+   * Returns { fn(t), fdom, halfLength } with t in SECONDS.
+   */
+  function makeWavelet(cfg) {
+    if (cfg.type === 'ormsby') {
+      const { f1, f2, f3, f4 } = cfg;
+      return {
+        fn: (t) => ormsby(t, f1, f2, f3, f4),
+        fdom: (f2 + f3) / 2,
+        halfLength: 2.2 / f1,
+      };
+    }
+    const f = cfg.f;
+    return {
+      fn: (t) => ricker(t, f),
+      fdom: f,
+      halfLength: 1.4 / f,
+    };
+  }
+
+  // Amplitude spectrum by brute-force DFT of a sampled wavelet. Small n, fine.
+  function spectrum(wav, dt, nf, fmax) {
+    const half = wav.halfLength;
+    const n = Math.ceil(half / dt);
+    const out = [];
+    for (let k = 0; k < nf; k++) {
+      const f = (k / (nf - 1)) * fmax;
+      let re = 0, im = 0;
+      for (let i = -n; i <= n; i++) {
+        const t = i * dt;
+        const v = wav.fn(t);
+        const ph = -2 * Math.PI * f * t;
+        re += v * Math.cos(ph);
+        im += v * Math.sin(ph);
+      }
+      out.push({ f, a: Math.hypot(re, im) * dt });
+    }
+    const mx = out.reduce((m, p) => Math.max(m, p.a), 1e-12);
+    out.forEach((p) => (p.a /= mx));
+    return out;
+  }
+
+  /* ---------------------------------------------------------------------
+     SYNTHETIC TRACES
+     Spikes are convolved analytically (sum of scaled, shifted wavelets)
+     so reflector timing is never rounded to the sample grid. This keeps
+     tuning curves smooth instead of stair-stepped.
+     --------------------------------------------------------------------- */
+
+  // spikes: [{t: seconds, r: reflection coefficient}, ...]
+  function traceValue(spikes, t, wfn) {
+    let v = 0;
+    for (let i = 0; i < spikes.length; i++) {
+      v += spikes[i].r * wfn(t - spikes[i].t);
+    }
+    return v;
+  }
+
+  function sampleTrace(spikes, t0, dt, nt, wfn) {
+    const out = new Float32Array(nt);
+    for (let i = 0; i < nt; i++) out[i] = traceValue(spikes, t0 + i * dt, wfn);
+    return out;
+  }
+
+  /**
+   * Same result as sampleTrace, but each spike only writes over the samples its
+   * wavelet actually reaches. With a few reflectors it makes no difference; with
+   * forty of them it is several times faster, because the cost stops scaling
+   * with the length of the trace.
+   */
+  function traceFromSpikes(spikes, t0, dt, nt, wav) {
+    const out = new Float32Array(nt);
+    const half = wav.halfLength;
+    for (let s = 0; s < spikes.length; s++) {
+      const st = spikes[s].t, sr = spikes[s].r;
+      const i0 = Math.max(0, Math.ceil((st - half - t0) / dt));
+      const i1 = Math.min(nt - 1, Math.floor((st + half - t0) / dt));
+      for (let i = i0; i <= i1; i++) out[i] += sr * wav.fn(t0 + i * dt - st);
     }
     return out;
   }
 
-  let f = 40, dir = -1;
-  function drawHero() {
-    const w = hero.parentElement.clientWidth - 30;
-    const h = Math.max(190, Math.min(260, w * 0.56));
-    const ctx = SEIS.fitCanvas(hero, w, h);
-    const dt = 0.0004;
-    const tEnd = TTOP + 2 * MAXH / V + 0.055;
-    const nt = Math.round(tEnd / dt);
-    const rect = { x: 0, y: 0, w: w, h: h };
-    const field = wedgeField(f, nt, dt);
-    SEIS.drawVarDensity(ctx, field, NX, nt, rect, { cmap: SEIS.COLORMAPS.bwr, clip: 0.21 });
+  /* ---------------------------------------------------------------------
+     REFLECTION COEFFICIENTS
+     --------------------------------------------------------------------- */
 
-    // the quarter-wavelength marker, sliding as frequency changes
-    const q = (V / f) / 4;
-    if (q <= MAXH) {
-      const x = (q / MAXH) * w;
-      SEIS.dashedLine(ctx, x, 0, x, h, '#0B7285', [3, 3], 1.6);
-      SEIS.tag(ctx, x + 4, 12, 'λ/4', '#0B7285');
-    }
-    SEIS.dashedLine(ctx, 0, (TTOP / tEnd) * h, w, (TTOP / tEnd) * h, 'rgba(22,25,28,.55)', [5,4], 1.2);
-    SEIS.dashedLine(ctx, 0, (TTOP / tEnd) * h, w, ((TTOP + 2*MAXH/V) / tEnd) * h, 'rgba(22,25,28,.55)', [5,4], 1.2);
-
-    document.getElementById('heroF').textContent = f.toFixed(0) + ' Hz';
-    document.getElementById('heroR').textContent = (V / f / 4).toFixed(0) + ' m';
+  function rc(v1, rho1, v2, rho2) {
+    const i1 = v1 * rho1, i2 = v2 * rho2;
+    return (i2 - i1) / (i2 + i1);
   }
 
-  let last = 0;
-  function tick(ts) {
-    if (ts - last > 55) {
-      last = ts;
-      f += dir * 0.55;
-      if (f <= 14) { f = 14; dir = 1; }
-      if (f >= 55) { f = 55; dir = -1; }
-      drawHero();
-    }
-    requestAnimationFrame(tick);
+  /* ---------------------------------------------------------------------
+     RANDOM + NOISE
+     --------------------------------------------------------------------- */
+
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a |= 0; a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
   }
 
-  drawHero();
-  if (!reduce) requestAnimationFrame(tick);
-
-  /* --------------------------- card thumbnails --------------------------- */
-  function thumbWedge(canvas) {
-    const w = canvas.parentElement.clientWidth, h = 118;
-    const ctx = SEIS.fitCanvas(canvas, w, h);
-    const dt = 0.0004, tEnd = TTOP + 2 * MAXH / V + 0.05;
-    const nt = Math.round(tEnd / dt);
-    const wav = SEIS.makeWavelet({ type: 'ricker', f: 38 });
-    const fld = new Float32Array(NX * nt);
-    for (let ix = 0; ix < NX; ix++) {
-      const hh = (ix / (NX - 1)) * MAXH;
-      const sp = [{ t: TTOP, r: 0.14 }, { t: TTOP + 2 * hh / V, r: -0.14 }];
-      for (let it = 0; it < nt; it++) fld[ix * nt + it] = SEIS.traceValue(sp, it * dt, wav.fn);
-    }
-    SEIS.drawVarDensity(ctx, fld, NX, nt, { x:0, y:0, w:w, h:h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.21 });
+  function gaussRand(rnd) {
+    let u = 0, v = 0;
+    while (u === 0) u = rnd();
+    while (v === 0) v = rnd();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   }
 
-  function thumbFault(canvas) {
-    const w = canvas.parentElement.clientWidth, h = 118;
-    const ctx = SEIS.fitCanvas(canvas, w, h);
-    const nx = 160, dx = 12.5, t0 = 0.06, tE = 0.30, dt = 0.0006;
-    const nt = Math.round((tE - t0) / dt);
-    const wav = SEIS.makeWavelet({ type: 'ricker', f: 34 });
-    const layers = [
-      { t:0.095, r:0.12 }, { t:0.130, r:-0.09 }, { t:0.163, r:0.13 },
-      { t:0.205, r:-0.11 }, { t:0.248, r:0.10 },
-    ];
-    const thr = 0.019, vel = 2800, tanD = Math.tan(64 * Math.PI / 180);
-    const fld = new Float32Array(nx * nt);
+  /**
+   * Band-limited noise: white reflectivity convolved with the same wavelet,
+   * so the noise looks like seismic rather than TV static.
+   *
+   * `lateral` gives the noise trace-to-trace correlation (a triangular smoother
+   * that many traces wide). Without it the field is spatially white and reads
+   * as vertical striping, which is not what noise on a migrated section
+   * looks like — and vertical striping is far too easy to tell apart from a fault.
+   *
+   * Returns Float32Array[nx*nt], RMS-normalized to 1.
+   */
+  function bandLimitedNoise(nx, nt, dt, wav, seed, lateral) {
+    const rnd = mulberry32(seed);
+    const hw = Math.ceil(wav.halfLength / dt);
+    const wsamp = new Float32Array(2 * hw + 1);
+    for (let i = -hw; i <= hw; i++) wsamp[i + hw] = wav.fn(i * dt);
+
+    const out = new Float32Array(nx * nt);
+    const white = new Float32Array(nt + 2 * hw);
     for (let ix = 0; ix < nx; ix++) {
-      const x = (ix + 0.5) * dx;
-      const sp = layers.map((L) => {
-        const fx = 0.52 * nx * dx + (vel * (L.t - 0.18) / 2) / tanD;
-        return { t: x > fx ? L.t + thr : L.t, r: L.r };
-      });
-      for (let it = 0; it < nt; it++) fld[ix * nt + it] = SEIS.traceValue(sp, t0 + it * dt, wav.fn);
-    }
-    SEIS.drawVarDensity(ctx, fld, nx, nt, { x:0, y:0, w:w, h:h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.15 });
-  }
-
-  function thumbDepth(canvas) {
-    const w = canvas.parentElement.clientWidth, h = 118;
-    const ctx = SEIS.fitCanvas(canvas, w, h);
-    ctx.clearRect(0, 0, w, h);
-    const t0 = 0.05, tEnd = 2.6, f0 = 42, Q = 55, v0 = 2000, vmax = 4600;
-    const velAt = (t) => v0 * Math.pow(vmax / v0, Math.max(0, Math.min(t, tEnd)) / tEnd);
-    const effFreq = (t) => {
-      if (t <= 0) return f0;
-      const a = 2 / (f0 * f0), b = Math.PI * t / Q, c = -2;
-      return (-b + Math.sqrt(b * b - 4 * a * c)) / (2 * a);
-    };
-    const ampDecay = (t) => (t <= 0 ? 1 : Math.exp(-Math.PI * effFreq(t) * t / Q));
-    const nx = 120, dt = 0.0012, nt = Math.round((tEnd - t0) / dt);
-    const rnd = SEIS.mulberry32(4021);
-    const layers = [];
-    let t = t0 + 0.03, sign = 1;
-    while (t < tEnd - 0.05 && layers.length < 26) {
-      layers.push({ t, r: sign * (0.05 + rnd() * 0.09) });
-      sign = rnd() < 0.8 ? -sign : sign;
-      t += 2 * (18 + rnd() * 45) / velAt(t);
-    }
-    const base = new Float32Array(nt);
-    layers.forEach((L) => {
-      const wav = SEIS.makeWavelet({ type: 'ricker', f: effFreq(L.t) });
-      const amp = L.r * ampDecay(L.t), half = wav.halfLength;
-      const i0 = Math.max(0, Math.ceil((L.t - half - t0) / dt));
-      const i1 = Math.min(nt - 1, Math.floor((L.t + half - t0) / dt));
-      for (let i = i0; i <= i1; i++) base[i] += amp * wav.fn(t0 + i * dt - L.t);
-    });
-    const fld = new Float32Array(nx * nt);
-    for (let ix = 0; ix < nx; ix++) fld.set(base, ix * nt);
-    SEIS.drawVarDensity(ctx, fld, nx, nt, { x: 0, y: 0, w: w, h: h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.11 });
-  }
-
-  function thumb1d(canvas) {
-    const w = canvas.parentElement.clientWidth, h = 118;
-    const ctx = SEIS.fitCanvas(canvas, w, h);
-    ctx.clearRect(0, 0, w, h);
-    const layers = [
-      { v: 2450, d: 2.38 }, { v: 2750, d: 2.30 }, { v: 2500, d: 2.40 },
-      { v: 2800, d: 2.32 }, { v: 2550, d: 2.42 },
-    ];
-    const thick = [0, 45, 30, 22, 0];
-    const ai = layers.map((l) => l.v * l.d * 1000 / 1e6);
-    let t = 0.05; const ifc = [];
-    for (let i = 0; i < layers.length - 1; i++) {
-      if (i > 0) t += 2 * thick[i] / layers[i].v;
-      ifc.push({ t, rc: (ai[i + 1] - ai[i]) / (ai[i + 1] + ai[i]) });
-    }
-    const tEnd = 0.2;
-    const EARTH = [[238,227,197],[212,189,145],[172,149,113],[126,109,88],[78,68,58]];
-    const lo = Math.min.apply(null, ai), hi = Math.max.apply(null, ai);
-    const shade = (i) => {
-      const u = (ai[i] - lo) / ((hi - lo) || 1) * (EARTH.length - 1);
-      const k = Math.min(EARTH.length - 2, Math.floor(u)), f = u - k;
-      const a = EARTH[k], b = EARTH[k + 1];
-      return 'rgb(' + Math.round(a[0]+(b[0]-a[0])*f) + ',' + Math.round(a[1]+(b[1]-a[1])*f) +
-             ',' + Math.round(a[2]+(b[2]-a[2])*f) + ')';
-    };
-    const colW = w * 0.42, synX = w * 0.52, synW = w - synX;
-    const yOf = (tt) => (tt / tEnd) * h;
-    for (let i = 0; i < layers.length; i++) {
-      const y0 = i === 0 ? 0 : yOf(ifc[i - 1].t);
-      const y1 = i < ifc.length ? yOf(ifc[i].t) : h;
-      ctx.fillStyle = shade(i);
-      ctx.fillRect(0, y0, colW, y1 - y0);
-    }
-    const wav = SEIS.makeWavelet({ type: 'ricker', f: 32 });
-    const dt = 0.0004, nt = Math.round(tEnd / dt);
-    const tr = SEIS.traceFromSpikes(ifc.map((f) => ({ t: f.t, r: f.rc })), 0, dt, nt, wav);
-    const nx = 26, fld = new Float32Array(nx * nt);
-    for (let ix = 0; ix < nx; ix++) fld.set(tr, ix * nt);
-    SEIS.drawVarDensity(ctx, fld, nx, nt, { x: synX, y: 0, w: synW, h: h },
-      { cmap: SEIS.COLORMAPS.bwr, clip: 0.055 });
-    ctx.save();
-    ctx.strokeStyle = 'rgba(132,22,23,.85)'; ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    const cx = colW + (synX - colW) / 2;
-    ifc.forEach((f) => {
-      const y = yOf(f.t);
-      ctx.moveTo(cx, y); ctx.lineTo(cx + (f.rc / 0.05) * ((synX - colW) / 2) * 0.8, y);
-    });
-    ctx.stroke(); ctx.restore();
-  }
-
-  function thumbFresnel(canvas) {
-    const w = canvas.parentElement.clientWidth, h = 118;
-    const ctx = SEIS.fitCanvas(canvas, w, h);
-    ctx.clearRect(0, 0, w, h);
-    const V = 2500, t0 = 0.42, f = 32, sep = 150;
-    const wav = SEIS.makeWavelet({ type: 'ricker', f });
-    const XW = 1400, NX = 150, dx = XW / NX;
-    const tStart = 0.30, tEnd = 0.78, nt = 150, dt = (tEnd - tStart) / nt;
-    const fld = new Float32Array(NX * nt);
-    for (let ix = 0; ix < NX; ix++) {
-      const x = -XW / 2 + (ix + 0.5) * dx;
-      [-sep / 2, sep / 2].forEach((x0) => {
-        const tau = Math.sqrt(t0 * t0 + Math.pow(2 * (x - x0) / V, 2));
-        const hl = wav.halfLength;
-        const i0 = Math.max(0, Math.ceil((tau - hl - tStart) / dt));
-        const i1 = Math.min(nt - 1, Math.floor((tau + hl - tStart) / dt));
-        for (let i = i0; i <= i1; i++) fld[ix * nt + i] += (t0 / tau) * wav.fn(tStart + i * dt - tau);
-      });
-    }
-    SEIS.drawVarDensity(ctx, fld, NX, nt, { x: 0, y: 0, w: w, h: h },
-      { cmap: SEIS.COLORMAPS.bwr, clip: 0.85 });
-  }
-
-  function thumbMapRes(canvas) {
-    const w = canvas.parentElement.clientWidth, h = 118;
-    const ctx = SEIS.fitCanvas(canvas, w, h);
-    ctx.clearRect(0, 0, w, h);
-    const NXn = 256, NYn = 128, FS = 0.34, KC = 0.708;
-    const w0 = 900, wend = 0, div = 700, res = 84;
-    const XD = 4500, YD = XD * NYn / NXn;
-    const shape = (fx) => {
-      if (fx < 0.04 || fx > 0.985) return null;
-      const yc = YD / 2 + 0.085 * YD * Math.sin(2 * Math.PI * fx * 1.25);
-      const wS = Math.max(wend * 2.4, w0 * 0.62);
-      if (fx < FS) return [{ y: yc, w: w0 + (wS - w0) * (fx - 0.04) / (FS - 0.04) }];
-      const t = (fx - FS) / (0.985 - FS);
-      const wb = wS * 0.5 + (wend - wS * 0.5) * t;
-      if (wb <= 0.5) return null;
-      const off = (wS * 0.5 + div * Math.pow(t, 1.25)) / 2;
-      return [{ y: yc - off, w: wb }, { y: yc + off, w: wb }];
-    };
-    const src = new Float64Array(NXn * NYn);
-    for (let iy = 0; iy < NYn; iy++) for (let ix = 0; ix < NXn; ix++) {
-      const ls = shape((ix + 0.5) / NXn); if (!ls) continue;
-      const y = ((iy + 0.5) / NYn) * YD;
-      for (const L of ls) if (Math.abs(y - L.y) <= L.w / 2) { src[iy * NXn + ix] = 1; break; }
-    }
-    const re = new Float64Array(NXn * NYn), im = new Float64Array(NXn * NYn);
-    re.set(src);
-    const rr = new Float64Array(NXn), ri = new Float64Array(NXn);
-    const cr = new Float64Array(NYn), ci = new Float64Array(NYn);
-    const rows = (inv) => { for (let iy = 0; iy < NYn; iy++) {
-      for (let ix = 0; ix < NXn; ix++) { rr[ix] = re[iy * NXn + ix]; ri[ix] = im[iy * NXn + ix]; }
-      SEIS.fft(rr, ri, inv);
-      for (let ix = 0; ix < NXn; ix++) { re[iy * NXn + ix] = rr[ix]; im[iy * NXn + ix] = ri[ix]; } } };
-    const colsF = (inv) => { for (let ix = 0; ix < NXn; ix++) {
-      for (let iy = 0; iy < NYn; iy++) { cr[iy] = re[iy * NXn + ix]; ci[iy] = im[iy * NXn + ix]; }
-      SEIS.fft(cr, ci, inv);
-      for (let iy = 0; iy < NYn; iy++) { re[iy * NXn + ix] = cr[iy]; im[iy * NXn + ix] = ci[iy]; } } };
-    rows(false); colsF(false);
-    const dx = XD / NXn, dy = YD / NYn, kc = KC / res;
-    for (let iy = 0; iy < NYn; iy++) {
-      const ky = Math.abs((iy <= NYn / 2 ? iy : iy - NYn) / (NYn * dy));
-      for (let ix = 0; ix < NXn; ix++) {
-        const kx = Math.abs((ix <= NXn / 2 ? ix : ix - NXn) / (NXn * dx));
-        const q = Math.hypot(kx / kc, ky / kc);
-        const wgt = q <= 1 ? 1 : q >= 1.15 ? 0 : 0.5 + 0.5 * Math.cos(Math.PI * (q - 1) / 0.15);
-        re[iy * NXn + ix] *= wgt; im[iy * NXn + ix] *= wgt;
+      for (let i = 0; i < white.length; i++) white[i] = gaussRand(rnd);
+      for (let it = 0; it < nt; it++) {
+        let s = 0;
+        for (let k = -hw; k <= hw; k++) s += white[it + hw + k] * wsamp[hw - k];
+        out[ix * nt + it] = s;
       }
     }
-    colsF(true); rows(true);
-    const stops = [[252,251,248],[226,236,238],[170,208,216],[96,168,188],[38,116,146],[16,58,84]];
-    const off2 = document.createElement('canvas');
-    off2.width = NXn; off2.height = NYn;
-    const octx = off2.getContext('2d');
-    const img = octx.createImageData(NXn, NYn);
-    let mx = 1e-9;
-    for (let i = 0; i < re.length; i++) mx = Math.max(mx, re[i]);
-    for (let i = 0; i < NXn * NYn; i++) {
-      const u = Math.max(0, Math.min(1, re[i] / mx)) * (stops.length - 1);
-      const k = Math.min(stops.length - 2, Math.floor(u)), f = u - k;
-      const a = stops[k], b = stops[k + 1];
-      img.data[i * 4] = a[0] + (b[0] - a[0]) * f;
-      img.data[i * 4 + 1] = a[1] + (b[1] - a[1]) * f;
-      img.data[i * 4 + 2] = a[2] + (b[2] - a[2]) * f;
-      img.data[i * 4 + 3] = 255;
+
+    // lateral correlation: triangular smoother across traces
+    const L = Math.max(0, Math.floor(lateral === undefined ? 3 : lateral));
+    if (L > 0) {
+      const tmp = new Float32Array(nx);
+      for (let it = 0; it < nt; it++) {
+        for (let ix = 0; ix < nx; ix++) {
+          let s = 0, wsum = 0;
+          for (let k = -L; k <= L; k++) {
+            const j = ix + k;
+            if (j < 0 || j >= nx) continue;
+            const wgt = (L + 1 - Math.abs(k));
+            s += out[j * nt + it] * wgt; wsum += wgt;
+          }
+          tmp[ix] = s / wsum;
+        }
+        for (let ix = 0; ix < nx; ix++) out[ix * nt + it] = tmp[ix];
+      }
+    }
+
+    let sum2 = 0;
+    for (let i = 0; i < out.length; i++) sum2 += out[i] * out[i];
+    const rms = Math.sqrt(sum2 / (nx * nt)) || 1;
+    for (let i = 0; i < out.length; i++) out[i] /= rms;
+    return out;
+  }
+
+  /* ---------------------------------------------------------------------
+     FFT  (radix-2, in place)
+     --------------------------------------------------------------------- */
+
+  function fft(re, im, inverse) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) {
+      let bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) {
+        let t = re[i]; re[i] = re[j]; re[j] = t;
+        t = im[i]; im[i] = im[j]; im[j] = t;
+      }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+      const ang = (2 * Math.PI / len) * (inverse ? 1 : -1);
+      const wr = Math.cos(ang), wi = Math.sin(ang);
+      for (let i = 0; i < n; i += len) {
+        let cr = 1, ci = 0;
+        for (let k = 0; k < len / 2; k++) {
+          const ur = re[i + k], ui = im[i + k];
+          const ar = re[i + k + len / 2], ai = im[i + k + len / 2];
+          const vr = ar * cr - ai * ci, vi = ar * ci + ai * cr;
+          re[i + k] = ur + vr; im[i + k] = ui + vi;
+          re[i + k + len / 2] = ur - vr; im[i + k + len / 2] = ui - vi;
+          const ncr = cr * wr - ci * wi;
+          ci = cr * wi + ci * wr; cr = ncr;
+        }
+      }
+    }
+    if (inverse) for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
+  }
+
+  /**
+   * Rotate a wavelet's phase, exactly, through the frequency domain: positive
+   * frequencies are multiplied by e^-i*phi and negative ones by its conjugate,
+   * which is the same thing as w*cos(phi) - H{w}*sin(phi) without needing a
+   * separate Hilbert transform.
+   *
+   * Returns an object with the same shape as makeWavelet, so it can be passed
+   * anywhere a wavelet is expected. The rotated wavelet has longer tails than
+   * the one it came from, so halfLength grows to match.
+   */
+  function phaseRotate(wav, degrees) {
+    const deg = ((degrees % 360) + 540) % 360 - 180;      // into -180..180
+    if (Math.abs(deg) < 1e-9) return wav;
+
+    const dt = Math.min(wav.halfLength / 96, 0.0004);
+    const hw = Math.ceil(wav.halfLength / dt);
+    const out = 3 * hw;                                    // room for the tails
+    let n = 1;
+    while (n < 4 * out) n *= 2;
+
+    const re = new Float64Array(n), im = new Float64Array(n);
+    for (let i = -hw; i <= hw; i++) re[(i + n) % n] = wav.fn(i * dt);
+    fft(re, im, false);
+
+    const ph = deg * Math.PI / 180;
+    const c = Math.cos(ph), s = Math.sin(ph);
+    for (let k = 0; k < n; k++) {
+      const sgn = (k === 0 || k === n / 2) ? 0 : (k < n / 2 ? 1 : -1);
+      const cc = c, ss = -sgn * s;
+      const a = re[k], b = im[k];
+      re[k] = a * cc - b * ss;
+      im[k] = a * ss + b * cc;
+    }
+    fft(re, im, true);
+
+    const samp = new Float64Array(2 * out + 1);
+    for (let i = -out; i <= out; i++) samp[i + out] = re[(i + n) % n];
+
+    const half = out * dt;
+    return {
+      fdom: wav.fdom,
+      halfLength: half,
+      phase: deg,
+      fn: function (t) {
+        const p = t / dt + out;
+        if (p < 0 || p > 2 * out) return 0;
+        const i = Math.floor(p), f = p - i;
+        if (i >= 2 * out) return samp[2 * out];
+        return samp[i] + (samp[i + 1] - samp[i]) * f;
+      },
+    };
+  }
+
+  /**
+   * f-k amplitude spectrum of a trace-major field. nx and nt must be powers of
+   * two. A cosine taper is applied in both directions first, otherwise the
+   * edges of the panel smear energy across the whole plot.
+   *
+   * Returns { mag, nk, nf } with mag laid out [ik * nf + iff], ik running from
+   * -Nyquist to +Nyquist (already shifted) and iff from 0 Hz upward.
+   */
+  function fkSpectrum(field, nx, nt) {
+    const nf = nt / 2;
+    const tw = new Float64Array(nt), xw = new Float64Array(nx);
+    for (let i = 0; i < nt; i++) tw[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (nt - 1));
+    for (let i = 0; i < nx; i++) xw[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (nx - 1));
+
+    // time transform, one trace at a time
+    const sr = new Float64Array(nx * nf), si = new Float64Array(nx * nf);
+    const re = new Float64Array(nt), im = new Float64Array(nt);
+    for (let ix = 0; ix < nx; ix++) {
+      for (let it = 0; it < nt; it++) { re[it] = field[ix * nt + it] * tw[it] * xw[ix]; im[it] = 0; }
+      fft(re, im, false);
+      for (let f = 0; f < nf; f++) { sr[ix * nf + f] = re[f]; si[ix * nf + f] = im[f]; }
+    }
+    // space transform, one frequency at a time
+    const mag = new Float32Array(nx * nf);
+    const xr = new Float64Array(nx), xi = new Float64Array(nx);
+    for (let f = 0; f < nf; f++) {
+      for (let ix = 0; ix < nx; ix++) { xr[ix] = sr[ix * nf + f]; xi[ix] = si[ix * nf + f]; }
+      fft(xr, xi, false);
+      for (let ik = 0; ik < nx; ik++) {
+        const shifted = (ik + nx / 2) % nx;          // put k = 0 in the middle
+        mag[ik * nf + f] = Math.hypot(xr[shifted], xi[shifted]);
+      }
+    }
+    return { mag, nk: nx, nf };
+  }
+
+  /* ---------------------------------------------------------------------
+     COLOR MAPS
+     Each returns [r,g,b] for x in [-1, 1].
+     --------------------------------------------------------------------- */
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function rampMap(stops) {
+    return function (x) {
+      const v = Math.max(-1, Math.min(1, x));
+      const p = (v + 1) / 2 * (stops.length - 1);
+      const i = Math.min(stops.length - 2, Math.floor(p));
+      const f = p - i;
+      const a = stops[i], b = stops[i + 1];
+      return [
+        Math.round(lerp(a[0], b[0], f)),
+        Math.round(lerp(a[1], b[1], f)),
+        Math.round(lerp(a[2], b[2], f)),
+      ];
+    };
+  }
+
+  /**
+   * Seismic color maps. Each maps an amplitude in [-1, 1], so the NEGATIVE end
+   * is a trough and the POSITIVE end is a peak.
+   *
+   * Under the SEG normal convention a peak is blue, or black on a gray display,
+   * and a trough is red. Polarity is handled where the traces are built, by
+   * flipping the sign of the reflection coefficients, so these maps never need
+   * to change: a peak is always the positive end and always plots the same.
+   */
+  const COLORMAPS = {
+    // trough red -- white -- peak blue
+    bwr: rampMap([
+      [92, 14, 12], [176, 36, 24], [214, 138, 122],
+      [248, 248, 246],
+      [122, 168, 214], [27, 79, 156], [12, 44, 92],
+    ]),
+    // trough white -- peak black, the classic printed section
+    gray: rampMap([
+      [253, 253, 252], [226, 227, 228], [188, 190, 193],
+      [140, 144, 148],
+      [92, 96, 100], [48, 51, 55], [12, 14, 16],
+    ]),
+    // trough orange -- peak blue: safe for deuteranopia / protanopia
+    cbsafe: rampMap([
+      [127, 63, 0], [224, 130, 20], [253, 190, 110],
+      [247, 247, 247],
+      [146, 197, 222], [33, 102, 172], [8, 48, 107],
+    ]),
+  };
+
+  /* ---------------------------------------------------------------------
+     CANVAS HELPERS
+     --------------------------------------------------------------------- */
+
+  // Size a canvas for the device pixel ratio and return a scaled 2D context.
+  function fitCanvas(canvas, cssW, cssH) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return ctx;
+  }
+
+  /**
+   * Variable-density image of a [nx][nt] amplitude field.
+   * data: Float32Array laid out trace-major (ix*nt + it)
+   * Drawn into rect {x,y,w,h}; time increases downward.
+   */
+  function drawVarDensity(ctx, data, nx, nt, rect, opts) {
+    const o = opts || {};
+    const cmap = o.cmap || COLORMAPS.bwr;
+    const gain = o.gain || 1;
+    let peak = o.clip;
+    if (!peak) {
+      peak = 0;
+      for (let i = 0; i < data.length; i++) {
+        const a = Math.abs(data[i]);
+        if (a > peak) peak = a;
+      }
+      peak = peak || 1;
+    }
+    const off = document.createElement('canvas');
+    off.width = nx; off.height = nt;
+    const octx = off.getContext('2d');
+    const img = octx.createImageData(nx, nt);
+    for (let ix = 0; ix < nx; ix++) {
+      for (let it = 0; it < nt; it++) {
+        const v = (data[ix * nt + it] / peak) * gain;
+        const c = cmap(v);
+        const p = (it * nx + ix) * 4;
+        img.data[p] = c[0]; img.data[p + 1] = c[1];
+        img.data[p + 2] = c[2]; img.data[p + 3] = 255;
+      }
     }
     octx.putImageData(img, 0, 0);
-    ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(off2, 0, 0, w, h);
+    ctx.save();
+    ctx.imageSmoothingEnabled = o.smooth !== false;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(off, rect.x, rect.y, rect.w, rect.h);
+    ctx.restore();
+    return peak;
   }
 
-  function thumbPhase(canvas) {
-    const w = canvas.parentElement.clientWidth, h = 118;
-    const ctx = SEIS.fitCanvas(canvas, w, h);
-    ctx.clearRect(0, 0, w, h);
-    // the same wavelet at four rotations, sliding off the boundary
-    const base = SEIS.makeWavelet({ type: 'ricker', f: 30 });
-    const phases = [0, 45, 90, 135];
-    const span = 0.05;
-    const yOf = (t) => h / 2 + (t / (2 * span)) * h;
+  /**
+   * Wiggle + positive variable-area overlay.
+   * step: draw every Nth trace. excursion: trace spacing multiples.
+   */
+  function drawWiggle(ctx, data, nx, nt, rect, opts) {
+    const o = opts || {};
+    const step = o.step || 1;
+    const exc = o.excursion || 1.4;
+    const peak = o.clip || 1;
+    const dx = rect.w / nx;
+    const traceW = dx * step * exc;
     ctx.save();
-    ctx.strokeStyle = 'rgba(11,114,133,.9)'; ctx.lineWidth = 1.4;
-    ctx.setLineDash([4, 3]);
-    ctx.beginPath(); ctx.moveTo(0, yOf(0)); ctx.lineTo(w, yOf(0)); ctx.stroke();
-    ctx.restore();
-    phases.forEach((d, k) => {
-      const wv = SEIS.phaseRotate(base, d);
-      const cx = (k + 0.5) * (w / phases.length);
-      let mx = 1e-6;
-      for (let t = -span; t <= span; t += 0.0005) mx = Math.max(mx, Math.abs(wv.fn(t)));
-      ctx.save();
-      ctx.strokeStyle = 'rgba(92,102,112,.3)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke();
-      ctx.strokeStyle = '#841617'; ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.rect(rect.x, rect.y, rect.w, rect.h);
+    ctx.clip();
+    ctx.lineWidth = o.lineWidth || 0.9;
+    ctx.strokeStyle = o.stroke || 'rgba(22,25,28,0.85)';
+    ctx.fillStyle = o.fill || 'rgba(22,25,28,0.75)';
+    for (let ix = 0; ix < nx; ix += step) {
+      const x0 = rect.x + (ix + 0.5) * dx;
       ctx.beginPath();
-      for (let i = 0; i <= 200; i++) {
-        const t = -span + (i / 200) * 2 * span;
-        const x = cx + (wv.fn(t) / mx) * (w / phases.length) * 0.36;
-        const y = yOf(t);
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      for (let it = 0; it < nt; it++) {
+        const y = rect.y + (it / (nt - 1)) * rect.h;
+        const x = x0 + (data[ix * nt + it] / peak) * traceW;
+        it === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       }
-      ctx.stroke(); ctx.restore();
-    });
-  }
-
-  function thumbDepth0(canvas) {
-    const w = canvas.parentElement.clientWidth, h = 118;
-    const ctx = SEIS.fitCanvas(canvas, w, h);
-    ctx.clearRect(0, 0, w, h);
-    const water = 1500, zmax = 6000, v0 = 1700, k = 0.55;
-    const opTop = 3400, opThick = 900, opAmp = 0.18;
-    const opF = (z) => (z <= opTop || z >= opTop + opThick) ? 0
-      : 0.5 - 0.5 * Math.cos(2 * Math.PI * (z - opTop) / opThick);
-    const vOf = (z) => z < water ? 1500
-      : Math.max(1400, (v0 + k * (z - water)) * (1 - opAmp * opF(z)));
-    const vmax = vOf(zmax) * 1.06;
-    // water band
-    ctx.fillStyle = 'rgba(127,179,204,.55)';
-    ctx.fillRect(0, 0, w, (water / zmax) * h);
-    ctx.save();
-    ctx.fillStyle = 'rgba(132,22,23,.14)';
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    for (let i = 0; i <= 160; i++) {
-      const z = (i / 160) * zmax;
-      ctx.lineTo((vOf(z) / vmax) * w, (z / zmax) * h);
+      ctx.stroke();
+      // positive-lobe fill
+      ctx.beginPath();
+      ctx.moveTo(x0, rect.y);
+      for (let it = 0; it < nt; it++) {
+        const y = rect.y + (it / (nt - 1)) * rect.h;
+        const a = data[ix * nt + it];
+        ctx.lineTo(x0 + Math.max(0, a / peak) * traceW, y);
+      }
+      ctx.lineTo(x0, rect.y + rect.h);
+      ctx.closePath();
+      ctx.fill();
     }
-    ctx.lineTo(0, h); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#841617'; ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let i = 0; i <= 160; i++) {
-      const z = (i / 160) * zmax;
-      const x = (vOf(z) / vmax) * w, y = (z / zmax) * h;
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-    ctx.strokeStyle = 'rgba(138,109,31,.9)'; ctx.lineWidth = 1.2;
-    ctx.setLineDash([4, 3]);
-    [opTop, opTop + opThick].forEach((z) => {
-      ctx.beginPath(); ctx.moveTo(0, (z / zmax) * h); ctx.lineTo(w, (z / zmax) * h); ctx.stroke();
-    });
     ctx.restore();
   }
 
-  function drawThumbs() {
-    document.querySelectorAll('.thumb-canvas').forEach((c) => {
-      if (c.dataset.thumb === 'wedge') thumbWedge(c);
-      else if (c.dataset.thumb === 'fault') thumbFault(c);
-      else if (c.dataset.thumb === 'model1d') thumb1d(c);
-      else if (c.dataset.thumb === 'fresnel') thumbFresnel(c);
-      else if (c.dataset.thumb === 'mapres') thumbMapRes(c);
-      else if (c.dataset.thumb === 'phase') thumbPhase(c);
-      else if (c.dataset.thumb === 'depth0') thumbDepth0(c);
-      else if (c.dataset.thumb === 'mapview') thumbMapView(c);
-      else if (c.dataset.thumb === 'depth') thumbDepth(c);
+  /* ---------------------------------------------------------------------
+     AXES
+     --------------------------------------------------------------------- */
+
+  const AX = {
+    font: '11px "IBM Plex Mono", ui-monospace, monospace',
+    color: '#5C6670',
+    grid: 'rgba(92,102,112,0.16)',
+  };
+
+  function niceTicks(min, max, target) {
+    const span = max - min;
+    if (span <= 0) return [min];
+    const raw = span / (target || 5);
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / mag;
+    const stepN = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
+    const step = stepN * mag;
+    const start = Math.ceil(min / step) * step;
+    const out = [];
+    for (let v = start; v <= max + step * 1e-6; v += step) {
+      out.push(Math.abs(v) < step * 1e-6 ? 0 : v);
+    }
+    return out;
+  }
+
+  function frame(ctx, rect) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(22,25,28,0.55)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w, rect.h);
+    ctx.restore();
+  }
+
+  function axisBottom(ctx, rect, min, max, label, fmt, opts) {
+    const o = opts || {};
+    ctx.save();
+    ctx.font = AX.font; ctx.fillStyle = AX.color;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.strokeStyle = AX.color; ctx.lineWidth = 1;
+    niceTicks(min, max, o.ticks || 6).forEach((v) => {
+      const x = rect.x + ((v - min) / (max - min)) * rect.w;
+      ctx.beginPath();
+      ctx.moveTo(x, rect.y + rect.h);
+      ctx.lineTo(x, rect.y + rect.h + 4);
+      ctx.stroke();
+      ctx.fillText(fmt ? fmt(v) : String(Math.round(v * 100) / 100), x, rect.y + rect.h + 6);
+    });
+    if (label) {
+      ctx.font = '11px "IBM Plex Sans", sans-serif';
+      ctx.fillText(label, rect.x + rect.w / 2, rect.y + rect.h + 22);
+    }
+    ctx.restore();
+  }
+
+  function axisLeft(ctx, rect, min, max, label, fmt, opts) {
+    const o = opts || {};
+    ctx.save();
+    ctx.font = AX.font; ctx.fillStyle = AX.color;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = AX.color; ctx.lineWidth = 1;
+    niceTicks(min, max, o.ticks || 5).forEach((v) => {
+      const f = (v - min) / (max - min);
+      const y = o.flip ? rect.y + rect.h - f * rect.h : rect.y + f * rect.h;
+      ctx.beginPath();
+      ctx.moveTo(rect.x - 4, y);
+      ctx.lineTo(rect.x, y);
+      ctx.stroke();
+      ctx.fillText(fmt ? fmt(v) : String(Math.round(v * 100) / 100), rect.x - 6, y);
+      if (o.grid) {
+        ctx.save();
+        ctx.strokeStyle = AX.grid;
+        ctx.beginPath(); ctx.moveTo(rect.x, y); ctx.lineTo(rect.x + rect.w, y); ctx.stroke();
+        ctx.restore();
+      }
+    });
+    if (label) {
+      ctx.translate(rect.x - 42, rect.y + rect.h / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.font = '11px "IBM Plex Sans", sans-serif';
+      ctx.fillText(label, 0, 0);
+    }
+    ctx.restore();
+  }
+
+  function dashedLine(ctx, x1, y1, x2, y2, color, dash, width) {
+    ctx.save();
+    ctx.setLineDash(dash || [5, 4]);
+    ctx.strokeStyle = color; ctx.lineWidth = width || 1.4;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function tag(ctx, x, y, text, color, align) {
+    ctx.save();
+    ctx.font = '10px "IBM Plex Mono", monospace';
+    const w = ctx.measureText(text).width + 8;
+    const ax = align === 'right' ? x - w : x;
+    ctx.fillStyle = color;
+    ctx.fillRect(ax, y - 7, w, 14);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, ax + 4, y + 0.5);
+    ctx.restore();
+  }
+
+  /**
+   * Horizontal color bar, drawn in terms of REFLECTION COEFFICIENT rather than
+   * displayed amplitude. That distinction matters: the color map itself never
+   * changes, but polarity decides whether a positive RC is drawn as a peak or a
+   * trough, so labelling the bar by RC makes the bar itself flip when polarity
+   * is switched. Pass pol = -1 for reverse polarity.
+   */
+  function drawColorbar(ctx, rect, cmap, opts) {
+    const o = opts || {};
+    const pol = o.pol === -1 ? -1 : 1;
+    const n = Math.max(2, Math.round(rect.w));
+    for (let i = 0; i < n; i++) {
+      const rcv = -1 + (2 * i) / (n - 1);          // reflection coefficient axis
+      const c = cmap(pol * rcv * 0.92);
+      ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+      ctx.fillRect(rect.x + i * (rect.w / n), rect.y, rect.w / n + 1, rect.h);
+    }
+    ctx.save();
+    ctx.strokeStyle = 'rgba(22,25,28,.45)'; ctx.lineWidth = 1;
+    ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w, rect.h);
+    ctx.font = '9.5px "IBM Plex Mono", monospace';
+    ctx.fillStyle = AX.color;
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillText(o.left || '\u2212 RC', rect.x, rect.y + rect.h + 3);
+    ctx.textAlign = 'right';
+    ctx.fillText(o.right || '+ RC', rect.x + rect.w, rect.y + rect.h + 3);
+    if (o.title) {
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(o.title, rect.x + rect.w / 2, rect.y - 3);
+    }
+    ctx.restore();
+  }
+
+  /* ---------------------------------------------------------------------
+     UNITS
+     --------------------------------------------------------------------- */
+
+  const UNITS = {
+    m: { len: 1, lab: 'm', vel: 1, vlab: 'm/s' },
+    ft: { len: 3.28084, lab: 'ft', vel: 3.28084, vlab: 'ft/s' },
+  };
+
+  /* ---------------------------------------------------------------------
+     URL STATE  (so instructors can hand out a link to an exact setup)
+     --------------------------------------------------------------------- */
+
+  function readState(defaults) {
+    const p = new URLSearchParams(location.search);
+    const out = Object.assign({}, defaults);
+    for (const k of Object.keys(defaults)) {
+      if (!p.has(k)) continue;
+      const raw = p.get(k);
+      out[k] = typeof defaults[k] === 'number' ? parseFloat(raw)
+             : typeof defaults[k] === 'boolean' ? raw === '1' || raw === 'true'
+             : raw;
+    }
+    return out;
+  }
+
+  let writeTimer = null;
+  function writeState(state, defaults) {
+    clearTimeout(writeTimer);
+    writeTimer = setTimeout(() => {
+      const p = new URLSearchParams();
+      for (const k of Object.keys(state)) {
+        if (defaults && state[k] === defaults[k]) continue;
+        p.set(k, typeof state[k] === 'boolean' ? (state[k] ? 1 : 0) : state[k]);
+      }
+      const q = p.toString();
+      history.replaceState(null, '', q ? '?' + q : location.pathname);
+    }, 250);
+  }
+
+  function copyLink(btn) {
+    navigator.clipboard.writeText(location.href).then(() => {
+      const old = btn.textContent;
+      btn.textContent = 'Link copied';
+      setTimeout(() => (btn.textContent = old), 1600);
     });
   }
-  drawThumbs();
 
-  let rt;
-  window.addEventListener('resize', () => {
-    clearTimeout(rt);
-    rt = setTimeout(() => { drawHero(); drawThumbs(); }, 140);
-  });
+  function savePNG(canvas, name) {
+    const a = document.createElement('a');
+    a.download = name + '.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }
+
+  /* --------------------------------------------------------------------- */
+
+  return {
+    ricker, ormsby, makeWavelet, spectrum,
+    traceValue, sampleTrace, traceFromSpikes, rc,
+    mulberry32, gaussRand, bandLimitedNoise, fft, fkSpectrum, phaseRotate,
+    COLORMAPS, fitCanvas, drawVarDensity, drawWiggle,
+    niceTicks, frame, axisBottom, axisLeft, dashedLine, tag, drawColorbar,
+    UNITS, readState, writeState, copyLink, savePNG,
+  };
 })();
-</script>
-</body>
-</html>
