@@ -149,17 +149,17 @@
         <span class="flag next">Live</span>
       </a>
 
-      <div class="card planned">
-        <div class="thumb"></div>
+      <a class="card" href="modules/mapview.html">
+        <canvas class="thumb-canvas" data-thumb="mapview"></canvas>
         <div class="card-body">
           <div class="card-no">07</div>
           <h3>Tuning in map view</h3>
           <p>A channel with real thickness variation, turned into an amplitude extraction — so you can see
-            exactly how a thickness map can go wrong.</p>
+            exactly how a thickness map goes wrong.</p>
           <div class="q">Does bright mean thick?</div>
         </div>
-        <span class="flag">In progress</span>
-      </div>
+        <span class="flag next">Live</span>
+      </a>
 
       <div class="card planned">
         <div class="thumb"></div>
@@ -430,6 +430,54 @@
     ctx.restore();
   }
 
+  function thumbMapView(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const V = 2600, f = 30, hmax = 40, wid = 600, sinu = 300, taper = 0.28;
+    const YD = 2400, XD = 2 * YD;
+    const wav = SEIS.makeWavelet({ type: 'ricker', f });
+    const thk = (fx, fy) => {
+      const yc = YD / 2 + sinu * Math.sin(2 * Math.PI * (fx * XD) / (XD / 1.35));
+      const d = Math.abs(fy * YD - yc), hw = wid / 2;
+      if (d >= hw) return 0;
+      return hmax * (taper + (1 - taper) * (1 - fx)) * Math.pow(1 - (d / hw) * (d / hw), 0.7);
+    };
+    const amp = (hh) => {
+      const gap = 2 * hh / V, sp = [{ t: 0, r: 0.12 }, { t: gap, r: -0.12 }];
+      let best = 0;
+      for (let t = -wav.halfLength; t <= gap + wav.halfLength; t += 0.0004) {
+        const v = SEIS.traceValue(sp, t, wav.fn);
+        if (v > 0 && v > best) best = v;
+      }
+      return best;
+    };
+    const stops = [[252,250,246],[253,231,160],[247,190,90],[233,131,60],[196,60,45],[110,16,20]];
+    const NXm = 130, NYm = 80;
+    const vals = new Float32Array(NXm * NYm);
+    let mx = 1e-9;
+    for (let iy = 0; iy < NYm; iy++) for (let ix = 0; ix < NXm; ix++) {
+      const a = amp(thk((ix + 0.5) / NXm, (iy + 0.5) / NYm));
+      vals[iy * NXm + ix] = a; mx = Math.max(mx, a);
+    }
+    const off = document.createElement('canvas');
+    off.width = NXm; off.height = NYm;
+    const octx = off.getContext('2d');
+    const img = octx.createImageData(NXm, NYm);
+    for (let i = 0; i < NXm * NYm; i++) {
+      const p = Math.max(0, Math.min(1, vals[i] / mx)) * (stops.length - 1);
+      const k = Math.min(stops.length - 2, Math.floor(p)), fr = p - k;
+      const a = stops[k], b = stops[k + 1];
+      img.data[i * 4] = a[0] + (b[0] - a[0]) * fr;
+      img.data[i * 4 + 1] = a[1] + (b[1] - a[1]) * fr;
+      img.data[i * 4 + 2] = a[2] + (b[2] - a[2]) * fr;
+      img.data[i * 4 + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, 0, 0, w, h);
+  }
+
   function drawThumbs() {
     document.querySelectorAll('.thumb-canvas').forEach((c) => {
       if (c.dataset.thumb === 'wedge') thumbWedge(c);
@@ -437,6 +485,7 @@
       else if (c.dataset.thumb === 'model1d') thumb1d(c);
       else if (c.dataset.thumb === 'fresnel') thumbFresnel(c);
       else if (c.dataset.thumb === 'aliasing') thumbAlias(c);
+      else if (c.dataset.thumb === 'mapview') thumbMapView(c);
       else if (c.dataset.thumb === 'depth') thumbDepth(c);
     });
   }
