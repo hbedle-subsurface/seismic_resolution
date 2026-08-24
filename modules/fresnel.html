@@ -51,8 +51,12 @@
         nothing is missing from the picture — the energy has simply been spread out, and it can be gathered
         back.</p>
       <p style="font-size:14.5px">Turning the focus ring collapses that disc back to a small bright dot.
-        <b>Migration is the focus ring.</b> It takes the energy smeared across the Fresnel zone and puts it
-        back where it came from.</p>
+        <b>Migration is the focus ring</b> — it is the name of the processing step that does exactly this,
+        taking the energy smeared across the Fresnel zone and putting it back where it came from. When
+        someone says data is "migrated", this is what they mean has been done to it.</p>
+      <p style="font-size:14.5px">Panels 3 and 4 below show it happening on the section. Unmigrated, each
+        feature draws a curved <b>frown</b> across many traces, and the frowns from neighbouring features
+        overlap. Migration collapses each frown back to a point.</p>
       <p style="font-size:14.5px;margin-bottom:0">And exactly like a camera, there is a limit. However
         perfectly you focus, a lens cannot make a point smaller than its own diffraction limit, and migration
         cannot shrink a feature below about <b>a quarter of a wavelength</b>. That number should look
@@ -90,19 +94,22 @@
     </div>
 
     <div class="ctl-col">
-      <h2>The focus ring</h2>
+      <h2>Migration — the focus step</h2>
       <div class="ctl">
         <div class="seg" role="group" aria-label="Migration state">
-          <button type="button" id="mNone" aria-pressed="false">Out of focus</button>
+          <button type="button" id="mNone" aria-pressed="false">Unmigrated</button>
           <button type="button" id="m2D" aria-pressed="false">2D</button>
           <button type="button" id="m3D" aria-pressed="true">3D</button>
         </div>
       </div>
       <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px">
-        <b>Out of focus</b> is unmigrated data. <b>3D</b> focuses in every direction.
-        <b>2D</b> focuses along the line only, because that is the only direction a single line samples.</p>
+        <b>Migration is the processing step that does the focusing.</b> 3D focuses in every direction. 2D
+        focuses along the line only, because a single line samples only one direction.</p>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px">
+        Nearly everything handed to you today is migrated. Older vintages and some legacy 2D lines are not,
+        so if you ever work a survey from the tape library, set this to <b>Unmigrated</b> and see what you
+        would be interpreting.</p>
       <label class="check"><input type="checkbox" id="showField" checked> Show a football field for scale</label>
-      <label class="check"><input type="checkbox" id="showSec"> Show the section as well</label>
     </div>
 
     <div class="ctl-col">
@@ -144,6 +151,29 @@
     <div class="legend" id="mainLegend"></div>
   </section>
 
+  <section class="plot" id="secWrap" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>Where the blur comes from, on the section</h3>
+    </div>
+    <p class="hint-line">A single small feature does not put its echo on one trace. It puts a little energy on
+      every trace that can see it, which draws the curved frown you see on the left. Notice that the two
+      frowns cross each other: energy from both features arrives on the same traces, mixed together. That
+      overlap is the Fresnel zone seen side-on, and it is why the unmigrated map is a smear. Migration is the
+      processing step that gathers each frown back to the point that made it.</p>
+    <div class="sec-row" id="secRow">
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> Unmigrated
+          <span class="note">each feature spreads into a frown</span></p>
+        <canvas id="rawCanvas" aria-label="Unmigrated section"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>4</b> Migrated
+          <span class="note">each frown collapses to a point</span></p>
+        <canvas id="migCanvas" aria-label="Migrated section"></canvas>
+      </div>
+    </div>
+  </section>
+
   <section class="plot" style="margin-top:18px">
     <div class="plot-head">
       <h3>A slice through the middle</h3>
@@ -153,26 +183,7 @@
     <div class="legend" id="profLegend"></div>
   </section>
 
-  <section class="plot" id="secWrap" style="margin-top:18px" hidden>
-    <div class="plot-head">
-      <h3>Where the blur comes from, on the section</h3>
-    </div>
-    <p class="hint-line">A single small feature does not put its echo on one trace. It puts a little energy on
-      every trace that can see it, which draws an arc. Migration is the step that gathers each arc back to the
-      point that made it.</p>
-    <div class="sec-row" id="secRow">
-      <div class="panel-col">
-        <p class="sublabel"><b>3</b> Before focusing
-          <span class="note">each feature spreads into an arc</span></p>
-        <canvas id="rawCanvas" aria-label="Unmigrated section"></canvas>
-      </div>
-      <div class="panel-col">
-        <p class="sublabel"><b>4</b> After focusing
-          <span class="note">the arcs collapse</span></p>
-        <canvas id="migCanvas" aria-label="Migrated section"></canvas>
-      </div>
-    </div>
-  </section>
+
 
   <div class="stats">
     <div class="stat"><span>Wavelength λ = V / f</span><b id="rLam">— m</b></div>
@@ -188,7 +199,8 @@
     <div class="tryit">
       <h3>Try this</h3>
       <ol>
-        <li><b>Turn the focus ring.</b> Click between <em>Out of focus</em> and <em>3D</em> and watch panel 1.
+        <li><b>Turn the focus ring.</b> Click between <em>Unmigrated</em> and <em>3D</em> and watch panels
+          1 and 4.
           <span class="ans">The blur drops from a few hundred meters across to a few tens. Everything you
             believe about the shape of a feature in map view — a channel edge, the limit of a sand, the trace
             of a fault — depends on that one step having worked.</span></li>
@@ -196,8 +208,7 @@
           <span class="ans">They stay two until the gap closes to about a quarter of a wavelength, then merge
             into one blob that gets brighter rather than wider. Two gas pockets become one. Two channels
             become one channel. Nothing in the map tells you which it was.</span></li>
-        <li><b>Try it without migration.</b> Set the focus to <em>Out of focus</em> and separate them by
-          300 m.
+        <li><b>Try it unmigrated.</b> Set migration to <em>Unmigrated</em> and separate them by 300 m.
           <span class="ans">They are inside the same Fresnel patch and there is no separating them at any
             amplitude. Migration is not a tidying-up step. It is the step that makes lateral interpretation
             possible at all.</span></li>
@@ -222,7 +233,9 @@
       <ul>
         <li><b>Unmigrated, a trace reports one number for a patch hundreds of meters across.</b> The Fresnel
           zone is <span class="k">(V/2)·√(t/f)</span> in radius.</li>
-        <li><b>Migration is focusing, and it does most of the work</b> — often a tenfold improvement.</li>
+        <li><b>Migration is the focusing step, and it does most of the work</b> — often a tenfold
+          improvement. Almost all modern data is migrated; older vintages may not be, and it is worth
+          checking rather than assuming.</li>
         <li><b>λ/4 is the floor, not a promise.</b> A narrow survey or a poor velocity model leaves you well
           short of it.</li>
         <li><b>Two features closer than that image as one</b>, and the merged blob is brighter, which makes
@@ -283,7 +296,7 @@
 
   const DEF = {
     sep: 300, t0: 1.2, f: 25, v: 2600, ap: 3000,
-    mig: '3d', field: true, sec: false, units: 'm',
+    mig: '3d', field: true, units: 'm',
   };
   let S = SEIS.readState(DEF);
 
@@ -557,9 +570,6 @@
   /* ------------------------- the optional section ----------------------- */
 
   function drawSections() {
-    const wrap = $('secWrap');
-    wrap.hidden = !S.sec;
-    if (!S.sec) return;
     const L = layout('rawCanvas');
     $('secRow').querySelectorAll('.panel-col').forEach((c) => { c.style.width = L.each + 'px'; });
     const { P, xs } = CACHE;
@@ -598,12 +608,22 @@
       let peak = 1e-9;
       for (let i = 0; i < fld.length; i++) peak = Math.max(peak, Math.abs(fld[i]));
       SEIS.drawVarDensity(ctx, fld, NXs, nt, rr, { cmap: SEIS.COLORMAPS.bwr, clip: peak });
+      // The seismic underneath runs from deep blue to deep red, so a marker in
+      // any single colour disappears against one end of it. A white ring with a
+      // dark ring inside reads against both.
       xs.forEach((x0) => {
         const x = rr.x + ((x0 + XW / 2) / XW) * rr.w;
         const y = rr.y + ((S.t0 - tStart) / (tEnd - tStart)) * rr.h;
         ctx.save();
-        ctx.fillStyle = TEAL;
-        ctx.beginPath(); ctx.arc(x, y, 3, 0, 6.284); ctx.fill(); ctx.restore();
+        ctx.lineWidth = 3.4; ctx.strokeStyle = 'rgba(255,255,255,.95)';
+        ctx.beginPath(); ctx.arc(x, y, 5.5, 0, 6.284); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 9, y); ctx.lineTo(x + 9, y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, y - 9); ctx.lineTo(x, y + 9); ctx.stroke();
+        ctx.lineWidth = 1.5; ctx.strokeStyle = '#16191C';
+        ctx.beginPath(); ctx.arc(x, y, 5.5, 0, 6.284); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 9, y); ctx.lineTo(x + 9, y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, y - 9); ctx.lineTo(x, y + 9); ctx.stroke();
+        ctx.restore();
       });
       SEIS.frame(ctx, rr);
       SEIS.axisBottom(ctx, rr, -uL(XW / 2), uL(XW / 2), 'Distance (' + U().lab + ')', (v) => v.toFixed(0));
@@ -669,7 +689,7 @@
   function pushToInputs() {
     $('sep').value = S.sep; $('t0').value = S.t0; $('freq').value = S.f;
     $('vel').value = S.v; $('ap').value = S.ap;
-    $('units').value = S.units; $('showField').checked = S.field; $('showSec').checked = S.sec;
+    $('units').value = S.units; $('showField').checked = S.field;
   }
   function bump() { syncLabels(); refresh(); }
 
@@ -684,7 +704,6 @@
 
   $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
   $('showField').addEventListener('change', () => { S.field = $('showField').checked; render(); });
-  $('showSec').addEventListener('change', () => { S.sec = $('showSec').checked; render(); });
   $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
   $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
 
