@@ -97,9 +97,9 @@
       <h2>Migration — the focus step</h2>
       <div class="ctl">
         <div class="seg" role="group" aria-label="Migration state">
-          <button type="button" id="mNone" aria-pressed="false">Unmigrated</button>
+          <button type="button" id="mNone" aria-pressed="true">Unmigrated</button>
           <button type="button" id="m2D" aria-pressed="false">2D</button>
-          <button type="button" id="m3D" aria-pressed="true">3D</button>
+          <button type="button" id="m3D" aria-pressed="false">3D</button>
         </div>
       </div>
       <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px">
@@ -199,8 +199,8 @@
     <div class="tryit">
       <h3>Try this</h3>
       <ol>
-        <li><b>Turn the focus ring.</b> Click between <em>Unmigrated</em> and <em>3D</em> and watch panels
-          1 and 4.
+        <li><b>Turn the focus ring.</b> The page opens unmigrated, the way the data comes off the boat.
+          Click <em>3D</em> and watch panels 1 and 4.
           <span class="ans">The blur drops from a few hundred meters across to a few tens. Everything you
             believe about the shape of a feature in map view — a channel edge, the limit of a sand, the trace
             of a fault — depends on that one step having worked.</span></li>
@@ -296,7 +296,7 @@
 
   const DEF = {
     sep: 300, t0: 1.2, f: 25, v: 2600, ap: 3000,
-    mig: '3d', field: true, units: 'm',
+    mig: 'none', field: true, units: 'm',
   };
   let S = SEIS.readState(DEF);
 
