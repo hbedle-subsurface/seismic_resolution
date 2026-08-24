@@ -137,17 +137,17 @@
         <span class="flag next">Live</span>
       </a>
 
-      <div class="card planned">
-        <div class="thumb"></div>
+      <a class="card" href="modules/aliasing.html">
+        <canvas class="thumb-canvas" data-thumb="aliasing"></canvas>
         <div class="card-body">
           <div class="card-no">06</div>
           <h3>Sampling &amp; spatial aliasing</h3>
-          <p>Trace spacing against dip against frequency. Where steep events fold back on themselves and
-            start lying about their dip.</p>
+          <p>Trace spacing against dip against frequency, and where steep events fold back on themselves
+            and start lying about their dip.</p>
           <div class="q">Is that dipping event real or aliased?</div>
         </div>
-        <span class="flag">In progress</span>
-      </div>
+        <span class="flag next">Live</span>
+      </a>
 
       <div class="card planned">
         <div class="thumb"></div>
@@ -401,12 +401,42 @@
       { cmap: SEIS.COLORMAPS.bwr, clip: 0.85 });
   }
 
+  function thumbAlias(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    // the same dip sampled well on the left, badly on the right
+    const V = 2500, f = 32, dip = 22, nt = 512;
+    const wav = SEIS.makeWavelet({ type: 'ricker', f });
+    const p = 2 * Math.sin(dip * Math.PI / 180) / V;
+    const draw = (n, dx, x0, wpx) => {
+      const W = n * dx, win = Math.abs(p) * W * 1.2 + 4 / f, dt = win / nt;
+      const fld = new Float32Array(n * nt), hl = wav.halfLength;
+      for (let ix = 0; ix < n; ix++) {
+        const tt = win / 2 + p * (ix - (n - 1) / 2) * dx;
+        const i0 = Math.max(0, Math.ceil((tt - hl) / dt));
+        const i1 = Math.min(nt - 1, Math.floor((tt + hl) / dt));
+        for (let i = i0; i <= i1; i++) fld[ix * nt + i] += wav.fn(i * dt - tt);
+      }
+      SEIS.drawVarDensity(ctx, fld, n, nt, { x: x0, y: 0, w: wpx, h: h },
+        { cmap: SEIS.COLORMAPS.bwr, clip: 1, smooth: n > 100 });
+    };
+    const half = Math.floor(w / 2);
+    draw(256, 5, 0, half - 1);
+    draw(32, 40, half + 1, w - half - 1);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(132,22,23,.85)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(half, 0); ctx.lineTo(half, h); ctx.stroke();
+    ctx.restore();
+  }
+
   function drawThumbs() {
     document.querySelectorAll('.thumb-canvas').forEach((c) => {
       if (c.dataset.thumb === 'wedge') thumbWedge(c);
       else if (c.dataset.thumb === 'fault') thumbFault(c);
       else if (c.dataset.thumb === 'model1d') thumb1d(c);
       else if (c.dataset.thumb === 'fresnel') thumbFresnel(c);
+      else if (c.dataset.thumb === 'aliasing') thumbAlias(c);
       else if (c.dataset.thumb === 'depth') thumbDepth(c);
     });
   }
