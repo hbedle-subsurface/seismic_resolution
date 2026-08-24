@@ -513,12 +513,13 @@ const SEIS = (function () {
     ctx.restore();
   }
 
-  function axisBottom(ctx, rect, min, max, label, fmt) {
+  function axisBottom(ctx, rect, min, max, label, fmt, opts) {
+    const o = opts || {};
     ctx.save();
     ctx.font = AX.font; ctx.fillStyle = AX.color;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.strokeStyle = AX.color; ctx.lineWidth = 1;
-    niceTicks(min, max, 6).forEach((v) => {
+    niceTicks(min, max, o.ticks || 6).forEach((v) => {
       const x = rect.x + ((v - min) / (max - min)) * rect.w;
       ctx.beginPath();
       ctx.moveTo(x, rect.y + rect.h);
@@ -539,7 +540,7 @@ const SEIS = (function () {
     ctx.font = AX.font; ctx.fillStyle = AX.color;
     ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
     ctx.strokeStyle = AX.color; ctx.lineWidth = 1;
-    niceTicks(min, max, 5).forEach((v) => {
+    niceTicks(min, max, o.ticks || 5).forEach((v) => {
       const f = (v - min) / (max - min);
       const y = o.flip ? rect.y + rect.h - f * rect.h : rect.y + f * rect.h;
       ctx.beginPath();
