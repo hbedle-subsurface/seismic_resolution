@@ -119,8 +119,8 @@
         <div class="card-body">
           <div class="card-no">04</div>
           <h3>Horizontal resolution</h3>
-          <p>The Fresnel zone, and what migration does and does not collapse. Two point scatterers walking
-            toward each other until they become one.</p>
+          <p>One trace does not see one point — it sees a patch the size of several football fields.
+            Migration is the focus ring. Watch two features merge as they close.</p>
           <div class="q">How small a feature can I map in plan view?</div>
         </div>
         <span class="flag next">Live</span>
@@ -161,8 +161,8 @@
         <span class="flag next">Live</span>
       </a>
 
-      <div class="card planned">
-        <div class="thumb"></div>
+      <a class="card" href="modules/phase.html">
+        <canvas class="thumb-canvas" data-thumb="phase"></canvas>
         <div class="card-body">
           <div class="card-no">08</div>
           <h3>Phase, polarity &amp; well ties</h3>
@@ -170,8 +170,8 @@
             picked horizons often disagree.</p>
           <div class="q">Am I picking the top of the sand, or near it?</div>
         </div>
-        <span class="flag">In progress</span>
-      </div>
+        <span class="flag next">Live</span>
+      </a>
 
     </div>
   </section>
@@ -470,6 +470,40 @@
     ctx.drawImage(off2, 0, 0, w, h);
   }
 
+  function thumbPhase(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    // the same wavelet at four rotations, sliding off the boundary
+    const base = SEIS.makeWavelet({ type: 'ricker', f: 30 });
+    const phases = [0, 45, 90, 135];
+    const span = 0.05;
+    const yOf = (t) => h / 2 + (t / (2 * span)) * h;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(11,114,133,.9)'; ctx.lineWidth = 1.4;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(0, yOf(0)); ctx.lineTo(w, yOf(0)); ctx.stroke();
+    ctx.restore();
+    phases.forEach((d, k) => {
+      const wv = SEIS.phaseRotate(base, d);
+      const cx = (k + 0.5) * (w / phases.length);
+      let mx = 1e-6;
+      for (let t = -span; t <= span; t += 0.0005) mx = Math.max(mx, Math.abs(wv.fn(t)));
+      ctx.save();
+      ctx.strokeStyle = 'rgba(92,102,112,.3)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke();
+      ctx.strokeStyle = '#841617'; ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      for (let i = 0; i <= 200; i++) {
+        const t = -span + (i / 200) * 2 * span;
+        const x = cx + (wv.fn(t) / mx) * (w / phases.length) * 0.36;
+        const y = yOf(t);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.restore();
+    });
+  }
+
   function drawThumbs() {
     document.querySelectorAll('.thumb-canvas').forEach((c) => {
       if (c.dataset.thumb === 'wedge') thumbWedge(c);
@@ -477,6 +511,7 @@
       else if (c.dataset.thumb === 'model1d') thumb1d(c);
       else if (c.dataset.thumb === 'fresnel') thumbFresnel(c);
       else if (c.dataset.thumb === 'mapres') thumbMapRes(c);
+      else if (c.dataset.thumb === 'phase') thumbPhase(c);
       else if (c.dataset.thumb === 'mapview') thumbMapView(c);
       else if (c.dataset.thumb === 'depth') thumbDepth(c);
     });
