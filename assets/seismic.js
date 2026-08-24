@@ -725,6 +725,40 @@ const SEIS = (function () {
     a.click();
   }
 
+  /* ---------------------------------------------------------------------
+     FAILURE IS LOUD, NOT SILENT
+
+     When a module throws while drawing, every canvas on the page stays blank
+     and nothing says why. That has happened more than once by updating a
+     module without also updating this file, since modules rely on helpers that
+     were added here later. This puts a message on the page instead.
+     --------------------------------------------------------------------- */
+
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('error', function (ev) {
+      if (document.getElementById('seis-error-banner')) return;
+      const msg = (ev && ev.message) || 'Unknown error';
+      const likelyStale = /is not a function|is not defined|undefined/.test(msg);
+      const el = document.createElement('div');
+      el.id = 'seis-error-banner';
+      el.setAttribute('style', [
+        'position:fixed', 'left:0', 'right:0', 'top:0', 'z-index:9999',
+        'background:#841617', 'color:#fff', 'padding:12px 18px',
+        'font:13px/1.5 ui-monospace,Menlo,monospace', 'box-shadow:0 2px 10px rgba(0,0,0,.3)',
+      ].join(';'));
+      el.textContent = 'This page stopped drawing: ' + msg +
+        (likelyStale
+          ? '  —  this usually means assets/seismic.js is older than the module using it. Upload the current assets/seismic.js and reload.'
+          : '');
+      const dismiss = document.createElement('span');
+      dismiss.textContent = '  [dismiss]';
+      dismiss.setAttribute('style', 'cursor:pointer;text-decoration:underline');
+      dismiss.onclick = function () { el.remove(); };
+      el.appendChild(dismiss);
+      (document.body || document.documentElement).appendChild(el);
+    });
+  }
+
   /* --------------------------------------------------------------------- */
 
   return {
