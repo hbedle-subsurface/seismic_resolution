@@ -97,8 +97,8 @@
         <label for="contact">Contact depth <span class="val" id="contactV">2660 m</span></label>
         <input type="range" id="contact" min="2000" max="3200" step="10" value="2660">
       </div>
-      <label class="check"><input type="checkbox" id="showTune" checked> Draw the tuning ring</label>
-      <label class="check"><input type="checkbox" id="showCon" checked> Draw the fluid contact</label>
+      <label class="check"><input type="checkbox" id="showTune"> Draw the tuning ring</label>
+      <label class="check"><input type="checkbox" id="showCon"> Draw the fluid contact</label>
     </div>
 
     <div class="ctl-col">
@@ -185,10 +185,12 @@
     <div class="tryit">
       <h3>Try this</h3>
       <ol>
-        <li><b>Start with brine only.</b> There is no hydrocarbon anywhere in the model. Look at panel 3.
-          <span class="ans">There is still a bright rim around the dome. Every drop of fluid in that sand is
-            water. If you had been handed only this map, the rim would look like the most promising thing on
-            it — and it is a thickness effect and nothing else.</span></li>
+        <li><b>Look at the three maps before touching anything.</b> There is no hydrocarbon anywhere in
+          the model — the sand is full of water from edge to edge — and no lines have been drawn on it yet.
+          <span class="ans">There is still a bright rim around the dome on the amplitude map. Check the bar
+            beneath it: that really is the loud end of the scale. If you had been handed only this map, the
+            rim would look like the most promising thing on it, and it is a thickness effect and nothing
+            else.</span></li>
         <li><b>Check where the rim sits.</b> Turn on the tuning ring and compare it with the bright rim.
           <span class="ans">They are the same line. The rim traces the contour where the sand passes through
             tuning thickness, which is a thickness contour, so it closes in a ring around the dome
@@ -286,7 +288,7 @@
   const DEF = {
     hmax: 55, taper: 1800, pinch: 1100,
     relief: 600, dip: 34, fluid: 'brine', contact: 2660,
-    f: 25, v: 2700, cmap: 'viridis', tune: true, con: true,
+    f: 25, v: 2700, cmap: 'viridis', tune: false, con: false,
     units: 'm', px: 0.62, py: 0.50,
   };
   let S = SEIS.readState(DEF);
@@ -312,7 +314,28 @@
   const uL = (m) => m * U().len;
   const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 0 : d) + ' ' + U().lab;
 
-  const COOL = SEIS.SEQMAPS.cividis;
+  const THICK_MAP = SEIS.SEQMAPS.thickness;   // green: how much sand
+  const STRUCT_MAP = SEIS.SEQMAPS.structure;  // red shallow, purple deep
+
+  // A map without a scale beside it is just a pattern. Each panel carries its
+  // own bar so "bright" has a number attached to it.
+  function colorBar(ctx, rect, rampFn, lo, hi, fmtV, flip) {
+    const bw = Math.min(rect.w, 168), bx = rect.x, by = rect.y - 27, bh = 9;
+    for (let i = 0; i < bw; i++) {
+      const u = i / (bw - 1);
+      const c = rampFn(flip ? 1 - u : u);
+      ctx.fillStyle = 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+      ctx.fillRect(bx + i, by, 1.3, bh);
+    }
+    ctx.save();
+    ctx.strokeStyle = 'rgba(22,25,28,.45)'; ctx.lineWidth = 1;
+    ctx.strokeRect(bx + 0.5, by + 0.5, bw, bh);
+    ctx.font = '9.5px "IBM Plex Mono", monospace';
+    ctx.fillStyle = SLATE; ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';  ctx.fillText(fmtV(flip ? hi : lo), bx, by + bh + 2);
+    ctx.textAlign = 'right'; ctx.fillText(fmtV(flip ? lo : hi), bx + bw, by + bh + 2);
+    ctx.restore();
+  }
 
   /* ------------------------------- the model --------------------------- */
 
@@ -488,22 +511,26 @@
     const w = L.each, h = clamp(Math.round(w * 0.62), 190, 300);
     const ctx = SEIS.fitCanvas($(id), w, h);
     ctx.clearRect(0, 0, w, h);
-    const m = { l: 48, r: 10, t: 8, b: 40 };
+    const m = { l: 48, r: 10, t: 40, b: 40 };
     const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
     const { thk, dep, amp } = CACHE;
     const present = (i) => thk[i] > 0.5;
 
     if (which === 'thk') {
-      grid(ctx, rect, thk, COOL, 0, Math.max(S.hmax, 1), present);
+      const hi = Math.max(S.hmax, 1);
+      grid(ctx, rect, thk, THICK_MAP, 0, hi, present);
+      colorBar(ctx, rect, THICK_MAP, 0, hi, (v) => fmtL(v));
     } else if (which === 'str') {
       let lo = 1e9, hi = -1e9;
       for (let i = 0; i < dep.length; i++) { lo = Math.min(lo, dep[i]); hi = Math.max(hi, dep[i]); }
-      // shallow is bright, the way a structure map is usually shown
-      grid(ctx, rect, dep, (u) => COOL(1 - u), lo, hi, null);
+      // shallow red, deep purple: the convention on every structure map
+      grid(ctx, rect, dep, STRUCT_MAP, lo, hi, null);
+      colorBar(ctx, rect, STRUCT_MAP, lo, hi, (v) => fmtL(v));
     } else {
       let mx = 1e-9;
       for (let i = 0; i < amp.length; i++) mx = Math.max(mx, amp[i]);
       grid(ctx, rect, amp, SEIS.SEQMAPS[S.cmap], 0, mx, present);
+      colorBar(ctx, rect, SEIS.SEQMAPS[S.cmap], 0, 1, (v) => (v === 0 ? 'dim' : 'bright'));
     }
     overlays(ctx, rect, which);
     SEIS.frame(ctx, rect);
@@ -544,8 +571,52 @@
     }
     SEIS.drawVarDensity(ctx, fld, NXs, NT, rect, { cmap: SEIS.COLORMAPS.bwr, clip: 0.26 });
 
-    // the true top and base of the sand
     const yOf = (t) => rect.y + ((t - t0) / (t1 - t0)) * rect.h;
+
+    // The salt itself. Without it on the section the geometry does not explain
+    // itself: it just looks like a bed that thins for no reason. The dome is
+    // the thing the sand is lapping onto, so it has to be visible.
+    const halfChord = Math.abs(y - YC) < S.pinch
+      ? Math.sqrt(S.pinch * S.pinch - (y - YC) * (y - YC)) : 0;
+    if (halfChord > 0) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+      ctx.beginPath();
+      let started = false;
+      for (let i = 0; i <= NXs; i++) {
+        const x = (i / NXs) * XD;
+        if (Math.abs(x - XC) > halfChord) { continue; }
+        const tt = 2 * depthAt(x, y) / S.v;
+        const xx = rect.x + (x / XD) * rect.w;
+        started ? ctx.lineTo(xx, yOf(tt)) : ctx.moveTo(xx, yOf(tt));
+        started = true;
+      }
+      // close the body down to the bottom of the panel
+      ctx.lineTo(rect.x + ((XC + halfChord) / XD) * rect.w, rect.y + rect.h);
+      ctx.lineTo(rect.x + ((XC - halfChord) / XD) * rect.w, rect.y + rect.h);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(244,243,238,.94)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(22,25,28,.75)'; ctx.lineWidth = 1.6;
+      ctx.stroke();
+      // a light stipple, the way salt is usually ornamented
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(22,25,28,.16)'; ctx.lineWidth = 1;
+      for (let d = -rect.h; d < rect.w; d += 11) {
+        ctx.beginPath();
+        ctx.moveTo(rect.x + d, rect.y + rect.h);
+        ctx.lineTo(rect.x + d + rect.h, rect.y);
+        ctx.stroke();
+      }
+      ctx.fillStyle = 'rgba(22,25,28,.75)';
+      ctx.font = '11px "IBM Plex Sans", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('SALT', rect.x + (XC / XD) * rect.w,
+                   yOf(2 * depthAt(XC, y) / S.v) + 12);
+      ctx.restore();
+    }
+
+    // the true top and base of the sand
     [['top', 0], ['base', 1]].forEach(([, isBase]) => {
       ctx.save();
       ctx.strokeStyle = 'rgba(22,25,28,.8)'; ctx.lineWidth = 1.4;
