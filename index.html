@@ -137,14 +137,14 @@
         <span class="flag next">Live</span>
       </a>
 
-      <a class="card" href="modules/aliasing.html">
-        <canvas class="thumb-canvas" data-thumb="aliasing"></canvas>
+      <a class="card" href="modules/mapres.html">
+        <canvas class="thumb-canvas" data-thumb="mapres"></canvas>
         <div class="card-body">
           <div class="card-no">06</div>
-          <h3>Sampling &amp; spatial aliasing</h3>
-          <p>Trace spacing against dip against frequency, and where steep events fold back on themselves
-            and start lying about their dip.</p>
-          <div class="q">Is that dipping event real or aliased?</div>
+          <h3>Resolution in map view</h3>
+          <p>A channel that narrows and splits in two. Watch where it appears to end, and where the two
+            distributaries stop looking like one.</p>
+          <div class="q">Where does my channel really end?</div>
         </div>
         <span class="flag next">Live</span>
       </a>
@@ -401,81 +401,73 @@
       { cmap: SEIS.COLORMAPS.bwr, clip: 0.85 });
   }
 
-  function thumbAlias(canvas) {
+  function thumbMapRes(canvas) {
     const w = canvas.parentElement.clientWidth, h = 118;
     const ctx = SEIS.fitCanvas(canvas, w, h);
     ctx.clearRect(0, 0, w, h);
-    // the same dip sampled well on the left, badly on the right
-    const V = 2500, f = 32, dip = 22, nt = 512;
-    const wav = SEIS.makeWavelet({ type: 'ricker', f });
-    const p = 2 * Math.sin(dip * Math.PI / 180) / V;
-    const draw = (n, dx, x0, wpx) => {
-      const W = n * dx, win = Math.abs(p) * W * 1.2 + 4 / f, dt = win / nt;
-      const fld = new Float32Array(n * nt), hl = wav.halfLength;
-      for (let ix = 0; ix < n; ix++) {
-        const tt = win / 2 + p * (ix - (n - 1) / 2) * dx;
-        const i0 = Math.max(0, Math.ceil((tt - hl) / dt));
-        const i1 = Math.min(nt - 1, Math.floor((tt + hl) / dt));
-        for (let i = i0; i <= i1; i++) fld[ix * nt + i] += wav.fn(i * dt - tt);
-      }
-      SEIS.drawVarDensity(ctx, fld, n, nt, { x: x0, y: 0, w: wpx, h: h },
-        { cmap: SEIS.COLORMAPS.bwr, clip: 1, smooth: n > 100 });
+    const NXn = 256, NYn = 128, FS = 0.34, KC = 0.708;
+    const w0 = 900, wend = 0, div = 700, res = 84;
+    const XD = 4500, YD = XD * NYn / NXn;
+    const shape = (fx) => {
+      if (fx < 0.04 || fx > 0.985) return null;
+      const yc = YD / 2 + 0.085 * YD * Math.sin(2 * Math.PI * fx * 1.25);
+      const wS = Math.max(wend * 2.4, w0 * 0.62);
+      if (fx < FS) return [{ y: yc, w: w0 + (wS - w0) * (fx - 0.04) / (FS - 0.04) }];
+      const t = (fx - FS) / (0.985 - FS);
+      const wb = wS * 0.5 + (wend - wS * 0.5) * t;
+      if (wb <= 0.5) return null;
+      const off = (wS * 0.5 + div * Math.pow(t, 1.25)) / 2;
+      return [{ y: yc - off, w: wb }, { y: yc + off, w: wb }];
     };
-    const half = Math.floor(w / 2);
-    draw(256, 5, 0, half - 1);
-    draw(32, 40, half + 1, w - half - 1);
-    ctx.save();
-    ctx.strokeStyle = 'rgba(132,22,23,.85)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(half, 0); ctx.lineTo(half, h); ctx.stroke();
-    ctx.restore();
-  }
-
-  function thumbMapView(canvas) {
-    const w = canvas.parentElement.clientWidth, h = 118;
-    const ctx = SEIS.fitCanvas(canvas, w, h);
-    ctx.clearRect(0, 0, w, h);
-    const V = 2600, f = 30, hmax = 40, wid = 600, sinu = 300, taper = 0.28;
-    const YD = 2400, XD = 2 * YD;
-    const wav = SEIS.makeWavelet({ type: 'ricker', f });
-    const thk = (fx, fy) => {
-      const yc = YD / 2 + sinu * Math.sin(2 * Math.PI * (fx * XD) / (XD / 1.35));
-      const d = Math.abs(fy * YD - yc), hw = wid / 2;
-      if (d >= hw) return 0;
-      return hmax * (taper + (1 - taper) * (1 - fx)) * Math.pow(1 - (d / hw) * (d / hw), 0.7);
-    };
-    const amp = (hh) => {
-      const gap = 2 * hh / V, sp = [{ t: 0, r: 0.12 }, { t: gap, r: -0.12 }];
-      let best = 0;
-      for (let t = -wav.halfLength; t <= gap + wav.halfLength; t += 0.0004) {
-        const v = SEIS.traceValue(sp, t, wav.fn);
-        if (v > 0 && v > best) best = v;
-      }
-      return best;
-    };
-    const stops = [[252,250,246],[253,231,160],[247,190,90],[233,131,60],[196,60,45],[110,16,20]];
-    const NXm = 130, NYm = 80;
-    const vals = new Float32Array(NXm * NYm);
-    let mx = 1e-9;
-    for (let iy = 0; iy < NYm; iy++) for (let ix = 0; ix < NXm; ix++) {
-      const a = amp(thk((ix + 0.5) / NXm, (iy + 0.5) / NYm));
-      vals[iy * NXm + ix] = a; mx = Math.max(mx, a);
+    const src = new Float64Array(NXn * NYn);
+    for (let iy = 0; iy < NYn; iy++) for (let ix = 0; ix < NXn; ix++) {
+      const ls = shape((ix + 0.5) / NXn); if (!ls) continue;
+      const y = ((iy + 0.5) / NYn) * YD;
+      for (const L of ls) if (Math.abs(y - L.y) <= L.w / 2) { src[iy * NXn + ix] = 1; break; }
     }
-    const off = document.createElement('canvas');
-    off.width = NXm; off.height = NYm;
-    const octx = off.getContext('2d');
-    const img = octx.createImageData(NXm, NYm);
-    for (let i = 0; i < NXm * NYm; i++) {
-      const p = Math.max(0, Math.min(1, vals[i] / mx)) * (stops.length - 1);
-      const k = Math.min(stops.length - 2, Math.floor(p)), fr = p - k;
+    const re = new Float64Array(NXn * NYn), im = new Float64Array(NXn * NYn);
+    re.set(src);
+    const rr = new Float64Array(NXn), ri = new Float64Array(NXn);
+    const cr = new Float64Array(NYn), ci = new Float64Array(NYn);
+    const rows = (inv) => { for (let iy = 0; iy < NYn; iy++) {
+      for (let ix = 0; ix < NXn; ix++) { rr[ix] = re[iy * NXn + ix]; ri[ix] = im[iy * NXn + ix]; }
+      SEIS.fft(rr, ri, inv);
+      for (let ix = 0; ix < NXn; ix++) { re[iy * NXn + ix] = rr[ix]; im[iy * NXn + ix] = ri[ix]; } } };
+    const colsF = (inv) => { for (let ix = 0; ix < NXn; ix++) {
+      for (let iy = 0; iy < NYn; iy++) { cr[iy] = re[iy * NXn + ix]; ci[iy] = im[iy * NXn + ix]; }
+      SEIS.fft(cr, ci, inv);
+      for (let iy = 0; iy < NYn; iy++) { re[iy * NXn + ix] = cr[iy]; im[iy * NXn + ix] = ci[iy]; } } };
+    rows(false); colsF(false);
+    const dx = XD / NXn, dy = YD / NYn, kc = KC / res;
+    for (let iy = 0; iy < NYn; iy++) {
+      const ky = Math.abs((iy <= NYn / 2 ? iy : iy - NYn) / (NYn * dy));
+      for (let ix = 0; ix < NXn; ix++) {
+        const kx = Math.abs((ix <= NXn / 2 ? ix : ix - NXn) / (NXn * dx));
+        const q = Math.hypot(kx / kc, ky / kc);
+        const wgt = q <= 1 ? 1 : q >= 1.15 ? 0 : 0.5 + 0.5 * Math.cos(Math.PI * (q - 1) / 0.15);
+        re[iy * NXn + ix] *= wgt; im[iy * NXn + ix] *= wgt;
+      }
+    }
+    colsF(true); rows(true);
+    const stops = [[252,251,248],[226,236,238],[170,208,216],[96,168,188],[38,116,146],[16,58,84]];
+    const off2 = document.createElement('canvas');
+    off2.width = NXn; off2.height = NYn;
+    const octx = off2.getContext('2d');
+    const img = octx.createImageData(NXn, NYn);
+    let mx = 1e-9;
+    for (let i = 0; i < re.length; i++) mx = Math.max(mx, re[i]);
+    for (let i = 0; i < NXn * NYn; i++) {
+      const u = Math.max(0, Math.min(1, re[i] / mx)) * (stops.length - 1);
+      const k = Math.min(stops.length - 2, Math.floor(u)), f = u - k;
       const a = stops[k], b = stops[k + 1];
-      img.data[i * 4] = a[0] + (b[0] - a[0]) * fr;
-      img.data[i * 4 + 1] = a[1] + (b[1] - a[1]) * fr;
-      img.data[i * 4 + 2] = a[2] + (b[2] - a[2]) * fr;
+      img.data[i * 4] = a[0] + (b[0] - a[0]) * f;
+      img.data[i * 4 + 1] = a[1] + (b[1] - a[1]) * f;
+      img.data[i * 4 + 2] = a[2] + (b[2] - a[2]) * f;
       img.data[i * 4 + 3] = 255;
     }
     octx.putImageData(img, 0, 0);
     ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(off, 0, 0, w, h);
+    ctx.drawImage(off2, 0, 0, w, h);
   }
 
   function drawThumbs() {
@@ -484,7 +476,7 @@
       else if (c.dataset.thumb === 'fault') thumbFault(c);
       else if (c.dataset.thumb === 'model1d') thumb1d(c);
       else if (c.dataset.thumb === 'fresnel') thumbFresnel(c);
-      else if (c.dataset.thumb === 'aliasing') thumbAlias(c);
+      else if (c.dataset.thumb === 'mapres') thumbMapRes(c);
       else if (c.dataset.thumb === 'mapview') thumbMapView(c);
       else if (c.dataset.thumb === 'depth') thumbDepth(c);
     });
