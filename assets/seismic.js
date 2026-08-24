@@ -241,6 +241,59 @@ const SEIS = (function () {
   }
 
   /**
+   * Rotate a wavelet's phase, exactly, through the frequency domain: positive
+   * frequencies are multiplied by e^-i*phi and negative ones by its conjugate,
+   * which is the same thing as w*cos(phi) - H{w}*sin(phi) without needing a
+   * separate Hilbert transform.
+   *
+   * Returns an object with the same shape as makeWavelet, so it can be passed
+   * anywhere a wavelet is expected. The rotated wavelet has longer tails than
+   * the one it came from, so halfLength grows to match.
+   */
+  function phaseRotate(wav, degrees) {
+    const deg = ((degrees % 360) + 540) % 360 - 180;      // into -180..180
+    if (Math.abs(deg) < 1e-9) return wav;
+
+    const dt = Math.min(wav.halfLength / 96, 0.0004);
+    const hw = Math.ceil(wav.halfLength / dt);
+    const out = 3 * hw;                                    // room for the tails
+    let n = 1;
+    while (n < 4 * out) n *= 2;
+
+    const re = new Float64Array(n), im = new Float64Array(n);
+    for (let i = -hw; i <= hw; i++) re[(i + n) % n] = wav.fn(i * dt);
+    fft(re, im, false);
+
+    const ph = deg * Math.PI / 180;
+    const c = Math.cos(ph), s = Math.sin(ph);
+    for (let k = 0; k < n; k++) {
+      const sgn = (k === 0 || k === n / 2) ? 0 : (k < n / 2 ? 1 : -1);
+      const cc = c, ss = -sgn * s;
+      const a = re[k], b = im[k];
+      re[k] = a * cc - b * ss;
+      im[k] = a * ss + b * cc;
+    }
+    fft(re, im, true);
+
+    const samp = new Float64Array(2 * out + 1);
+    for (let i = -out; i <= out; i++) samp[i + out] = re[(i + n) % n];
+
+    const half = out * dt;
+    return {
+      fdom: wav.fdom,
+      halfLength: half,
+      phase: deg,
+      fn: function (t) {
+        const p = t / dt + out;
+        if (p < 0 || p > 2 * out) return 0;
+        const i = Math.floor(p), f = p - i;
+        if (i >= 2 * out) return samp[2 * out];
+        return samp[i] + (samp[i + 1] - samp[i]) * f;
+      },
+    };
+  }
+
+  /**
    * f-k amplitude spectrum of a trace-major field. nx and nt must be powers of
    * two. A cosine taper is applied in both directions first, otherwise the
    * edges of the panel smear energy across the whole plot.
@@ -626,7 +679,7 @@ const SEIS = (function () {
   return {
     ricker, ormsby, makeWavelet, spectrum,
     traceValue, sampleTrace, traceFromSpikes, rc,
-    mulberry32, gaussRand, bandLimitedNoise, fft, fkSpectrum,
+    mulberry32, gaussRand, bandLimitedNoise, fft, fkSpectrum, phaseRotate,
     COLORMAPS, fitCanvas, drawVarDensity, drawWiggle,
     niceTicks, frame, axisBottom, axisLeft, dashedLine, tag, drawColorbar,
     UNITS, readState, writeState, copyLink, savePNG,
