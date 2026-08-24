@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tuning in map view — What Can You REALLY See in Seismic?</title>
-<meta name="description" content="A channel with real thickness variation turned into an amplitude extraction, so you can see exactly how a thickness map goes wrong.">
+<meta name="description" content="A sand thinning updip onto a salt dome, turned into an amplitude extraction. Is the bright rim a fluid, or is it tuning?">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -23,108 +23,131 @@
 
   <div class="mod-head">
     <p class="eyebrow">Module 07 &nbsp;·&nbsp; Tuning in map view</p>
-    <h1>Does bright mean thick?</h1>
-    <p class="sub">Module 02 showed one wedge. A channel is thousands of them side by side, and the amplitude
-      map you extract from it inherits every bit of that behaviour. Here is a channel whose thickness you know
-      exactly, turned into the amplitude extraction you would actually be handed. Compare the two maps and see
-      which parts of the story survive.</p>
+    <h1>Does bright mean thick — or does it mean gas?</h1>
+    <p class="sub">A minibasin sand, thinning updip as it laps onto the flank of a salt dome. Extract the
+      amplitude and a bright rim appears around the dome. That rim is the oldest question in amplitude
+      interpretation: is it hydrocarbon, or is it the bed passing through tuning thickness on its way to
+      pinching out? Both look like a bright rim. They are told apart by what the rim follows.</p>
+  </div>
+
+  <!-- ============================ THE IDEA FIRST =========================== -->
+  <div class="teach" style="padding-top:6px">
+    <div class="tryit">
+      <h3>Start here — why a rim appears at all</h3>
+      <p style="margin-top:0;font-size:14.5px">The sand is thickest out in the basin and thins to nothing
+        against the dome. Somewhere on that flank it passes through <b>tuning thickness</b>, where the
+        reflections from its top and base line up and reinforce. That happens at one particular thickness,
+        and because thickness is laid out in rings around the dome, the bright spot is a <b>ring</b>.</p>
+      <p style="font-size:14.5px;margin-bottom:0">Nothing has changed about the rock or the fluid. The sand
+        is the same sand all the way round. The rim is arithmetic.</p>
+    </div>
+    <div class="takeaway">
+      <h3>And why that is a problem</h3>
+      <p style="margin-top:0;font-size:14.5px">Hydrocarbon in the same sand would <em>also</em> brighten it,
+        and it would also collect updip near the dome. Two quite different stories, one bright rim.</p>
+      <p style="font-size:14.5px;margin-bottom:0">The way out is to ask what the bright edge follows. A fluid
+        sits below a contact, so its limit follows a <b>structural contour</b> — a line of constant depth,
+        and it is flat. Tuning follows a <b>thickness contour</b>. Put a regional dip on the section and
+        those two are no longer the same line, and the map will tell you which one you have.</p>
+    </div>
   </div>
 
   <!-- ============================== CONTROLS ============================== -->
   <section class="controls">
     <div class="ctl-col">
-      <h2>The channel</h2>
+      <h2>The sand</h2>
       <div class="ctl">
-        <label for="hmax">Thickest point <span class="val" id="hmaxV">40 m</span></label>
-        <input type="range" id="hmax" min="5" max="120" step="1" value="40">
+        <label for="hmax">Thickness out in the basin <span class="val" id="hmaxV">55 m</span></label>
+        <input type="range" id="hmax" min="10" max="150" step="1" value="55">
       </div>
       <div class="ctl">
-        <label for="wid">Channel width <span class="val" id="widV">600 m</span></label>
-        <input type="range" id="wid" min="150" max="1400" step="25" value="600">
+        <label for="taper">How far it takes to thin out <span class="val" id="taperV">1800 m</span></label>
+        <input type="range" id="taper" min="300" max="4000" step="50" value="1800">
       </div>
       <div class="ctl">
-        <label for="sinu">Sinuosity <span class="val" id="sinuV">300 m</span></label>
-        <input type="range" id="sinu" min="0" max="700" step="10" value="300">
+        <label for="pinch">Pinch-out against the salt <span class="val" id="pinchV">1100 m</span></label>
+        <input type="range" id="pinch" min="400" max="2500" step="50" value="1100">
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>The structure</h2>
+      <div class="ctl">
+        <label for="relief">Dome relief <span class="val" id="reliefV">600 m</span></label>
+        <input type="range" id="relief" min="100" max="1200" step="25" value="600">
       </div>
       <div class="ctl">
-        <label for="taper">Thins downstream to <span class="val" id="taperV">28%</span></label>
-        <input type="range" id="taper" min="10" max="100" step="2" value="28">
+        <label for="dip">Regional dip <span class="val" id="dipV">34 m/km</span></label>
+        <input type="range" id="dip" min="0" max="80" step="1" value="34">
       </div>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:0">
+        With no regional dip the structure is a perfect dome and the two rims coincide, which is exactly the
+        case you cannot resolve. Add dip and they separate.</p>
+    </div>
+
+    <div class="ctl-col">
+      <h2>The fluid</h2>
+      <div class="ctl">
+        <div class="seg" role="group" aria-label="What fills the sand">
+          <button type="button" id="fBrine" aria-pressed="true">Brine only</button>
+          <button type="button" id="fGas" aria-pressed="false">Gas updip</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="contact">Contact depth <span class="val" id="contactV">2660 m</span></label>
+        <input type="range" id="contact" min="2000" max="3200" step="10" value="2660">
+      </div>
+      <label class="check"><input type="checkbox" id="showTune" checked> Draw the tuning ring</label>
+      <label class="check"><input type="checkbox" id="showCon" checked> Draw the fluid contact</label>
     </div>
 
     <div class="ctl-col">
       <h2>The data</h2>
       <div class="ctl">
-        <label for="freq">Peak frequency <span class="val" id="freqV">30 Hz</span></label>
-        <input type="range" id="freq" min="10" max="80" step="1" value="30">
+        <label for="freq">Peak frequency <span class="val" id="freqV">25 Hz</span></label>
+        <input type="range" id="freq" min="8" max="60" step="1" value="25">
       </div>
       <div class="ctl">
-        <label for="vel">Channel velocity <span class="val" id="velV">2600 m/s</span></label>
-        <input type="range" id="vel" min="1600" max="4500" step="50" value="2600">
+        <label for="vel">Sand velocity <span class="val" id="velV">2700 m/s</span></label>
+        <input type="range" id="vel" min="1800" max="4200" step="50" value="2700">
       </div>
       <div class="ctl">
-        <label for="rocks">Rocks</label>
-        <select id="rocks">
-          <option value="sand" selected>Sand in shale — hard top, soft base</option>
-          <option value="gas">Gas sand in shale — soft top, hard base</option>
-          <option value="same">Hardening downward — both the same sign</option>
+        <label for="cmap">Amplitude colors</label>
+        <select id="cmap">
+          <option value="viridis" selected>Viridis</option>
+          <option value="cividis">Cividis</option>
+          <option value="warm">Warm</option>
         </select>
       </div>
-      <div class="ctl">
-        <label for="snr">Signal-to-noise <span class="val" id="snrV">clean</span></label>
-        <input type="range" id="snr" min="0" max="20" step="0.5" value="0">
-      </div>
-    </div>
-
-    <div class="ctl-col">
-      <h2>The map on the right</h2>
-      <div class="ctl">
-        <div class="seg" role="group" aria-label="What the right-hand map shows">
-          <button type="button" id="mAmp" aria-pressed="true">Amplitude</button>
-          <button type="button" id="mInf" aria-pressed="false">Inferred</button>
-          <button type="button" id="mErr" aria-pressed="false">Error</button>
-        </div>
-      </div>
-      <p style="font-size:12px;color:var(--ink-soft);margin:0 0 8px" id="modeNote">
-        The amplitude extraction, exactly as it would come off the horizon.</p>
-      <label class="check"><input type="checkbox" id="showTune" checked> Mark where thickness equals tuning</label>
       <div class="ctl">
         <label for="units">Units</label>
         <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
       </div>
-    </div>
-
-    <div class="ctl-col">
-      <h2>Display</h2>
-      <div class="ctl">
-        <label for="cmap">Seismic color map</label>
-        <select id="cmap">
-          <option value="bwr">Blue peak / red trough</option>
-          <option value="cbsafe">Blue peak / orange trough (colorblind safe)</option>
-          <option value="gray">Grayscale (black peak)</option>
-        </select>
-      </div>
       <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
-      <button class="btn ghost small" id="pngBtn" type="button">Save maps as PNG</button>
       <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
     </div>
   </section>
 
-  <!-- ================================ MAPS ================================ -->
+  <!-- =============================== MAPS ================================= -->
   <section class="plot" style="margin-top:18px">
     <div class="plot-head">
-      <h3>Two maps of the same channel</h3>
-      <span class="hint">Click anywhere on a map to move the crosshair and the section line</span>
+      <h3>Three maps of the same sand</h3>
+      <span class="hint">Click any map to move the crosshair and the section line</span>
     </div>
     <div class="sec-row" id="mapRow">
       <div class="panel-col">
-        <p class="sublabel"><b>1</b> True thickness
-          <span class="note">the geology, which you would never actually have</span></p>
-        <canvas id="thkCanvas" aria-label="Map of the true channel thickness"></canvas>
+        <p class="sublabel"><b>1</b> Thickness
+          <span class="note">rings around the dome</span></p>
+        <canvas id="thkCanvas" aria-label="Map of sand thickness thinning onto the dome"></canvas>
       </div>
       <div class="panel-col">
-        <p class="sublabel"><b>2</b> <span id="rightLabel">Amplitude extraction</span>
-          <span class="note" id="rightNote">what the seismic hands you</span></p>
+        <p class="sublabel"><b>2</b> Structure
+          <span class="note">depth to the top of the sand</span></p>
+        <canvas id="strCanvas" aria-label="Structure map on the top of the sand"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>3</b> Amplitude
+          <span class="note" id="ampNote">what you would be handed</span></p>
         <canvas id="ampCanvas" aria-label="Amplitude extraction map"></canvas>
       </div>
     </div>
@@ -134,28 +157,27 @@
   <section class="plot" style="margin-top:18px">
     <div class="sec-row">
       <div class="panel-col">
-        <p class="sublabel"><b>3</b> Section across the channel
-          <span class="note">at the line you picked</span></p>
-        <canvas id="secCanvas" aria-label="Cross-section through the channel"></canvas>
+        <p class="sublabel"><b>4</b> Section through the dome flank
+          <span class="note">the wedge you are really looking at</span></p>
+        <canvas id="secCanvas" aria-label="Cross-section from the dome out into the basin"></canvas>
       </div>
       <div class="panel-col">
-        <p class="sublabel"><b>4</b> The tuning curve behind it all</p>
-        <canvas id="curveCanvas" aria-label="Amplitude against thickness, with the channel's range marked"></canvas>
+        <p class="sublabel"><b>5</b> The tuning curve behind it</p>
+        <canvas id="curveCanvas" aria-label="Amplitude against thickness"></canvas>
       </div>
     </div>
-    <div class="legend" id="curveLegend"></div>
+    <div class="legend" id="secLegend"></div>
   </section>
 
   <div class="stats">
     <div class="stat"><span>Wavelength λ = V / f</span><b id="rLam">— m</b></div>
     <div class="stat"><span>Tuning thickness</span><b id="rTune">— m</b></div>
-    <div class="stat"><span>Channel thickest point</span><b id="rHmax">— m</b></div>
-    <div class="stat"><span>Channel area above tuning</span><b id="rAbove">—</b></div>
-    <div class="stat key"><span>At the crosshair: true thickness</span><b id="rTrue">— m</b></div>
-    <div class="stat"><span>At the crosshair: amplitude</span><b id="rAmp">—</b></div>
-    <div class="stat"><span>Thickness you would infer</span><b id="rInf">— m</b></div>
-    <div class="stat"><span>That amplitude also fits</span><b id="rAlt">—</b></div>
-    <div class="stat wide"><span>Verdict</span><b id="rVerdict">—</b></div>
+    <div class="stat"><span>Where the sand tunes</span><b id="rRing">—</b></div>
+    <div class="stat"><span>At the crosshair: thickness</span><b id="rThk">— m</b></div>
+    <div class="stat"><span>At the crosshair: depth</span><b id="rDep">— m</b></div>
+    <div class="stat"><span>At the crosshair: fluid</span><b id="rFlu">—</b></div>
+    <div class="stat key"><span>At the crosshair: amplitude</span><b id="rAmp">—</b></div>
+    <div class="stat wide"><span>So is the bright rim a fluid or is it tuning?</span><b id="rVerdict">—</b></div>
   </div>
 
   <!-- ============================== TEACHING ============================== -->
@@ -163,77 +185,82 @@
     <div class="tryit">
       <h3>Try this</h3>
       <ol>
-        <li><b>Look at the two maps before touching anything.</b> Where is the channel brightest, and where is
-          it actually thickest?
-          <span class="ans">They are not the same place. The upstream half is thicker than tuning, so its
-            axis is dim and its flanks are bright — the channel images as two rails with a dull stripe down
-            the middle. The thin downstream half behaves itself and is brightest along the axis. One channel,
-            two opposite-looking amplitude signatures, and no change in rock type anywhere.</span></li>
-        <li><b>Find the same amplitude twice.</b> Put the crosshair on a bright flank, note the amplitude, then
-          find somewhere else with the same value.
-          <span class="ans">The readout tells you which two thicknesses fit that amplitude. Below tuning,
-            amplitude rises with thickness; above tuning it falls. One number, two answers, and nothing in
-            the amplitude alone to tell you which. This is why amplitude cannot be inverted to thickness
-            without an independent constraint.</span></li>
-        <li><b>Watch the map lie.</b> Switch the right-hand map to Inferred, then to Error.
-          <span class="ans">Inferred assumes the textbook rule that amplitude is proportional to thickness,
-            which is only true below tuning. Where the channel is thicker than that, the map does not merely
-            get vaguer — it puts the thin value on the thickest rock, and the error map shows the axis of the
-            channel as the worst place in the survey.</span></li>
-        <li><b>Make the problem disappear.</b> Take the thickest point down until the whole channel is below
-          tuning.
-          <span class="ans">Now amplitude really does track thickness and the two maps look alike. This is
-            the case textbooks quote, and it is also the case in which the answer is least interesting,
-            because the reservoir is thin everywhere.</span></li>
-        <li><b>Buy your way out with bandwidth.</b> Put the thickness back and raise frequency instead.
-          <span class="ans">Tuning thickness falls as 1/f, so more of the channel moves above tuning and the
-            bright rails move outward toward the edges. Higher frequency does not remove tuning, it moves it
-            — and it can turn a channel that looked simple into one that looks like two.</span></li>
-        <li><b>Change the rocks, not the shape.</b> Switch to hardening downward.
-          <span class="ans">With both reflection coefficients the same sign the tuning curve inverts, so the
-            thinnest edges of the channel are now the brightest part of the map. The identical geometry
-            produces an amplitude map with the opposite pattern. Before reading a bright spot as thick rock,
-            you have to know your impedance profile and your polarity.</span></li>
+        <li><b>Start with brine only.</b> There is no hydrocarbon anywhere in the model. Look at panel 3.
+          <span class="ans">There is still a bright rim around the dome. Every drop of fluid in that sand is
+            water. If you had been handed only this map, the rim would look like the most promising thing on
+            it — and it is a thickness effect and nothing else.</span></li>
+        <li><b>Check where the rim sits.</b> Turn on the tuning ring and compare it with the bright rim.
+          <span class="ans">They are the same line. The rim traces the contour where the sand passes through
+            tuning thickness, which is a thickness contour, so it closes in a ring around the dome
+            regardless of which way the structure dips.</span></li>
+        <li><b>Now put gas in it.</b> Switch to gas updip and watch panel 3 change.
+          <span class="ans">A second bright area appears, and this one is cut off along a straight edge —
+            the fluid contact. Because there is regional dip, that edge runs across the thickness rings
+            rather than following them.</span></li>
+        <li><b>Learn the test.</b> Compare the shape of the bright rim with panel 1 and then with panel 2.
+          <span class="ans">Tuning follows a thickness contour. A fluid follows a structural contour and
+            stops at a flat, level edge — the flat spot. When somebody says an amplitude anomaly is
+            "conformable to structure", this is the check they have done.</span></li>
+        <li><b>Take the dip out.</b> Set regional dip to zero with gas still in.
+          <span class="ans">The structure is now a perfect dome, so structural and thickness contours are
+            both circles and the two effects become indistinguishable on the map. This is the genuinely hard
+            case, and it is why the check needs dip, well control, or an independent attribute rather than
+            the amplitude map alone.</span></li>
+        <li><b>Move tuning instead.</b> Back to brine, and sweep frequency from 12 Hz to 50 Hz.
+          <span class="ans">The bright ring migrates up the flank as tuning thickness falls. A fluid contact
+            would not move an inch, because it is set by the rocks and the pressure regime, not by your
+            bandwidth. Reprocessing at a different bandwidth and watching whether an anomaly moves is a
+            genuinely useful test.</span></li>
+        <li><b>Thin the sand until the whole thing tunes.</b> Take the basinal thickness below the tuning
+          value.
+          <span class="ans">Now the ring stops being a ring: the entire sand is below tuning, so amplitude
+            rises steadily with thickness everywhere and the map looks like a thickness map. That is the one
+            regime where reading amplitude as thickness is safe, and you have to establish you are in it
+            rather than assume it.</span></li>
       </ol>
     </div>
 
     <div class="takeaway">
       <h3>What to carry away</h3>
       <ul>
-        <li><b>Bright means near tuning, not thick.</b> Above tuning the relationship runs backwards.</li>
-        <li><b>Amplitude-to-thickness is double-valued.</b> Every amplitude fits two thicknesses, and only
-          well control, geological sense or an independent attribute tells you which.</li>
-        <li><b>Tuning makes channels look like they have edges they do not have.</b> Bright rails along the
-          flanks are an artifact of thickness passing through tuning, not a levee or a facies change.</li>
-        <li><b>Thickness maps made from amplitude are only safe below tuning</b>, and you have to establish
-          that before you trust them, not after.</li>
-        <li><b>Everything here is one wedge model repeated across a map.</b> If module 02 made sense, this is
-          the same result with consequences.</li>
+        <li><b>A bright rim around a dome is what tuning looks like in map view.</b> Beds thinning onto a
+          high must pass through tuning thickness on their way out, and that contour closes as a ring.</li>
+        <li><b>Fluid effects follow structure; tuning follows thickness.</b> If those two are not parallel,
+          the map shape distinguishes them.</li>
+        <li><b>A fluid limit is flat and it is level.</b> A tuning limit is not — it tracks whatever shape
+          the thickness happens to have.</li>
+        <li><b>Tuning moves when your bandwidth changes.</b> Contacts do not.</li>
+        <li><b>Below tuning, amplitude tracks thickness</b>, and only there is a thickness map from amplitude
+          defensible.</li>
       </ul>
     </div>
   </div>
 
   <details class="notes" id="notes">
     <summary>Method, assumptions, and where to read more</summary>
-    <p>The channel is a sinuous body with an elliptical cross-section that thins downstream, so its thickness
-      sweeps through the whole range from zero to the thickest point you set. At every map cell the thickness
-      is converted to a two-way time with the channel velocity, and the response is the top and base
-      reflection coefficients convolved with a zero-phase Ricker wavelet. The amplitude extraction is the
-      extremum matching the sign of the top reflection, which is what a horizon-based extraction picks up.
-      That is the wedge model of module 02, evaluated at every cell rather than along one line.</p>
-    <p>The inferred-thickness map applies the rule that gets taught first: amplitude is proportional to
-      thickness, calibrated so that the tuning amplitude corresponds to the tuning thickness. That rule is
-      sound below tuning and wrong above it, and the error map is the difference between it and the truth.</p>
-    <p>Left out, and each would make matters worse rather than better: lateral velocity change, a channel fill
-      whose properties vary along it, dip and structural overprint, the fact that the extraction horizon is
-      itself picked from tuned data, and interference from reflectors above and below. Noise here is added to
-      the amplitude map rather than to the traces, which is a simplification.</p>
+    <p>The sand pinches out against the salt at a fixed radius and thickens outward into the basin over the
+      taper distance you set. The top of the sand is a regional dip plus a smooth dome uplift, so structural
+      contours and thickness contours are deliberately not parallel. At every map cell the thickness becomes
+      a two-way time with the sand velocity, and the response is the top and base reflection coefficients
+      convolved with a zero-phase Ricker wavelet. Amplitude is the extremum matching the sign of the top
+      reflection, which is what a horizon-based extraction picks up. That is the wedge of module 02 evaluated
+      cell by cell, which is all a tuning artifact ever is.</p>
+    <p>Brine sand is taken as slightly softer than the surrounding shale and gas sand as considerably softer,
+      which is the usual Gulf of Mexico case and gives the familiar bright soft-top response. The contact is
+      treated as a horizontal surface, so gas is present wherever the top of the sand is shallower than the
+      contact and the sand is present at all.</p>
+    <p>Left out, and every one of them makes the real problem harder: amplitude variation with offset, which
+      is the attribute that actually resolves this question in practice; lateral change in the sand and in the
+      overburden; velocity pull-up beneath the dome; imaging problems on a steep salt flank, which are severe;
+      residual gas, which brightens almost as well as commercial gas; and any noise at all. The colour maps
+      are perceptually uniform and safe for colour-vision deficiency, deliberately, because rainbow scales
+      invent edges in amplitude maps that the data does not contain.</p>
     <ul>
-      <li>Widess, M.B., 1973, How thin is a thin bed?: <em>Geophysics</em>, 38, 1176–1180.</li>
       <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.: AAPG/SEG.</li>
-      <li>Zeng, H., and Hentz, T.F., 2004, High-frequency sequence stratigraphy from seismic sedimentology:
-        <em>AAPG Bulletin</em>, 88, 153–174.</li>
+      <li>Widess, M.B., 1973, How thin is a thin bed?: <em>Geophysics</em>, 38, 1176–1180.</li>
       <li>Simm, R., and Bacon, M., 2014, <em>Seismic Amplitude: An Interpreter's Handbook</em>: Cambridge.</li>
+      <li>Rowan, M.G., Jackson, M.P.A., and Trudgill, B.D., 1999, Salt-related fault families:
+        <em>AAPG Bulletin</em>, 83, 1454–1484.</li>
     </ul>
   </details>
 
@@ -257,10 +284,10 @@
   'use strict';
 
   const DEF = {
-    hmax: 40, wid: 600, sinu: 300, taper: 28,
-    f: 30, v: 2600, rocks: 'sand', snr: 0,
-    mode: 'amp', tune: true, cmap: 'bwr', units: 'm',
-    px: 0.30, py: 0.50,
+    hmax: 55, taper: 1800, pinch: 1100,
+    relief: 600, dip: 34, fluid: 'brine', contact: 2660,
+    f: 25, v: 2700, cmap: 'viridis', tune: true, con: true,
+    units: 'm', px: 0.62, py: 0.50,
   };
   let S = SEIS.readState(DEF);
 
@@ -268,156 +295,123 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670', OCHRE = '#8A6D1F';
 
-  const NXM = 200, NYM = 132;      // map grid
-  const NLUT = 400;                // thickness lookup entries
+  const XD = 7000, YD = 4600;          // map extent, metres
+  const XC = 2500, YC = YD / 2;        // where the salt sits
+  const RD = 1500;                     // how wide the dome's uplift is
+  const ZREF = 2600;                   // regional depth at the dome centre
+  const NXM = 190, NYM = 125, NLUT = 400;
 
-  const ROCKS = {
-    sand: { r1:  0.12, r2: -0.12, label: 'hard top, soft base' },
-    gas:  { r1: -0.19, r2:  0.19, label: 'soft top, hard base' },
-    same: { r1:  0.11, r2:  0.11, label: 'both the same sign' },
+  // shale over sand. Brine sand is a little softer than the shale; gas sand is a
+  // lot softer, which is the usual Gulf of Mexico bright soft-top response.
+  const ROCK = {
+    brine: { r1: -0.055, r2: 0.055 },
+    gas:   { r1: -0.200, r2: 0.200 },
   };
 
   const U = () => SEIS.UNITS[S.units];
   const uL = (m) => m * U().len;
   const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 0 : d) + ' ' + U().lab;
 
-  /* --------------------------- colour ramps ---------------------------- */
+  const COOL = SEIS.SEQMAPS.cividis;
 
-  function ramp(stops) {
-    return (u) => {
-      const p = clamp(u, 0, 1) * (stops.length - 1);
-      const i = Math.min(stops.length - 2, Math.floor(p)), f = p - i;
-      const a = stops[i], b = stops[i + 1];
-      return [Math.round(a[0] + (b[0] - a[0]) * f),
-              Math.round(a[1] + (b[1] - a[1]) * f),
-              Math.round(a[2] + (b[2] - a[2]) * f)];
-    };
-  }
-  // thickness: cool, so it never gets mistaken for the warm amplitude map
-  const THICK = ramp([[247,249,250],[198,222,231],[126,186,201],[56,133,158],[22,78,104],[12,38,58]]);
-  const AMP   = ramp([[252,250,246],[253,231,160],[247,190,90],[233,131,60],[196,60,45],[110,16,20]]);
-  const ERR   = ramp([[27,79,156],[122,168,214],[248,248,246],[214,138,122],[176,36,24]]);
+  /* ------------------------------- the model --------------------------- */
 
-  /* ------------------------------- model ------------------------------- */
+  const radius = (x, y) => Math.hypot(x - XC, y - YC);
 
-  function geom() {
-    const YD = Math.max(4.0 * S.wid, 2.2 * S.sinu + 2.2 * S.wid, 1400);
-    return { XD: 2.0 * YD, YD };
+  // sand thins onto the salt: nothing inside the pinch-out, full thickness once
+  // it is a taper-width out into the basin
+  function thicknessAt(x, y) {
+    const r = radius(x, y);
+    if (r <= S.pinch) return 0;
+    return S.hmax * Math.min(1, (r - S.pinch) / Math.max(S.taper, 1));
   }
 
-  // thickness of the channel at a map position, in metres
-  function thicknessAt(fx, fy, G) {
-    const x = fx * G.XD, y = fy * G.YD;
-    const yc = G.YD / 2 + S.sinu * Math.sin(2 * Math.PI * x / (G.XD / 1.35));
-    const hw = S.wid / 2;
-    const d = Math.abs(y - yc);
-    if (d >= hw) return 0;
-    const across = Math.pow(1 - (d / hw) * (d / hw), 0.7);
-    const along = S.hmax * (S.taper / 100 + (1 - S.taper / 100) * (1 - fx));
-    return along * across;
+  // regional dip plus a smooth dome, so structure and thickness contours are
+  // deliberately not the same shape
+  function depthAt(x, y) {
+    const r = radius(x, y);
+    return ZREF + (S.dip / 1000) * (x - XC) - S.relief * Math.exp(-(r * r) / (RD * RD));
   }
+
+  const isGas = (x, y) => S.fluid === 'gas' && thicknessAt(x, y) > 0.5 && depthAt(x, y) < S.contact;
 
   let CACHE = {};
 
   function compute() {
-    const R = ROCKS[S.rocks] || ROCKS.sand;
     const wav = SEIS.makeWavelet({ type: 'ricker', f: S.f });
-    const G = geom();
     const lam = S.v / S.f;
-
-    // amplitude of the top event against bed thickness, measured once
     const hTop = Math.max(S.hmax, lam / 2) * 1.05;
-    const lut = new Float32Array(NLUT + 1);
-    const dtStep = 0.0001;
-    for (let i = 0; i <= NLUT; i++) {
-      const h = (i / NLUT) * hTop;
-      const gap = 2 * h / S.v;
-      const sp = [{ t: 0, r: R.r1 }, { t: gap, r: R.r2 }];
-      let best = 0;
-      for (let t = -wav.halfLength; t <= gap + wav.halfLength; t += dtStep) {
-        const v = SEIS.traceValue(sp, t, wav.fn);
-        if (Math.sign(v) === Math.sign(R.r1) && Math.abs(v) > Math.abs(best)) best = v;
+
+    // amplitude against thickness, once per fluid
+    const luts = {};
+    ['brine', 'gas'].forEach((k) => {
+      const R = ROCK[k], arr = new Float32Array(NLUT + 1);
+      for (let i = 0; i <= NLUT; i++) {
+        const gap = 2 * ((i / NLUT) * hTop) / S.v;
+        const sp = [{ t: 0, r: R.r1 }, { t: gap, r: R.r2 }];
+        let best = 0;
+        for (let t = -wav.halfLength; t <= gap + wav.halfLength; t += 0.0001) {
+          const v = SEIS.traceValue(sp, t, wav.fn);
+          if (Math.sign(v) === Math.sign(R.r1) && Math.abs(v) > Math.abs(best)) best = v;
+        }
+        arr[i] = Math.abs(best);
       }
-      lut[i] = Math.abs(best);
-    }
-    const ampOf = (h) => {
+      luts[k] = arr;
+    });
+    const ampOf = (h, k) => {
       const p = clamp(h / hTop, 0, 1) * NLUT;
       const i = Math.min(NLUT - 1, Math.floor(p)), fr = p - i;
-      return lut[i] + (lut[i + 1] - lut[i]) * fr;
+      return luts[k][i] + (luts[k][i + 1] - luts[k][i]) * fr;
     };
-
-    // tuning thickness and amplitude, from the same table
     let tunH = 0, tunA = 0;
     for (let i = 1; i <= NLUT; i++) {
-      if (lut[i] > tunA) { tunA = lut[i]; tunH = (i / NLUT) * hTop; }
+      if (luts.brine[i] > tunA) { tunA = luts.brine[i]; tunH = (i / NLUT) * hTop; }
     }
-    // for same-sign rocks the curve peaks at zero thickness, which is not a
-    // useful calibration point; fall back to the classic quarter wavelength
-    const sameSign = Math.sign(R.r1) === Math.sign(R.r2);
-    const calH = sameSign ? lam / 4 : tunH;
-    const calA = ampOf(calH);
+    // the radius at which the sand is exactly tuning thickness
+    const ringR = tunH < S.hmax ? S.pinch + (tunH / S.hmax) * S.taper : null;
 
-    // maps
     const thk = new Float32Array(NXM * NYM);
+    const dep = new Float32Array(NXM * NYM);
     const amp = new Float32Array(NXM * NYM);
-    const inf = new Float32Array(NXM * NYM);
-    const err = new Float32Array(NXM * NYM);
-    const rnd = SEIS.mulberry32(20260901);
-    let above = 0, inside = 0, maxErr = 0;
+    const gas = new Uint8Array(NXM * NYM);
     for (let iy = 0; iy < NYM; iy++) {
       for (let ix = 0; ix < NXM; ix++) {
-        const h = thicknessAt((ix + 0.5) / NXM, (iy + 0.5) / NYM, G);
-        let a = ampOf(h);
-        if (S.snr > 0) a += (tunA / S.snr) * (rnd() - 0.5) * 2;
-        a = Math.max(0, a);
+        const x = ((ix + 0.5) / NXM) * XD, y = ((iy + 0.5) / NYM) * YD;
         const k = iy * NXM + ix;
-        thk[k] = h; amp[k] = a;
-        const hi = (a / Math.max(calA, 1e-9)) * calH;
-        inf[k] = hi; err[k] = hi - h;
-        if (h > 0.5) { inside++; if (h > tunH) above++; maxErr = Math.max(maxErr, Math.abs(hi - h)); }
+        const h = thicknessAt(x, y);
+        thk[k] = h; dep[k] = depthAt(x, y);
+        const g = isGas(x, y);
+        gas[k] = g ? 1 : 0;
+        amp[k] = h > 0.5 ? ampOf(h, g ? 'gas' : 'brine') : 0;
       }
     }
-
-    CACHE = { R, wav, G, lam, lut, hTop, ampOf, tunH, tunA, calH, calA, sameSign,
-              thk, amp, inf, err, above, inside, maxErr };
+    CACHE = { wav, lam, luts, ampOf, hTop, tunH, tunA, ringR, thk, dep, amp, gas };
   }
 
-  // the other thickness that produces the same amplitude
-  function otherThickness(h) {
-    const { ampOf, tunH, hTop } = CACHE;
-    const target = ampOf(h);
-    const lo = h > tunH ? 0 : tunH, hi = h > tunH ? tunH : hTop;
-    let a = lo, b = hi;
-    if ((ampOf(a) - target) * (ampOf(b) - target) > 0) return null;
-    for (let i = 0; i < 50; i++) {
-      const m = (a + b) / 2;
-      if ((ampOf(a) - target) * (ampOf(m) - target) <= 0) b = m; else a = m;
-    }
-    const r = (a + b) / 2;
-    return Math.abs(r - h) < 0.5 ? null : r;
-  }
+  /* -------------------------------- layout ----------------------------- */
 
-  /* ------------------------------- layout ------------------------------ */
-
-  function layout(sel) {
+  function layout(sel, n) {
     const box = $(sel).closest('.plot');
     const W = Math.max(300, box.clientWidth - 28);
-    const stacked = W < 720;
-    const each = stacked ? W : Math.floor((W - 10) / 2);
-    return { stacked, each, W };
+    const stacked = W < 760;
+    return { stacked, each: stacked ? W : Math.floor((W - 10 * (n - 1)) / n), W };
   }
 
-  /* ------------------------------ drawing ------------------------------ */
+  /* ------------------------------- drawing ----------------------------- */
 
-  function drawGrid(ctx, rect, data, nx, ny, rampFn, vmin, vmax) {
+  function grid(ctx, rect, data, rampFn, vmin, vmax, mask) {
     const off = document.createElement('canvas');
-    off.width = nx; off.height = ny;
+    off.width = NXM; off.height = NYM;
     const octx = off.getContext('2d');
-    const img = octx.createImageData(nx, ny);
-    for (let i = 0; i < nx * ny; i++) {
-      const c = rampFn((data[i] - vmin) / ((vmax - vmin) || 1));
-      img.data[i * 4] = c[0]; img.data[i * 4 + 1] = c[1];
-      img.data[i * 4 + 2] = c[2]; img.data[i * 4 + 3] = 255;
+    const img = octx.createImageData(NXM, NYM);
+    for (let i = 0; i < NXM * NYM; i++) {
+      if (mask && !mask(i)) {
+        img.data[i * 4] = 236; img.data[i * 4 + 1] = 236; img.data[i * 4 + 2] = 233;
+      } else {
+        const c = rampFn((data[i] - vmin) / ((vmax - vmin) || 1));
+        img.data[i * 4] = c[0]; img.data[i * 4 + 1] = c[1]; img.data[i * 4 + 2] = c[2];
+      }
+      img.data[i * 4 + 3] = 255;
     }
     octx.putImageData(img, 0, 0);
     ctx.save();
@@ -426,246 +420,278 @@
     ctx.restore();
   }
 
-  function tuningContour(ctx, rect) {
-    if (!S.tune) return;
-    const { thk, tunH } = CACHE;
+  const px = (rect, x) => rect.x + (x / XD) * rect.w;
+  const py = (rect, y) => rect.y + (y / YD) * rect.h;
+
+  function salt(ctx, rect) {
     ctx.save();
-    ctx.strokeStyle = 'rgba(22,25,28,.75)'; ctx.lineWidth = 1.2;
-    ctx.setLineDash([4, 3]);
-    // walk each row and mark the crossings; a contour without the machinery
-    for (let iy = 0; iy < NYM; iy++) {
-      for (let ix = 1; ix < NXM; ix++) {
-        const a = thk[iy * NXM + ix - 1], b = thk[iy * NXM + ix];
-        if ((a - tunH) * (b - tunH) < 0) {
-          const fx = (ix - 0.5 + (tunH - a) / (b - a)) / NXM;
-          const fy = (iy + 0.5) / NYM;
-          ctx.beginPath();
-          ctx.moveTo(rect.x + fx * rect.w, rect.y + fy * rect.h - 1);
-          ctx.lineTo(rect.x + fx * rect.w, rect.y + fy * rect.h + 1);
-          ctx.stroke();
-        }
-      }
-    }
+    ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.strokeStyle = 'rgba(22,25,28,.7)'; ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.ellipse(px(rect, XC), py(rect, YC), (S.pinch / XD) * rect.w, (S.pinch / YD) * rect.h, 0, 0, 6.284);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(22,25,28,.6)';
+    ctx.font = '10px "IBM Plex Sans", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('salt', px(rect, XC), py(rect, YC));
     ctx.restore();
   }
 
-  function crosshair(ctx, rect) {
-    const x = rect.x + S.px * rect.w, y = rect.y + S.py * rect.h;
+  // a contour, walked row by row: enough for one smooth closed level
+  function contour(ctx, rect, valueAt, level, color, dash, width) {
     ctx.save();
-    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.4;
-    ctx.setLineDash([5, 4]);
-    ctx.beginPath(); ctx.moveTo(x, rect.y); ctx.lineTo(x, rect.y + rect.h); ctx.stroke();
+    ctx.strokeStyle = color; ctx.lineWidth = width || 1.6;
+    if (dash) ctx.setLineDash(dash);
+    ctx.beginPath();
+    const N = 260;
+    for (let iy = 0; iy <= N; iy++) {
+      const y = ((iy + 0.5) / N) * YD;
+      let prev = null;
+      for (let ix = 0; ix <= N; ix++) {
+        const x = ((ix + 0.5) / N) * XD;
+        const v = valueAt(x, y);
+        if (prev !== null && (prev.v - level) * (v - level) < 0) {
+          const f = (level - prev.v) / (v - prev.v);
+          const xc = prev.x + (x - prev.x) * f;
+          ctx.moveTo(px(rect, xc), py(rect, y) - 0.9);
+          ctx.lineTo(px(rect, xc), py(rect, y) + 0.9);
+        }
+        prev = { x, v };
+      }
+    }
+    ctx.stroke(); ctx.restore();
+  }
+
+  function overlays(ctx, rect, which) {
+    if (S.tune && CACHE.ringR !== null && (which === 'thk' || which === 'amp')) {
+      contour(ctx, rect, (x, y) => thicknessAt(x, y), CACHE.tunH, CRIMSON, null, 2);
+    }
+    if (S.con && S.fluid === 'gas' && (which === 'str' || which === 'amp')) {
+      contour(ctx, rect, (x, y) => (thicknessAt(x, y) > 0.5 ? depthAt(x, y) : 1e9),
+              S.contact, '#16191C', null, 2);
+    }
+    salt(ctx, rect);
+    // section line and crosshair
+    const cx = px(rect, S.px * XD), cy = py(rect, S.py * YD);
+    ctx.save();
+    ctx.strokeStyle = TEAL; ctx.lineWidth = 1.3; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(rect.x, cy); ctx.lineTo(rect.x + rect.w, cy); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(x - 7, y); ctx.lineTo(x + 7, y); ctx.stroke();
-    ctx.beginPath(); ctx.arc(x, y, 4, 0, 6.284); ctx.stroke();
+    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(cx, cy, 4.5, 0, 6.284); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 8, cy); ctx.stroke();
     ctx.restore();
   }
 
   function drawMap(id, which, L) {
-    const w = L.each, h = clamp(Math.round(w * 0.55), 200, 330);
+    const w = L.each, h = clamp(Math.round(w * 0.62), 190, 300);
     const ctx = SEIS.fitCanvas($(id), w, h);
     ctx.clearRect(0, 0, w, h);
-    const m = { l: 50, r: 12, t: 8, b: 40 };
+    const m = { l: 48, r: 10, t: 8, b: 40 };
     const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
-    const { G, thk, amp, inf, err, tunA } = CACHE;
+    const { thk, dep, amp } = CACHE;
+    const present = (i) => thk[i] > 0.5;
 
     if (which === 'thk') {
-      drawGrid(ctx, rect, thk, NXM, NYM, THICK, 0, Math.max(S.hmax, 1));
-    } else if (S.mode === 'amp') {
-      let mx = 1e-9; for (let i = 0; i < amp.length; i++) mx = Math.max(mx, amp[i]);
-      drawGrid(ctx, rect, amp, NXM, NYM, AMP, 0, mx);
-    } else if (S.mode === 'inf') {
-      drawGrid(ctx, rect, inf, NXM, NYM, THICK, 0, Math.max(S.hmax, 1));
+      grid(ctx, rect, thk, COOL, 0, Math.max(S.hmax, 1), present);
+    } else if (which === 'str') {
+      let lo = 1e9, hi = -1e9;
+      for (let i = 0; i < dep.length; i++) { lo = Math.min(lo, dep[i]); hi = Math.max(hi, dep[i]); }
+      // shallow is bright, the way a structure map is usually shown
+      grid(ctx, rect, dep, (u) => COOL(1 - u), lo, hi, null);
     } else {
-      let mx = 1e-9; for (let i = 0; i < err.length; i++) mx = Math.max(mx, Math.abs(err[i]));
-      drawGrid(ctx, rect, err, NXM, NYM, ERR, -mx, mx);
+      let mx = 1e-9;
+      for (let i = 0; i < amp.length; i++) mx = Math.max(mx, amp[i]);
+      grid(ctx, rect, amp, SEIS.SEQMAPS[S.cmap], 0, mx, present);
     }
-    tuningContour(ctx, rect);
-    crosshair(ctx, rect);
+    overlays(ctx, rect, which);
     SEIS.frame(ctx, rect);
-    SEIS.axisBottom(ctx, rect, 0, uL(G.XD), 'Distance (' + U().lab + ')', (v) => v.toFixed(0));
-    SEIS.axisLeft(ctx, rect, 0, uL(G.YD), '', (v) => v.toFixed(0));
-    CACHE[which === 'thk' ? 'thkRect' : 'ampRect'] = rect;
-    CACHE.mapH = h;
+    SEIS.axisBottom(ctx, rect, 0, uL(XD), 'Distance (' + U().lab + ')', (v) => v.toFixed(0), { ticks: 3 });
+    SEIS.axisLeft(ctx, rect, 0, uL(YD), '', (v) => v.toFixed(0), { ticks: 3 });
+    CACHE[which + 'Rect'] = rect;
   }
 
   function drawSection(L) {
-    const w = L.each, h = 250;
+    const w = L.each, h = 260;
     const ctx = SEIS.fitCanvas($('secCanvas'), w, h);
     ctx.clearRect(0, 0, w, h);
-    const m = { l: 54, r: 12, t: 8, b: 40 };
+    const m = { l: 56, r: 12, t: 10, b: 42 };
     const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
-    const { G, R, wav, tunH } = CACHE;
+    const { wav } = CACHE;
 
-    const NY = 220, NT = 240;
-    const tTop = 0.040;
-    const tEnd = tTop + 2 * S.hmax / S.v + 3.2 / S.f;
-    const dt = tEnd / NT;
-    const fld = new Float32Array(NY * NT);
-    const hs = [];
-    for (let iy = 0; iy < NY; iy++) {
-      const fy = (iy + 0.5) / NY;
-      const hh = thicknessAt(S.px, fy, G);
-      hs.push(hh);
-      const sp = hh > 0.01
-        ? [{ t: tTop, r: R.r1 }, { t: tTop + 2 * hh / S.v, r: R.r2 }]
-        : [];
-      if (sp.length) fld.set(SEIS.traceFromSpikes(sp, 0, dt, NT, wav), iy * NT);
+    const y = S.py * YD;
+    const NXs = 200, NT = 260;
+    // a time window that follows the structure along the line
+    let tMin = 1e9, tMax = -1e9;
+    for (let i = 0; i < NXs; i++) {
+      const x = ((i + 0.5) / NXs) * XD;
+      const tt = 2 * depthAt(x, y) / S.v;
+      tMin = Math.min(tMin, tt); tMax = Math.max(tMax, tt + 2 * thicknessAt(x, y) / S.v);
     }
-    const clip = Math.max(Math.abs(R.r1), Math.abs(R.r2)) * 1.6;
-    SEIS.drawVarDensity(ctx, fld, NY, NT, rect, { cmap: SEIS.COLORMAPS[S.cmap], clip });
+    const pad = 3 / S.f;
+    const t0 = tMin - pad, t1 = tMax + pad, dt = (t1 - t0) / NT;
 
-    // the true channel body, drawn over the seismic
-    ctx.save();
-    ctx.strokeStyle = 'rgba(22,25,28,.85)'; ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    hs.forEach((hh, iy) => {
-      const x = rect.x + (iy / (NY - 1)) * rect.w;
-      const y = rect.y + (tTop / tEnd) * rect.h;
-      iy === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    ctx.beginPath();
-    hs.forEach((hh, iy) => {
-      const x = rect.x + (iy / (NY - 1)) * rect.w;
-      const y = rect.y + ((tTop + 2 * hh / S.v) / tEnd) * rect.h;
-      iy === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.stroke(); ctx.restore();
+    const fld = new Float32Array(NXs * NT);
+    for (let i = 0; i < NXs; i++) {
+      const x = ((i + 0.5) / NXs) * XD;
+      const hh = thicknessAt(x, y);
+      if (hh <= 0.5) continue;
+      const R = ROCK[isGas(x, y) ? 'gas' : 'brine'];
+      const tt = 2 * depthAt(x, y) / S.v;
+      const sp = [{ t: tt, r: R.r1 }, { t: tt + 2 * hh / S.v, r: R.r2 }];
+      fld.set(SEIS.traceFromSpikes(sp, t0, dt, NT, wav), i * NT);
+    }
+    SEIS.drawVarDensity(ctx, fld, NXs, NT, rect, { cmap: SEIS.COLORMAPS.bwr, clip: 0.26 });
 
-    // where the section crosses tuning thickness
-    if (S.tune) {
-      hs.forEach((hh, iy) => {
-        if (iy === 0) return;
-        if ((hs[iy - 1] - tunH) * (hh - tunH) < 0) {
-          const x = rect.x + (iy / (NY - 1)) * rect.w;
-          SEIS.dashedLine(ctx, x, rect.y, x, rect.y + rect.h, 'rgba(22,25,28,.75)', [4, 3], 1.2);
-        }
+    // the true top and base of the sand
+    const yOf = (t) => rect.y + ((t - t0) / (t1 - t0)) * rect.h;
+    [['top', 0], ['base', 1]].forEach(([, isBase]) => {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(22,25,28,.8)'; ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      let pen = false;
+      for (let i = 0; i < NXs; i++) {
+        const x = ((i + 0.5) / NXs) * XD, hh = thicknessAt(x, y);
+        if (hh <= 0.5) { if (pen) { ctx.stroke(); ctx.beginPath(); pen = false; } continue; }
+        const tt = 2 * depthAt(x, y) / S.v + (isBase ? 2 * hh / S.v : 0);
+        const xx = rect.x + (x / XD) * rect.w;
+        pen ? ctx.lineTo(xx, yOf(tt)) : ctx.moveTo(xx, yOf(tt));
+        pen = true;
+      }
+      ctx.stroke(); ctx.restore();
+    });
+
+    // the contact: flat and level, which is the whole point
+    if (S.fluid === 'gas' && S.con) {
+      const tC = 2 * S.contact / S.v;
+      SEIS.dashedLine(ctx, rect.x, yOf(tC), rect.x + rect.w, yOf(tC), '#16191C', [6, 4], 1.8);
+      SEIS.tag(ctx, rect.x + 5, yOf(tC) - 9, 'contact — flat', '#16191C');
+    }
+    if (S.tune && CACHE.ringR !== null) {
+      [XC - CACHE.ringR, XC + CACHE.ringR].forEach((xr) => {
+        if (xr < 0 || xr > XD) return;
+        const xx = rect.x + (xr / XD) * rect.w;
+        SEIS.dashedLine(ctx, xx, rect.y, xx, rect.y + rect.h, CRIMSON, [4, 3], 1.6);
       });
     }
-    const cy = rect.x + S.py * rect.w;
+    const cx = rect.x + S.px * rect.w;
     ctx.save();
-    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.moveTo(cy, rect.y); ctx.lineTo(cy, rect.y + rect.h); ctx.stroke();
+    ctx.strokeStyle = TEAL; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
     ctx.restore();
 
     SEIS.frame(ctx, rect);
-    SEIS.axisBottom(ctx, rect, 0, uL(G.YD), 'Across the channel (' + U().lab + ')', (v) => v.toFixed(0));
-    SEIS.axisLeft(ctx, rect, 0, tEnd * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
+    SEIS.axisBottom(ctx, rect, 0, uL(XD), 'Distance (' + U().lab + ')', (v) => v.toFixed(0), { ticks: 4 });
+    SEIS.axisLeft(ctx, rect, t0 * 1000, t1 * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
   }
 
   function drawCurve(L) {
-    const w = L.each, h = 250;
+    const w = L.each, h = 260;
     const ctx = SEIS.fitCanvas($('curveCanvas'), w, h);
     ctx.clearRect(0, 0, w, h);
-    const m = { l: 54, r: 12, t: 8, b: 40 };
+    const m = { l: 56, r: 12, t: 10, b: 42 };
     const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
     ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
-    const { lut, hTop, tunH, tunA, ampOf, G } = CACHE;
+    const { luts, hTop, tunH, ampOf } = CACHE;
 
-    const hShow = Math.min(hTop, Math.max(S.hmax * 1.25, tunH * 3));
+    const hShow = Math.min(hTop, Math.max(S.hmax * 1.2, tunH * 2.6));
+    let aMax = 1e-9;
+    for (let i = 0; i <= NLUT; i++) {
+      if ((i / NLUT) * hTop > hShow) break;
+      aMax = Math.max(aMax, luts.gas[i], luts.brine[i]);
+    }
     const xOf = (hh) => rect.x + (hh / hShow) * rect.w;
-    const yOf = (a) => rect.y + rect.h - (a / (tunA * 1.12)) * rect.h;
+    const yOf = (a) => rect.y + rect.h - (a / (aMax * 1.1)) * rect.h;
 
-    // the band of thicknesses the channel actually contains
     ctx.save();
-    ctx.fillStyle = 'rgba(56,133,158,.16)';
+    ctx.fillStyle = 'rgba(11,114,133,.12)';
     ctx.fillRect(xOf(0), rect.y, xOf(Math.min(S.hmax, hShow)) - xOf(0), rect.h);
     ctx.restore();
+    if (S.tune) SEIS.dashedLine(ctx, xOf(tunH), rect.y, xOf(tunH), rect.y + rect.h, CRIMSON, [4, 3], 1.4);
 
-    if (S.tune) SEIS.dashedLine(ctx, xOf(tunH), rect.y, xOf(tunH), rect.y + rect.h, 'rgba(22,25,28,.75)', [4, 3], 1.3);
+    [['brine', SLATE, 2], ['gas', CRIMSON, 2.4]].forEach(([k, col, wid]) => {
+      if (k === 'gas' && S.fluid !== 'gas') return;
+      ctx.save();
+      ctx.strokeStyle = col; ctx.lineWidth = wid; ctx.beginPath();
+      for (let i = 0; i <= NLUT; i++) {
+        const hh = (i / NLUT) * hTop;
+        if (hh > hShow) break;
+        const x = xOf(hh), yy = yOf(luts[k][i]);
+        i === 0 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy);
+      }
+      ctx.stroke(); ctx.restore();
+    });
 
-    ctx.save();
-    ctx.strokeStyle = CRIMSON; ctx.lineWidth = 2.2; ctx.beginPath();
-    for (let i = 0; i <= NLUT; i++) {
-      const hh = (i / NLUT) * hTop;
-      if (hh > hShow) break;
-      const x = xOf(hh), y = yOf(lut[i]);
-      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    }
-    ctx.stroke(); ctx.restore();
-
-    // the crosshair point, and the other thickness that shares its amplitude
-    const hProbe = thicknessAt(S.px, S.py, CACHE.G);
-    const aProbe = ampOf(hProbe);
-    if (hProbe > 0.01) {
-      SEIS.dashedLine(ctx, rect.x, yOf(aProbe), rect.x + rect.w, yOf(aProbe), 'rgba(92,102,112,.8)', [3, 3], 1.2);
-      const alt = otherThickness(hProbe);
-      [[hProbe, CRIMSON], [alt, OCHRE]].forEach(([hh, col]) => {
-        if (hh === null || hh === undefined || hh > hShow) return;
-        ctx.save();
-        ctx.fillStyle = col;
-        ctx.beginPath(); ctx.arc(xOf(hh), yOf(ampOf(hh)), 4.5, 0, 6.284); ctx.fill();
-        ctx.restore();
-      });
+    const hP = thicknessAt(S.px * XD, S.py * YD);
+    if (hP > 0.5 && hP <= hShow) {
+      const k = isGas(S.px * XD, S.py * YD) ? 'gas' : 'brine';
+      ctx.save();
+      ctx.fillStyle = k === 'gas' ? CRIMSON : SLATE;
+      ctx.beginPath(); ctx.arc(xOf(hP), yOf(ampOf(hP, k)), 4.5, 0, 6.284); ctx.fill();
+      ctx.restore();
     }
 
     SEIS.frame(ctx, rect);
-    SEIS.axisBottom(ctx, rect, 0, uL(hShow), 'Bed thickness (' + U().lab + ')', (v) => v.toFixed(0));
-    SEIS.axisLeft(ctx, rect, 0, tunA * 1.12, 'Amplitude', (v) => v.toFixed(2), { flip: true });
+    SEIS.axisBottom(ctx, rect, 0, uL(hShow), 'Sand thickness (' + U().lab + ')', (v) => v.toFixed(0));
+    SEIS.axisLeft(ctx, rect, 0, aMax * 1.1, 'Amplitude', (v) => v.toFixed(2), { flip: true });
   }
 
-  /* ------------------------------ readouts ----------------------------- */
+  /* ------------------------------- readouts ---------------------------- */
 
   function updateLegend() {
-    const modes = { amp: 'Amplitude extraction', inf: 'Inferred thickness', err: 'Error in the inferred map' };
-    const notes = {
-      amp: 'what the seismic hands you',
-      inf: 'amplitude read as thickness the usual way',
-      err: 'inferred minus true — blue too thin, red too thick',
-    };
-    $('rightLabel').textContent = modes[S.mode];
-    $('rightNote').textContent = notes[S.mode];
-    $('modeNote').textContent = {
-      amp: 'The amplitude extraction, exactly as it would come off the horizon.',
-      inf: 'Thickness read straight off amplitude, the way it is usually done.',
-      err: 'How far that reading is from the truth, cell by cell.',
-    }[S.mode];
-    $('mapLegend').innerHTML =
-      '<span><i style="border-color:' + CRIMSON + ';border-top-style:dashed"></i>crosshair and section line</span>' +
-      (S.tune ? '<span><i style="border-color:#16191C;border-top-style:dashed"></i>thickness = tuning</span>' : '');
-    $('curveLegend').innerHTML =
-      '<span><i style="border-color:' + CRIMSON + '"></i>tuning curve</span>' +
-      '<span><i style="border-color:' + CRIMSON + '"></i>thickness at the crosshair</span>' +
-      '<span><i style="border-color:' + OCHRE + '"></i>the other thickness that fits</span>' +
-      '<span><i class="sw" style="background:rgba(56,133,158,.35)"></i>range present in the channel</span>';
+    const bits = [];
+    if (S.tune) bits.push('<span><i style="border-color:' + CRIMSON + '"></i>tuning ring — a thickness contour</span>');
+    if (S.con && S.fluid === 'gas') bits.push('<span><i style="border-color:#16191C"></i>fluid contact — a structural contour</span>');
+    bits.push('<span><i style="border-color:' + TEAL + ';border-top-style:dashed"></i>section line</span>');
+    $('mapLegend').innerHTML = bits.join('');
+    $('secLegend').innerHTML =
+      '<span><i style="border-color:#5C6670"></i>brine sand</span>' +
+      (S.fluid === 'gas' ? '<span><i style="border-color:' + CRIMSON + '"></i>gas sand</span>' : '') +
+      '<span><i style="border-color:#16191C"></i>true top and base of the sand</span>';
+    $('ampNote').textContent = S.fluid === 'gas'
+      ? 'a tuning ring and a fluid, together' : 'brine everywhere — so what is the rim?';
   }
 
   function updateStats() {
-    const { lam, tunH, ampOf, tunA, above, inside, maxErr, calH, calA, sameSign } = CACHE;
+    const { lam, tunH, ringR, ampOf } = CACHE;
     $('rLam').textContent = fmtL(lam);
-    $('rTune').textContent = sameSign ? fmtL(lam / 4) + ' (λ/4)' : fmtL(tunH, 1) + ' = λ/' + (lam / tunH).toFixed(1);
-    $('rHmax').textContent = fmtL(S.hmax);
-    $('rAbove').textContent = inside ? (100 * above / inside).toFixed(0) + '% of the channel' : '—';
+    $('rTune').textContent = fmtL(tunH, 1);
+    $('rRing').textContent = ringR === null
+      ? 'nowhere — the sand never reaches tuning thickness'
+      : fmtL(ringR) + ' from the dome centre';
 
-    const h = thicknessAt(S.px, S.py, CACHE.G);
-    const a = ampOf(h);
-    $('rTrue').textContent = h > 0.01 ? fmtL(h, 1) : 'outside the channel';
-    $('rAmp').textContent = h > 0.01 ? (a / tunA).toFixed(2) + ' of peak' : '—';
-    const hi = (a / Math.max(calA, 1e-9)) * calH;
-    $('rInf').textContent = h > 0.01 ? fmtL(hi, 1) : '—';
-    const alt = h > 0.01 ? otherThickness(h) : null;
-    $('rAlt').textContent = alt !== null && alt !== undefined ? fmtL(alt, 1) : 'nothing else';
+    const x = S.px * XD, y = S.py * YD;
+    const h = thicknessAt(x, y), z = depthAt(x, y), g = isGas(x, y);
+    $('rThk').textContent = h > 0.5 ? fmtL(h, 1) : 'sand absent — on the salt';
+    $('rDep').textContent = fmtL(z);
+    $('rFlu').textContent = h <= 0.5 ? '—' : (g ? 'gas' : 'brine');
+    const a = h > 0.5 ? ampOf(h, g ? 'gas' : 'brine') : 0;
+    const aTune = ampOf(tunH, 'brine');
+    $('rAmp').textContent = h > 0.5 ? (a / aTune).toFixed(2) + ' of the brine tuning peak' : '—';
 
-    if (h <= 0.01) {
-      $('rVerdict').textContent = 'Crosshair is off the channel. Click inside it to compare.';
+    if (h <= 0.5) {
+      $('rVerdict').textContent = 'Crosshair is on the salt, where there is no sand. Move it out into the basin.';
       return;
     }
-    const err = hi - h;
-    $('rVerdict').textContent = h > tunH
-      ? 'Above tuning — amplitude falls as the bed thickens, so the map reads ' +
-        fmtL(Math.abs(err), 1) + ' too thin here'
-      : Math.abs(err) < 0.08 * Math.max(h, 1)
-        ? 'Below tuning — amplitude tracks thickness and the map is about right here'
-        : 'Below tuning, but near enough to the peak that the map is already off by ' + fmtL(Math.abs(err), 1);
+    const nearTune = Math.abs(h - tunH) < 0.18 * tunH;
+    $('rVerdict').textContent = g && nearTune
+      ? 'Both at once here — gas sand that also happens to be near tuning thickness. This is the ' +
+        'combination that makes prospects look far better than they are'
+      : g
+        ? 'Gas here, away from tuning. The brightness is a fluid effect, and its limit will follow structure'
+        : nearTune
+          ? 'Brine here, at tuning thickness. Everything bright about this spot is interference — same ' +
+            'sand, same water, no hydrocarbon anywhere'
+          : 'Brine, away from tuning. This is the dull background the rim stands out against';
   }
 
-  /* ---------------------------- interaction ---------------------------- */
+  /* ----------------------------- interaction --------------------------- */
 
-  function attachPick(id, rectKey) {
+  function attachPick(id, key) {
     const c = $(id);
     const go = (ev) => {
-      const r = c.getBoundingClientRect(), q = CACHE[rectKey];
+      const r = c.getBoundingClientRect(), q = CACHE[key];
       if (!q) return;
       S.px = clamp((ev.clientX - r.left - q.x) / q.w, 0, 1);
       S.py = clamp((ev.clientY - r.top - q.y) / q.h, 0, 1);
@@ -678,15 +704,15 @@
     c.addEventListener('pointercancel', () => { down = false; });
   }
 
-  /* ------------------------------ plumbing ----------------------------- */
+  /* ------------------------------- plumbing ---------------------------- */
 
   function render() {
-    const L1 = layout('thkCanvas');
-    const cols = $('mapRow').querySelectorAll('.panel-col');
-    cols.forEach((c) => { c.style.width = L1.each + 'px'; });
+    const L1 = layout('thkCanvas', 3);
+    $('mapRow').querySelectorAll('.panel-col').forEach((c) => { c.style.width = L1.each + 'px'; });
     drawMap('thkCanvas', 'thk', L1);
+    drawMap('strCanvas', 'str', L1);
     drawMap('ampCanvas', 'amp', L1);
-    const L2 = layout('secCanvas');
+    const L2 = layout('secCanvas', 2);
     $('secCanvas').parentElement.style.width = L2.each + 'px';
     $('curveCanvas').parentElement.style.width = L2.each + 'px';
     drawSection(L2); drawCurve(L2);
@@ -696,42 +722,43 @@
 
   function syncLabels() {
     $('hmaxV').textContent = fmtL(S.hmax);
-    $('widV').textContent = fmtL(S.wid);
-    $('sinuV').textContent = fmtL(S.sinu);
-    $('taperV').textContent = S.taper + '%';
+    $('taperV').textContent = fmtL(S.taper);
+    $('pinchV').textContent = fmtL(S.pinch);
+    $('reliefV').textContent = fmtL(S.relief);
+    $('dipV').textContent = S.dip + (S.units === 'm' ? ' m/km' : ' ft/kft');
+    $('contactV').textContent = fmtL(S.contact);
     $('freqV').textContent = S.f + ' Hz';
     $('velV').textContent = Math.round(uL(S.v)) + ' ' + U().vlab;
-    $('snrV').textContent = S.snr <= 0 ? 'clean' : S.snr.toFixed(1) + ' : 1';
-    $('mAmp').setAttribute('aria-pressed', S.mode === 'amp');
-    $('mInf').setAttribute('aria-pressed', S.mode === 'inf');
-    $('mErr').setAttribute('aria-pressed', S.mode === 'err');
+    $('fBrine').setAttribute('aria-pressed', S.fluid === 'brine');
+    $('fGas').setAttribute('aria-pressed', S.fluid === 'gas');
   }
   function pushToInputs() {
-    $('hmax').value = S.hmax; $('wid').value = S.wid; $('sinu').value = S.sinu;
-    $('taper').value = S.taper; $('freq').value = S.f; $('vel').value = S.v;
-    $('snr').value = S.snr; $('rocks').value = S.rocks;
-    $('cmap').value = S.cmap; $('units').value = S.units; $('showTune').checked = S.tune;
+    $('hmax').value = S.hmax; $('taper').value = S.taper; $('pinch').value = S.pinch;
+    $('relief').value = S.relief; $('dip').value = S.dip; $('contact').value = S.contact;
+    $('freq').value = S.f; $('vel').value = S.v;
+    $('cmap').value = S.cmap; $('units').value = S.units;
+    $('showTune').checked = S.tune; $('showCon').checked = S.con;
   }
   function bump() { syncLabels(); refresh(); }
 
   const slide = (id, key) => $(id).addEventListener('input', () => {
     S[key] = parseFloat($(id).value); bump();
   });
-  slide('hmax', 'hmax'); slide('wid', 'wid'); slide('sinu', 'sinu');
-  slide('taper', 'taper'); slide('freq', 'f'); slide('vel', 'v'); slide('snr', 'snr');
+  slide('hmax', 'hmax'); slide('taper', 'taper'); slide('pinch', 'pinch');
+  slide('relief', 'relief'); slide('dip', 'dip'); slide('contact', 'contact');
+  slide('freq', 'f'); slide('vel', 'v');
 
-  const toggle = (id, val) => $(id).addEventListener('click', () => { S.mode = val; bump(); });
-  toggle('mAmp', 'amp'); toggle('mInf', 'inf'); toggle('mErr', 'err');
-
-  $('rocks').addEventListener('change', () => { S.rocks = $('rocks').value; bump(); });
+  $('fBrine').addEventListener('click', () => { S.fluid = 'brine'; bump(); });
+  $('fGas').addEventListener('click', () => { S.fluid = 'gas'; bump(); });
   $('cmap').addEventListener('change', () => { S.cmap = $('cmap').value; bump(); });
   $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
-  $('showTune').addEventListener('change', () => { S.tune = $('showTune').checked; bump(); });
+  $('showTune').addEventListener('change', () => { S.tune = $('showTune').checked; render(); });
+  $('showCon').addEventListener('change', () => { S.con = $('showCon').checked; render(); });
   $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
   $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
-  $('pngBtn').addEventListener('click', () => SEIS.savePNG($('ampCanvas'), 'amplitude-extraction'));
 
   attachPick('thkCanvas', 'thkRect');
+  attachPick('strCanvas', 'strRect');
   attachPick('ampCanvas', 'ampRect');
 
   let rt;
