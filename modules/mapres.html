@@ -68,9 +68,9 @@
       <h2>Migration</h2>
       <div class="ctl">
         <div class="seg" role="group" aria-label="Migration state">
-          <button type="button" id="mNone" aria-pressed="false">None</button>
+          <button type="button" id="mNone" aria-pressed="true">Unmigrated</button>
           <button type="button" id="m2D" aria-pressed="false">2D</button>
-          <button type="button" id="m3D" aria-pressed="true">3D</button>
+          <button type="button" id="m3D" aria-pressed="false">3D</button>
         </div>
       </div>
       <div class="ctl">
@@ -140,7 +140,13 @@
     <div class="tryit">
       <h3>Try this</h3>
       <ol>
-        <li><b>Compare the two maps before touching anything.</b> Where does the channel stop in each?
+        <li><b>Look at what you are given before touching anything.</b> The page opens on unmigrated data,
+          which is where every survey starts.
+          <span class="ans">The channel is a broad smudge. You could tell somebody a channel runs through
+            here and roughly which way, and almost nothing else — not where it ends, not that it forks at
+            all. Now press <b>3D</b>. That one step is the difference between a smudge and a map, and it is
+            worth remembering that this is what the data looked like before somebody did it for you.</span></li>
+        <li><b>With 3D on, compare the two maps.</b> Where does the channel stop in each?
           <span class="ans">The imaged channel fades out well before the real one does. Everything downstream
             of that point is still sand, still the same thickness, and completely absent from your map. If
             you were mapping the extent of a reservoir from this, you would draw the boundary in the wrong
@@ -151,10 +157,6 @@
             they close until the trough between them fills in, and from there back to the split they image as
             one wide channel. The map shows a single channel that forks once, when in fact it forks much
             earlier.</span></li>
-        <li><b>Turn migration off.</b>
-          <span class="ans">The Fresnel zone is hundreds of meters across, so almost the whole channel system
-            smears into a single broad smudge. This is what interpreters were working with before migration
-            was routine, and it is worth remembering when you look at an old map.</span></li>
         <li><b>Take it deeper.</b> Move the channel from 1.2 s to 3 s.
           <span class="ans">Resolution worsens and the apparent end of the channel marches upstream. The same
             body, unchanged, gets shorter on the map as it gets deeper. Comparing feature sizes between a
@@ -239,7 +241,7 @@
 
   const DEF = {
     w0: 900, wend: 0, div: 700,
-    t0: 1.8, f: 22, v: 3000, ap: 1200, mig: '3d',
+    t0: 1.8, f: 22, v: 3000, ap: 1200, mig: 'none',
     end: true, truth: true, units: 'm', px: 0.72,
   };
   let S = SEIS.readState(DEF);
@@ -250,6 +252,14 @@
 
   const NX = 256, NY = 128;      // powers of two, for the FFT
   const FSPLIT = 0.34;           // where the trunk divides
+  // The channel used to begin abruptly a little way in from the left. A hard
+  // edge like that rings when the image is band-limited, which is what put the
+  // vertical banding across the upstream end, and because the transform is
+  // circular the same edge wrapped round and interfered from the right too.
+  // The model now starts at the very left of the grid and fades in inside a
+  // margin that is never displayed, so the channel just runs off the side.
+  const FX0 = 0.17;              // display starts here; left of it is margin
+  const EDGE_W = 0.075;          // the model fades in over this much of the grid
   // Calibrated so that two features exactly one resolution length apart are on
   // the point of separating. A textbook Rayleigh cutoff of 0.61/res puts the
   // split at 1.16 times the stated number, which would make the panel and the
@@ -279,13 +289,20 @@
 
   // trunk width, and the two branch centrelines and widths, at a position along
   // the map. Returns null upstream or downstream of the body.
+  // amplitude taper inside the hidden margin, so nothing has a hard edge
+  function edgeRamp(fx) {
+    if (fx <= 0) return 0;
+    if (fx >= EDGE_W) return 1;
+    return 0.5 - 0.5 * Math.cos(Math.PI * fx / EDGE_W);
+  }
+
   function shapeAt(fx, D) {
-    if (fx < 0.04 || fx > 0.985) return null;
+    if (fx < 0 || fx > 0.985) return null;
     // a gentle meander, so the body reads as a channel rather than a wedge
     const yc = D.YD / 2 + 0.085 * D.YD * Math.sin(2 * Math.PI * fx * 1.25);
     const wSplit = Math.max(S.wend * 2.4, S.w0 * 0.62);
     if (fx < FSPLIT) {
-      const t = (fx - 0.04) / (FSPLIT - 0.04);
+      const t = fx / FSPLIT;
       return { kind: 'trunk', lines: [{ y: yc, w: S.w0 + (wSplit - S.w0) * t }] };
     }
     // Each branch starts half the trunk width and already half-offset, so the
@@ -302,7 +319,7 @@
     const s = shapeAt(fx, D);
     if (!s) return 0;
     const y = fy * D.YD;
-    for (const L of s.lines) if (Math.abs(y - L.y) <= L.w / 2) return 1;
+    for (const L of s.lines) if (Math.abs(y - L.y) <= L.w / 2) return edgeRamp(fx);
     return 0;
   }
 
@@ -409,7 +426,12 @@
       splitFx = fx;
     }
 
-    CACHE = { D, R, truth, img, endFx, trueEndFx, splitFx, sample };
+    // everything reported is in display coordinates, measured from the left
+    // edge of what the student can actually see
+    const ix0 = Math.round(FX0 * NX);
+    const toDisp = (fx) => (fx === null ? null : (fx - FX0) * D.XD);
+    CACHE = { D, R, truth, img, endFx, trueEndFx, splitFx, sample, ix0, toDisp,
+              dispW: (1 - FX0) * D.XD };
   }
 
   function twoPeaks(p) {
@@ -443,16 +465,20 @@
     const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
     const { D, endFx, splitFx } = CACHE;
 
+    const ix0 = CACHE.ix0, NXD = NX - ix0;
     const off = document.createElement('canvas');
-    off.width = NX; off.height = NY;
+    off.width = NXD; off.height = NY;
     const octx = off.getContext('2d');
-    const img = octx.createImageData(NX, NY);
+    const img = octx.createImageData(NXD, NY);
     let mx = 1e-9;
     for (let i = 0; i < data.length; i++) mx = Math.max(mx, data[i]);
-    for (let i = 0; i < NX * NY; i++) {
-      const c = shade(data[i] / mx);
-      img.data[i * 4] = c[0]; img.data[i * 4 + 1] = c[1];
-      img.data[i * 4 + 2] = c[2]; img.data[i * 4 + 3] = 255;
+    for (let iy = 0; iy < NY; iy++) {
+      for (let ix = 0; ix < NXD; ix++) {
+        const c = shade(data[iy * NX + ix + ix0] / mx);
+        const q = iy * NXD + ix;
+        img.data[q * 4] = c[0]; img.data[q * 4 + 1] = c[1];
+        img.data[q * 4 + 2] = c[2]; img.data[q * 4 + 3] = 255;
+      }
     }
     octx.putImageData(img, 0, 0);
     ctx.save();
@@ -469,13 +495,14 @@
         [0, 1].forEach((branch) => {
           ctx.beginPath();
           let pen = false;
-          for (let i = 0; i < NX; i++) {
+          for (let i = CACHE.ix0; i < NX; i++) {
             const fx = (i + 0.5) / NX;
             const s = shapeAt(fx, D);
             if (!s) { if (pen) { ctx.stroke(); pen = false; } continue; }
             const Lline = s.lines[Math.min(branch, s.lines.length - 1)];
             const y = Lline.y + side * Lline.w / 2;
-            const px = rect.x + fx * rect.w, py = rect.y + (y / D.YD) * rect.h;
+            const px = rect.x + ((fx - FX0) / (1 - FX0)) * rect.w;
+            const py = rect.y + (y / D.YD) * rect.h;
             pen ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
             pen = true;
           }
@@ -487,25 +514,25 @@
 
     if (S.end && isImg) {
       if (endFx !== null) {
-        const x = rect.x + endFx * rect.w;
+        const x = rect.x + ((endFx - FX0) / (1 - FX0)) * rect.w;
         SEIS.dashedLine(ctx, x, rect.y, x, rect.y + rect.h, CRIMSON, [5, 4], 1.8);
         SEIS.tag(ctx, x + 4, rect.y + 11, 'looks like it ends', CRIMSON);
       }
       if (splitFx !== null) {
-        const x = rect.x + splitFx * rect.w;
+        const x = rect.x + ((splitFx - FX0) / (1 - FX0)) * rect.w;
         SEIS.dashedLine(ctx, x, rect.y, x, rect.y + rect.h, OCHRE, [3, 3], 1.5);
         SEIS.tag(ctx, x + 4, rect.y + rect.h - 11, 'two from here on', OCHRE);
       }
     }
 
-    const sx = rect.x + S.px * rect.w;
+    const sx = rect.x + ((S.px - FX0) / (1 - FX0)) * rect.w;
     ctx.save();
     ctx.strokeStyle = TEAL; ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.moveTo(sx, rect.y); ctx.lineTo(sx, rect.y + rect.h); ctx.stroke();
     ctx.restore();
 
     SEIS.frame(ctx, rect);
-    SEIS.axisBottom(ctx, rect, 0, uL(D.XD), 'Distance (' + U().lab + ')', (v) => v.toFixed(0));
+    SEIS.axisBottom(ctx, rect, 0, uL(CACHE.dispW), 'Distance (' + U().lab + ')', (v) => v.toFixed(0));
     SEIS.axisLeft(ctx, rect, 0, uL(D.YD), '', (v) => v.toFixed(0));
     CACHE[isImg ? 'imgRect' : 'trueRect'] = rect;
   }
@@ -520,7 +547,7 @@
     ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
     const { D, img, truth } = CACHE;
 
-    const ix = clamp(Math.round(S.px * NX - 0.5), 0, NX - 1);
+    const ix = clamp(Math.round(S.px * NX - 0.5), CACHE.ix0, NX - 1);
     const tp = [], ip = [];
     let mx = 1e-9;
     for (let iy = 0; iy < NY; iy++) { tp.push(truth[iy * NX + ix]); const v = img[iy * NX + ix]; ip.push(v); mx = Math.max(mx, v); }
@@ -576,9 +603,10 @@
     $('rFres').textContent = fmtL(2 * R.fres);
     $('rRes').textContent = S.mig === '2d'
       ? fmtL(R.inl) + ' \u00d7 ' + fmtL(R.crs) : fmtL(R.inl);
-    $('rEnd').textContent = endFx === null ? 'it does not fade out' : fmtL(endFx * D.XD);
-    $('rTrueEnd').textContent = fmtL(trueEndFx * D.XD);
-    $('rSplit').textContent = splitFx === null ? 'never — they read as one channel' : fmtL(splitFx * D.XD);
+    $('rEnd').textContent = endFx === null ? 'it does not fade out' : fmtL(CACHE.toDisp(endFx));
+    $('rTrueEnd').textContent = fmtL(CACHE.toDisp(trueEndFx));
+    $('rSplit').textContent = splitFx === null ? 'never — they read as one channel'
+                                              : fmtL(CACHE.toDisp(splitFx));
 
     const s = shapeAt(S.px, D);
     if (!s) {
@@ -610,7 +638,7 @@
     const go = (ev) => {
       const r = c.getBoundingClientRect(), q = CACHE[key];
       if (!q) return;
-      S.px = clamp((ev.clientX - r.left - q.x) / q.w, 0, 1);
+      S.px = FX0 + clamp((ev.clientX - r.left - q.x) / q.w, 0, 1) * (1 - FX0);
       render(); SEIS.writeState(S, DEF);
     };
     let down = false;
