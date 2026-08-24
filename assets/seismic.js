@@ -207,6 +207,76 @@ const SEIS = (function () {
   }
 
   /* ---------------------------------------------------------------------
+     FFT  (radix-2, in place)
+     --------------------------------------------------------------------- */
+
+  function fft(re, im, inverse) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) {
+      let bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) {
+        let t = re[i]; re[i] = re[j]; re[j] = t;
+        t = im[i]; im[i] = im[j]; im[j] = t;
+      }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+      const ang = (2 * Math.PI / len) * (inverse ? 1 : -1);
+      const wr = Math.cos(ang), wi = Math.sin(ang);
+      for (let i = 0; i < n; i += len) {
+        let cr = 1, ci = 0;
+        for (let k = 0; k < len / 2; k++) {
+          const ur = re[i + k], ui = im[i + k];
+          const ar = re[i + k + len / 2], ai = im[i + k + len / 2];
+          const vr = ar * cr - ai * ci, vi = ar * ci + ai * cr;
+          re[i + k] = ur + vr; im[i + k] = ui + vi;
+          re[i + k + len / 2] = ur - vr; im[i + k + len / 2] = ui - vi;
+          const ncr = cr * wr - ci * wi;
+          ci = cr * wi + ci * wr; cr = ncr;
+        }
+      }
+    }
+    if (inverse) for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
+  }
+
+  /**
+   * f-k amplitude spectrum of a trace-major field. nx and nt must be powers of
+   * two. A cosine taper is applied in both directions first, otherwise the
+   * edges of the panel smear energy across the whole plot.
+   *
+   * Returns { mag, nk, nf } with mag laid out [ik * nf + iff], ik running from
+   * -Nyquist to +Nyquist (already shifted) and iff from 0 Hz upward.
+   */
+  function fkSpectrum(field, nx, nt) {
+    const nf = nt / 2;
+    const tw = new Float64Array(nt), xw = new Float64Array(nx);
+    for (let i = 0; i < nt; i++) tw[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (nt - 1));
+    for (let i = 0; i < nx; i++) xw[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (nx - 1));
+
+    // time transform, one trace at a time
+    const sr = new Float64Array(nx * nf), si = new Float64Array(nx * nf);
+    const re = new Float64Array(nt), im = new Float64Array(nt);
+    for (let ix = 0; ix < nx; ix++) {
+      for (let it = 0; it < nt; it++) { re[it] = field[ix * nt + it] * tw[it] * xw[ix]; im[it] = 0; }
+      fft(re, im, false);
+      for (let f = 0; f < nf; f++) { sr[ix * nf + f] = re[f]; si[ix * nf + f] = im[f]; }
+    }
+    // space transform, one frequency at a time
+    const mag = new Float32Array(nx * nf);
+    const xr = new Float64Array(nx), xi = new Float64Array(nx);
+    for (let f = 0; f < nf; f++) {
+      for (let ix = 0; ix < nx; ix++) { xr[ix] = sr[ix * nf + f]; xi[ix] = si[ix * nf + f]; }
+      fft(xr, xi, false);
+      for (let ik = 0; ik < nx; ik++) {
+        const shifted = (ik + nx / 2) % nx;          // put k = 0 in the middle
+        mag[ik * nf + f] = Math.hypot(xr[shifted], xi[shifted]);
+      }
+    }
+    return { mag, nk: nx, nf };
+  }
+
+  /* ---------------------------------------------------------------------
      COLOR MAPS
      Each returns [r,g,b] for x in [-1, 1].
      --------------------------------------------------------------------- */
@@ -556,7 +626,7 @@ const SEIS = (function () {
   return {
     ricker, ormsby, makeWavelet, spectrum,
     traceValue, sampleTrace, traceFromSpikes, rc,
-    mulberry32, gaussRand, bandLimitedNoise,
+    mulberry32, gaussRand, bandLimitedNoise, fft, fkSpectrum,
     COLORMAPS, fitCanvas, drawVarDensity, drawWiggle,
     niceTicks, frame, axisBottom, axisLeft, dashedLine, tag, drawColorbar,
     UNITS, readState, writeState, copyLink, savePNG,
