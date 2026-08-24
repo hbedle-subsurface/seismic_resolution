@@ -268,6 +268,25 @@ a.card:hover {
 }
 .flag.next { background: var(--crimson); }
 
+/* --- disclaimer ---------------------------------------------------------- */
+
+.disclaimer {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--slate);
+  padding: 15px 20px 16px;
+  margin: 10px 0 6px;
+}
+.disclaimer h4 {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--slate); margin: 0 0 7px;
+}
+.disclaimer p {
+  margin: 0; font-size: 13.5px; color: var(--ink-soft); max-width: 96ch; line-height: 1.55;
+}
+.disclaimer p + p { margin-top: 7px; }
+.disclaimer b { color: var(--ink); font-weight: 600; }
+
 /* --- footer -------------------------------------------------------------- */
 
 footer {
