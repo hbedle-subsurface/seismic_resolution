@@ -397,6 +397,19 @@ const SEIS = (function () {
       [0,32,76],[0,67,88],[0,89,100],[62,109,105],[95,127,98],
       [128,146,89],[165,166,76],[203,187,60],[243,209,39],[255,233,69],
     ]),
+    // Shallow red through cream to deep blue-purple: the usual structure-map
+    // convention, and safe for colour-vision deficiency because the difficult
+    // pair is red against green, not red against blue.
+    structure: rampMapSeq([
+      [124,24,10],[168,60,18],[205,112,35],[232,175,95],[243,222,175],
+      [196,220,205],[120,180,200],[52,120,175],[30,66,135],[40,30,90],
+    ]),
+    // A single-hue green ramp for thickness, so it cannot be confused with
+    // either the structure map or the amplitude map at a glance.
+    thickness: rampMapSeq([
+      [250,253,246],[215,238,205],[168,220,175],[112,196,155],
+      [58,166,140],[24,124,120],[12,80,90],
+    ]),
     warm: rampMapSeq([
       [252,250,246],[253,231,160],[247,190,90],[233,131,60],[196,60,45],[110,16,20],
     ]),
