@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resolution in map view — What Can You REALLY See in Seismic?</title>
+<meta name="description" content="A channel that narrows and splits in two: where it appears to end, and where two distributaries stop looking like one.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>What can you <b>really</b> see in seismic?</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="#notes">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 06 &nbsp;·&nbsp; Horizontal resolution in practice</p>
+    <h1>Where does my channel really end?</h1>
+    <p class="sub">Module 04 shrank two points down until they became one. Here is the same limit acting on
+      something you would actually map: a channel that narrows downstream and splits into two distributaries.
+      Watch the point where it appears to stop, and the point where the two branches stop looking like one.
+      Neither of those places is in the geology — they are in the acquisition.</p>
+  </div>
+
+  <!-- ============================== CONTROLS ============================== -->
+  <section class="controls">
+    <div class="ctl-col">
+      <h2>The channel</h2>
+      <div class="ctl">
+        <label for="w0">Trunk width <span class="val" id="w0V">900 m</span></label>
+        <input type="range" id="w0" min="150" max="2000" step="25" value="900">
+      </div>
+      <div class="ctl">
+        <label for="wend">Width at the branch tips <span class="val" id="wendV">0 m</span></label>
+        <input type="range" id="wend" min="0" max="500" step="5" value="0">
+      </div>
+      <div class="ctl">
+        <label for="div">How far the branches spread <span class="val" id="divV">700 m</span></label>
+        <input type="range" id="div" min="60" max="1600" step="20" value="700">
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>The data</h2>
+      <div class="ctl">
+        <label for="t0">Two-way time to the channel <span class="val" id="t0V">1.80 s</span></label>
+        <input type="range" id="t0" min="0.2" max="3" step="0.05" value="1.8">
+      </div>
+      <div class="ctl">
+        <label for="freq">Peak frequency <span class="val" id="freqV">22 Hz</span></label>
+        <input type="range" id="freq" min="8" max="70" step="1" value="22">
+      </div>
+      <div class="ctl">
+        <label for="vel">Velocity <span class="val" id="velV">3000 m/s</span></label>
+        <input type="range" id="vel" min="1500" max="5000" step="50" value="3000">
+      </div>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Migration</h2>
+      <div class="ctl">
+        <div class="seg" role="group" aria-label="Migration state">
+          <button type="button" id="mNone" aria-pressed="false">None</button>
+          <button type="button" id="m2D" aria-pressed="false">2D</button>
+          <button type="button" id="m3D" aria-pressed="true">3D</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="ap">Migration aperture <span class="val" id="apV">1200 m</span></label>
+        <input type="range" id="ap" min="150" max="8000" step="50" value="1200">
+      </div>
+      <label class="check"><input type="checkbox" id="showEnd" checked> Mark where it appears to end</label>
+      <label class="check"><input type="checkbox" id="showTrue" checked> Outline the true channel</label>
+    </div>
+
+    <div class="ctl-col">
+      <h2>Display</h2>
+      <div class="ctl">
+        <label for="units">Units</label>
+        <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
+      </div>
+      <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="pngBtn" type="button">Save the imaged map as PNG</button>
+      <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
+    </div>
+  </section>
+
+  <!-- ================================ MAPS ================================ -->
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>The channel, and the channel you would map</h3>
+      <span class="hint">Click either map to move the section line</span>
+    </div>
+    <div class="sec-row" id="mapRow">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> The channel that is there
+          <span class="note">sand, everywhere inside the outline</span></p>
+        <canvas id="trueCanvas" aria-label="Map of the true channel"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The channel the seismic shows
+          <span class="note" id="imgNote">after imaging</span></p>
+        <canvas id="imgCanvas" aria-label="Imaged channel map"></canvas>
+      </div>
+    </div>
+    <div class="legend" id="mapLegend"></div>
+  </section>
+
+  <section class="plot" style="margin-top:18px">
+    <div class="plot-head">
+      <h3>Across the channel at your section line</h3>
+      <span class="hint">Grey is the truth, crimson is what you would see</span>
+    </div>
+    <canvas id="profCanvas" aria-label="Profile across the channel, true versus imaged"></canvas>
+    <div class="legend" id="profLegend"></div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><span>Wavelength λ = V / f</span><b id="rLam">— m</b></div>
+    <div class="stat"><span>Fresnel zone across</span><b id="rFres">— m</b></div>
+    <div class="stat key"><span>Resolution after imaging</span><b id="rRes">— m</b></div>
+    <div class="stat"><span>Channel appears to end at</span><b id="rEnd">—</b></div>
+    <div class="stat"><span>True channel continues to</span><b id="rTrueEnd">—</b></div>
+    <div class="stat"><span>Branches only separate beyond</span><b id="rSplit">—</b></div>
+    <div class="stat"><span>At the section line: true width</span><b id="rW">—</b></div>
+    <div class="stat"><span>At the section line: separation</span><b id="rSep">—</b></div>
+    <div class="stat wide"><span>Verdict</span><b id="rVerdict">—</b></div>
+  </div>
+
+  <!-- ============================== TEACHING ============================== -->
+  <div class="teach">
+    <div class="tryit">
+      <h3>Try this</h3>
+      <ol>
+        <li><b>Compare the two maps before touching anything.</b> Where does the channel stop in each?
+          <span class="ans">The imaged channel fades out well before the real one does. Everything downstream
+            of that point is still sand, still the same thickness, and completely absent from your map. If
+            you were mapping the extent of a reservoir from this, you would draw the boundary in the wrong
+            place and never know.</span></li>
+        <li><b>Find where the branches become two.</b> Drag the section line upstream from the far end and
+          watch the profile.
+          <span class="ans">Far downstream the two branches sit well apart and read as two. Move upstream and
+            they close until the trough between them fills in, and from there back to the split they image as
+            one wide channel. The map shows a single channel that forks once, when in fact it forks much
+            earlier.</span></li>
+        <li><b>Turn migration off.</b>
+          <span class="ans">The Fresnel zone is hundreds of meters across, so almost the whole channel system
+            smears into a single broad smudge. This is what interpreters were working with before migration
+            was routine, and it is worth remembering when you look at an old map.</span></li>
+        <li><b>Take it deeper.</b> Move the channel from 1.2 s to 3 s.
+          <span class="ans">Resolution worsens and the apparent end of the channel marches upstream. The same
+            body, unchanged, gets shorter on the map as it gets deeper. Comparing feature sizes between a
+            shallow field and a deep one is not comparing like with like.</span></li>
+        <li><b>Try to fix it with frequency.</b> Push the peak frequency up and watch the apparent end move.
+          <span class="ans">It helps, and it is the only thing here that helps, but the improvement is
+            proportional to frequency while the Fresnel zone shrinks only as its square root. Bandwidth is
+            expensive and the returns are steady rather than dramatic.</span></li>
+        <li><b>Starve the aperture.</b> Pull the aperture down to 500 m.
+          <span class="ans">The image degrades toward the unmigrated case. If your target sits near the edge
+            of the survey, the migration has only one side to gather from, and features that are perfectly
+            resolved in the middle of the survey quietly disappear at the margin.</span></li>
+        <li><b>Switch to 2D.</b>
+          <span class="ans">Resolution is good along the line and poor across it, so the channel smears in
+            one direction only. Whether you can see the branches now depends on which way they happen to
+            trend relative to your line — a geological conclusion decided by the survey orientation.</span></li>
+      </ol>
+    </div>
+
+    <div class="takeaway">
+      <h3>What to carry away</h3>
+      <ul>
+        <li><b>Features narrower than the resolution do not go blurry, they go missing.</b> A narrowing
+          channel appears to end, and the ending looks convincing.</li>
+        <li><b>Two things closer together than the resolution image as one thing.</b> Branches, stacked
+          channels, closely spaced faults — all merge.</li>
+        <li><b>The limit is roughly λ/4 after good 3D migration</b>, and the width of the Fresnel zone without
+          it, which is often ten times worse.</li>
+        <li><b>Boundaries you map are partly a property of the survey.</b> Reprocess with more bandwidth or a
+          wider aperture and the channel gets longer, with no new rock involved.</li>
+        <li><b>Absence of evidence is weak evidence here.</b> "The channel ends" and "the channel narrows
+          below what we can see" look identical on a map.</li>
+      </ul>
+    </div>
+  </div>
+
+  <details class="notes" id="notes">
+    <summary>Method, assumptions, and where to read more</summary>
+    <p>The channel is drawn as a map of amplitude: uniform inside the body, zero outside, so that thickness
+      and tuning are held out of it and only horizontal resolution is on trial. Module 07 does the opposite
+      and holds width fixed while thickness varies.</p>
+    <p>Imaging is done as a low-pass filter in the wavenumber domain, using the two-dimensional FFT: spatial
+      detail finer than the resolution length is removed, everything coarser is kept, with a raised-cosine
+      taper across the cutoff. That is what a band-limited image is. The cutoff is calibrated so that two
+      features separated by exactly the stated resolution are on the point of separating — checked against
+      the model across a factor of eight in scale, where the split occurs between 0.96 and 1.02 times the
+      quoted number.</p>
+    <p>The resolution length itself is the same as module 04: the Fresnel zone radius
+      <span class="k">(V/2)·√(t/f)</span> without migration, and <span class="k">λ/(4 sin θ)</span> with it,
+      where θ is the largest angle the aperture allows. In 2D the filter is applied along the line only, so
+      the cross-line direction keeps the Fresnel limit.</p>
+    <p>Left out: noise, tuning, velocity error, dip, migration artifacts, and the fact that a real channel
+      has a fill whose properties change along it. Every one of them makes the edge harder to find, not
+      easier.</p>
+    <ul>
+      <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.: AAPG/SEG.</li>
+      <li>Chen, J., and Schuster, G.T., 1999, Resolution limits of migrated images:
+        <em>Geophysics</em>, 64, 1046–1053.</li>
+      <li>Lindsey, J.P., 1989, The Fresnel zone and its interpretive significance:
+        <em>The Leading Edge</em>, 8, 33–39.</li>
+    </ul>
+  </details>
+
+  <div class="pager">
+    <a class="btn ghost" href="fresnel.html">← Horizontal resolution</a>
+    <a class="btn" href="mapview.html">Next: tuning in map view →</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma —
+        with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.
+        Free to use or adapt in your own courses with citation.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/seismic.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const DEF = {
+    w0: 900, wend: 0, div: 700,
+    t0: 1.8, f: 22, v: 3000, ap: 1200, mig: '3d',
+    end: true, truth: true, units: 'm', px: 0.72,
+  };
+  let S = SEIS.readState(DEF);
+
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670', OCHRE = '#8A6D1F';
+
+  const NX = 256, NY = 128;      // powers of two, for the FFT
+  const FSPLIT = 0.34;           // where the trunk divides
+  // Calibrated so that two features exactly one resolution length apart are on
+  // the point of separating. A textbook Rayleigh cutoff of 0.61/res puts the
+  // split at 1.16 times the stated number, which would make the panel and the
+  // readout disagree.
+  const KC = 0.708;
+
+  const U = () => SEIS.UNITS[S.units];
+  const uL = (m) => m * U().len;
+  const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 0 : d) + ' ' + U().lab;
+
+  const RAMP = [[252,251,248],[226,236,238],[170,208,216],[96,168,188],[38,116,146],[16,58,84]];
+  function shade(u) {
+    const p = clamp(u, 0, 1) * (RAMP.length - 1);
+    const i = Math.min(RAMP.length - 2, Math.floor(p)), f = p - i;
+    const a = RAMP[i], b = RAMP[i + 1];
+    return [Math.round(a[0] + (b[0] - a[0]) * f),
+            Math.round(a[1] + (b[1] - a[1]) * f),
+            Math.round(a[2] + (b[2] - a[2]) * f)];
+  }
+
+  /* ------------------------------ geometry ----------------------------- */
+
+  function domain() {
+    const XD = clamp(Math.max(5 * S.w0, 3.4 * S.div + 3 * S.wend, 3000), 2000, 16000);
+    return { XD, YD: XD * NY / NX };   // square cells, so the filter stays isotropic
+  }
+
+  // trunk width, and the two branch centrelines and widths, at a position along
+  // the map. Returns null upstream or downstream of the body.
+  function shapeAt(fx, D) {
+    if (fx < 0.04 || fx > 0.985) return null;
+    // a gentle meander, so the body reads as a channel rather than a wedge
+    const yc = D.YD / 2 + 0.085 * D.YD * Math.sin(2 * Math.PI * fx * 1.25);
+    const wSplit = Math.max(S.wend * 2.4, S.w0 * 0.62);
+    if (fx < FSPLIT) {
+      const t = (fx - 0.04) / (FSPLIT - 0.04);
+      return { kind: 'trunk', lines: [{ y: yc, w: S.w0 + (wSplit - S.w0) * t }] };
+    }
+    // Each branch starts half the trunk width and already half-offset, so the
+    // two of them exactly fill the trunk at the split and the body stays
+    // continuous instead of stepping in.
+    const t = (fx - FSPLIT) / (0.985 - FSPLIT);
+    const wb = (wSplit * 0.5) + (S.wend - wSplit * 0.5) * t;
+    if (wb <= 0.5) return null;
+    const off = (wSplit * 0.5 + S.div * Math.pow(t, 1.25)) / 2;
+    return { kind: 'branches', lines: [{ y: yc - off, w: wb }, { y: yc + off, w: wb }], sep: 2 * off, wb };
+  }
+
+  function trueAt(fx, fy, D) {
+    const s = shapeAt(fx, D);
+    if (!s) return 0;
+    const y = fy * D.YD;
+    for (const L of s.lines) if (Math.abs(y - L.y) <= L.w / 2) return 1;
+    return 0;
+  }
+
+  /* ------------------------------- physics ----------------------------- */
+
+  function resolution() {
+    const lam = S.v / S.f;
+    const z = S.v * S.t0 / 2;
+    const fres = (S.v / 2) * Math.sqrt(S.t0 / S.f);
+    const theta = Math.atan(S.ap / z);
+    const rMig = Math.max(lam / 4, lam / (4 * Math.max(Math.sin(theta), 1e-3)));
+    const inl = S.mig === 'none' ? fres : rMig;
+    const crs = S.mig === '3d' ? rMig : fres;
+    return { lam, z, fres, theta, rMig, inl, crs };
+  }
+
+  /* ------------------- band-limiting, done in the FFT ------------------- */
+
+  function bandLimit(src, D, R) {
+    const re = new Float64Array(NX * NY), im = new Float64Array(NX * NY);
+    re.set(src);
+    const rr = new Float64Array(NX), ri = new Float64Array(NX);
+    for (let iy = 0; iy < NY; iy++) {
+      for (let ix = 0; ix < NX; ix++) { rr[ix] = re[iy * NX + ix]; ri[ix] = im[iy * NX + ix]; }
+      SEIS.fft(rr, ri, false);
+      for (let ix = 0; ix < NX; ix++) { re[iy * NX + ix] = rr[ix]; im[iy * NX + ix] = ri[ix]; }
+    }
+    const cr = new Float64Array(NY), ci = new Float64Array(NY);
+    for (let ix = 0; ix < NX; ix++) {
+      for (let iy = 0; iy < NY; iy++) { cr[iy] = re[iy * NX + ix]; ci[iy] = im[iy * NX + ix]; }
+      SEIS.fft(cr, ci, false);
+      for (let iy = 0; iy < NY; iy++) { re[iy * NX + ix] = cr[iy]; im[iy * NX + ix] = ci[iy]; }
+    }
+    const dx = D.XD / NX, dy = D.YD / NY;
+    const kcx = KC / R.inl, kcy = KC / R.crs;
+    for (let iy = 0; iy < NY; iy++) {
+      const ky = Math.abs((iy <= NY / 2 ? iy : iy - NY) / (NY * dy));
+      for (let ix = 0; ix < NX; ix++) {
+        const kx = Math.abs((ix <= NX / 2 ? ix : ix - NX) / (NX * dx));
+        const q = Math.hypot(kx / kcx, ky / kcy);
+        let w;
+        if (q <= 1) w = 1;
+        else if (q >= 1.15) w = 0;
+        else w = 0.5 + 0.5 * Math.cos(Math.PI * (q - 1) / 0.15);
+        re[iy * NX + ix] *= w; im[iy * NX + ix] *= w;
+      }
+    }
+    for (let ix = 0; ix < NX; ix++) {
+      for (let iy = 0; iy < NY; iy++) { cr[iy] = re[iy * NX + ix]; ci[iy] = im[iy * NX + ix]; }
+      SEIS.fft(cr, ci, true);
+      for (let iy = 0; iy < NY; iy++) { re[iy * NX + ix] = cr[iy]; im[iy * NX + ix] = ci[iy]; }
+    }
+    for (let iy = 0; iy < NY; iy++) {
+      for (let ix = 0; ix < NX; ix++) { rr[ix] = re[iy * NX + ix]; ri[ix] = im[iy * NX + ix]; }
+      SEIS.fft(rr, ri, true);
+      for (let ix = 0; ix < NX; ix++) re[iy * NX + ix] = rr[ix];
+    }
+    return re;
+  }
+
+  /* ----------------------------- computation --------------------------- */
+
+  let CACHE = {};
+
+  function compute() {
+    const D = domain(), R = resolution();
+    const truth = new Float32Array(NX * NY);
+    for (let iy = 0; iy < NY; iy++)
+      for (let ix = 0; ix < NX; ix++)
+        truth[iy * NX + ix] = trueAt((ix + 0.5) / NX, (iy + 0.5) / NY, D);
+    const img = bandLimit(truth, D, R);
+
+    const sample = (fx, y) => {
+      const ix = clamp(Math.round(fx * NX - 0.5), 0, NX - 1);
+      const iy = clamp(Math.round((y / D.YD) * NY - 0.5), 0, NY - 1);
+      return img[iy * NX + ix];
+    };
+
+    // where the imaged channel fades below half its full-width value
+    // Walk downstream and find where the imaged channel fades below half its
+    // full-width brightness. The leading edge is also soft, so nothing counts
+    // as an ending until the channel has first been imaged properly.
+    let endFx = null, seen = false, trueEndFx = 0.04;
+    for (let i = 0; i < NX; i++) {
+      const fx = (i + 0.5) / NX;
+      const s = shapeAt(fx, D);
+      if (!s) continue;
+      trueEndFx = fx;
+      const best = Math.max.apply(null, s.lines.map((L) => sample(fx, L.y)));
+      if (best >= 0.75) seen = true;
+      else if (seen && best < 0.5 && endFx === null) endFx = fx;
+    }
+
+    // upstream-most place the two branches read as two
+    let splitFx = null;
+    for (let i = NX - 1; i >= 0; i--) {
+      const fx = (i + 0.5) / NX;
+      const s = shapeAt(fx, D);
+      if (!s || s.kind !== 'branches') break;
+      const ix = clamp(Math.round(fx * NX - 0.5), 0, NX - 1);
+      const col = [];
+      for (let iy = 0; iy < NY; iy++) col.push(img[iy * NX + ix]);
+      if (!twoPeaks(col)) break;
+      splitFx = fx;
+    }
+
+    CACHE = { D, R, truth, img, endFx, trueEndFx, splitFx, sample };
+  }
+
+  function twoPeaks(p) {
+    const pk = [];
+    for (let i = 1; i < p.length - 1; i++) if (p[i] > p[i - 1] && p[i] >= p[i + 1] && p[i] > 0.15) pk.push(i);
+    if (pk.length < 2) return false;
+    pk.sort((a, b) => p[b] - p[a]);
+    const pr = [pk[0], pk[1]].sort((a, b) => a - b);
+    if (p[pr[1]] < 0.5 * p[pr[0]]) return false;
+    let dip = Infinity;
+    for (let i = pr[0]; i <= pr[1]; i++) dip = Math.min(dip, p[i]);
+    return dip < 0.8 * Math.min(p[pr[0]], p[pr[1]]);
+  }
+
+  /* ------------------------------- layout ------------------------------ */
+
+  function layout() {
+    const box = $('trueCanvas').closest('.plot');
+    const W = Math.max(300, box.clientWidth - 28);
+    const stacked = W < 720;
+    return { stacked, each: stacked ? W : Math.floor((W - 10) / 2), W };
+  }
+
+  /* ------------------------------ drawing ------------------------------ */
+
+  function drawMap(id, data, L, isImg) {
+    const w = L.each, h = clamp(Math.round(w * 0.52), 190, 300);
+    const ctx = SEIS.fitCanvas($(id), w, h);
+    ctx.clearRect(0, 0, w, h);
+    const m = { l: 50, r: 12, t: 8, b: 38 };
+    const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
+    const { D, endFx, splitFx } = CACHE;
+
+    const off = document.createElement('canvas');
+    off.width = NX; off.height = NY;
+    const octx = off.getContext('2d');
+    const img = octx.createImageData(NX, NY);
+    let mx = 1e-9;
+    for (let i = 0; i < data.length; i++) mx = Math.max(mx, data[i]);
+    for (let i = 0; i < NX * NY; i++) {
+      const c = shade(data[i] / mx);
+      img.data[i * 4] = c[0]; img.data[i * 4 + 1] = c[1];
+      img.data[i * 4 + 2] = c[2]; img.data[i * 4 + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.save();
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(off, rect.x, rect.y, rect.w, rect.h);
+    ctx.restore();
+
+    // the true outline, so the two panels can be compared directly
+    if (S.truth && isImg) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(22,25,28,.55)'; ctx.lineWidth = 1.1;
+      ctx.setLineDash([4, 3]);
+      [-1, 1].forEach((side) => {
+        [0, 1].forEach((branch) => {
+          ctx.beginPath();
+          let pen = false;
+          for (let i = 0; i < NX; i++) {
+            const fx = (i + 0.5) / NX;
+            const s = shapeAt(fx, D);
+            if (!s) { if (pen) { ctx.stroke(); pen = false; } continue; }
+            const Lline = s.lines[Math.min(branch, s.lines.length - 1)];
+            const y = Lline.y + side * Lline.w / 2;
+            const px = rect.x + fx * rect.w, py = rect.y + (y / D.YD) * rect.h;
+            pen ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+            pen = true;
+          }
+          if (pen) ctx.stroke();
+        });
+      });
+      ctx.restore();
+    }
+
+    if (S.end && isImg) {
+      if (endFx !== null) {
+        const x = rect.x + endFx * rect.w;
+        SEIS.dashedLine(ctx, x, rect.y, x, rect.y + rect.h, CRIMSON, [5, 4], 1.8);
+        SEIS.tag(ctx, x + 4, rect.y + 11, 'looks like it ends', CRIMSON);
+      }
+      if (splitFx !== null) {
+        const x = rect.x + splitFx * rect.w;
+        SEIS.dashedLine(ctx, x, rect.y, x, rect.y + rect.h, OCHRE, [3, 3], 1.5);
+        SEIS.tag(ctx, x + 4, rect.y + rect.h - 11, 'two from here on', OCHRE);
+      }
+    }
+
+    const sx = rect.x + S.px * rect.w;
+    ctx.save();
+    ctx.strokeStyle = TEAL; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(sx, rect.y); ctx.lineTo(sx, rect.y + rect.h); ctx.stroke();
+    ctx.restore();
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisBottom(ctx, rect, 0, uL(D.XD), 'Distance (' + U().lab + ')', (v) => v.toFixed(0));
+    SEIS.axisLeft(ctx, rect, 0, uL(D.YD), '', (v) => v.toFixed(0));
+    CACHE[isImg ? 'imgRect' : 'trueRect'] = rect;
+  }
+
+  function drawProfile() {
+    const w = Math.max(300, $('profCanvas').closest('.plot').clientWidth - 28);
+    const h = 200;
+    const ctx = SEIS.fitCanvas($('profCanvas'), w, h);
+    ctx.clearRect(0, 0, w, h);
+    const m = { l: 58, r: 14, t: 10, b: 42 };
+    const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
+    ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    const { D, img, truth } = CACHE;
+
+    const ix = clamp(Math.round(S.px * NX - 0.5), 0, NX - 1);
+    const tp = [], ip = [];
+    let mx = 1e-9;
+    for (let iy = 0; iy < NY; iy++) { tp.push(truth[iy * NX + ix]); const v = img[iy * NX + ix]; ip.push(v); mx = Math.max(mx, v); }
+    const scale = Math.max(mx, 1);
+
+    const xOf = (iy) => rect.x + (iy / (NY - 1)) * rect.w;
+    const yOf = (v) => rect.y + rect.h * (0.9 - 0.8 * v);
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(92,102,112,.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(rect.x, yOf(0)); ctx.lineTo(rect.x + rect.w, yOf(0)); ctx.stroke();
+    ctx.restore();
+    SEIS.dashedLine(ctx, rect.x, yOf(0.5), rect.x + rect.w, yOf(0.5), 'rgba(132,22,23,.4)', [3, 4], 1);
+
+    const line = (arr, colour, width, dash, div) => {
+      ctx.save();
+      if (dash) ctx.setLineDash(dash);
+      ctx.strokeStyle = colour; ctx.lineWidth = width;
+      ctx.beginPath();
+      arr.forEach((v, i) => {
+        const x = xOf(i), y = yOf(v / div);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke(); ctx.restore();
+    };
+    line(tp, 'rgba(92,102,112,.9)', 1.6, [5, 4], 1);
+    line(ip, CRIMSON, 2.2, null, scale);
+
+    SEIS.frame(ctx, rect);
+    SEIS.axisBottom(ctx, rect, 0, uL(D.YD), 'Across the channel (' + U().lab + ')', (v) => v.toFixed(0));
+    SEIS.axisLeft(ctx, rect, -0.12, 1.12, 'Amplitude', (v) => v.toFixed(1), { flip: true });
+  }
+
+  /* ------------------------------ readouts ----------------------------- */
+
+  function updateLegend() {
+    $('imgNote').textContent = S.mig === 'none' ? 'no migration — the Fresnel zone is all you get'
+      : S.mig === '2d' ? 'after 2D migration, sharp along the line only'
+      : 'after 3D migration';
+    $('mapLegend').innerHTML =
+      '<span><i style="border-color:' + TEAL + '"></i>section line</span>' +
+      (S.truth ? '<span><i style="border-color:#16191C;border-top-style:dashed"></i>true channel edge</span>' : '') +
+      (S.end ? '<span><i style="border-color:' + CRIMSON + ';border-top-style:dashed"></i>where it appears to end</span>' +
+               '<span><i style="border-color:' + OCHRE + ';border-top-style:dashed"></i>where two branches appear</span>' : '');
+    $('profLegend').innerHTML =
+      '<span><i style="border-color:#5C6670;border-top-style:dashed"></i>the channel that is there</span>' +
+      '<span><i style="border-color:' + CRIMSON + '"></i>what the seismic shows</span>';
+  }
+
+  function updateStats() {
+    const { D, R, endFx, trueEndFx, splitFx } = CACHE;
+    $('rLam').textContent = fmtL(R.lam);
+    $('rFres').textContent = fmtL(2 * R.fres);
+    $('rRes').textContent = S.mig === '2d'
+      ? fmtL(R.inl) + ' \u00d7 ' + fmtL(R.crs) : fmtL(R.inl);
+    $('rEnd').textContent = endFx === null ? 'it does not fade out' : fmtL(endFx * D.XD);
+    $('rTrueEnd').textContent = fmtL(trueEndFx * D.XD);
+    $('rSplit').textContent = splitFx === null ? 'never — they read as one channel' : fmtL(splitFx * D.XD);
+
+    const s = shapeAt(S.px, D);
+    if (!s) {
+      $('rW').textContent = 'off the channel'; $('rSep').textContent = '—';
+      $('rVerdict').textContent = 'Section line is off the channel. Click on the map to move it.';
+      return;
+    }
+    $('rW').textContent = fmtL(s.lines[0].w);
+    $('rSep').textContent = s.kind === 'branches' ? fmtL(s.sep) : 'single channel here';
+
+    const wRatio = s.lines[0].w / R.crs;
+    const lost = endFx !== null && S.px > endFx;
+    const merged = s.kind === 'branches' && (splitFx === null || S.px < splitFx);
+    $('rVerdict').textContent = lost
+      ? 'Here the channel is ' + fmtL(s.lines[0].w) + ' wide against a resolution of ' + fmtL(R.crs) +
+        ' — too narrow to image, so your map says there is nothing here'
+      : merged
+        ? 'Two branches ' + fmtL(s.sep) + ' apart, closer than the ' + fmtL(R.crs) +
+          ' resolution, so they image as one channel'
+        : wRatio > 2
+          ? 'Comfortably resolved — the imaged width here is close to the truth'
+          : 'Resolved, but only just; the imaged edges are already softer than the real ones';
+  }
+
+  /* ---------------------------- interaction ---------------------------- */
+
+  function attachPick(id, key) {
+    const c = $(id);
+    const go = (ev) => {
+      const r = c.getBoundingClientRect(), q = CACHE[key];
+      if (!q) return;
+      S.px = clamp((ev.clientX - r.left - q.x) / q.w, 0, 1);
+      render(); SEIS.writeState(S, DEF);
+    };
+    let down = false;
+    c.addEventListener('pointerdown', (e) => { down = true; c.setPointerCapture(e.pointerId); e.preventDefault(); go(e); });
+    c.addEventListener('pointermove', (e) => { if (down) go(e); });
+    c.addEventListener('pointerup', () => { down = false; });
+    c.addEventListener('pointercancel', () => { down = false; });
+  }
+
+  /* ------------------------------ plumbing ----------------------------- */
+
+  function render() {
+    const L = layout();
+    $('mapRow').querySelectorAll('.panel-col').forEach((c) => { c.style.width = L.each + 'px'; });
+    drawMap('trueCanvas', CACHE.truth, L, false);
+    drawMap('imgCanvas', CACHE.img, L, true);
+    drawProfile();
+    updateLegend(); updateStats();
+  }
+  function refresh() { compute(); render(); SEIS.writeState(S, DEF); }
+
+  function syncLabels() {
+    $('w0V').textContent = fmtL(S.w0);
+    $('wendV').textContent = fmtL(S.wend);
+    $('divV').textContent = fmtL(S.div);
+    $('t0V').textContent = S.t0.toFixed(2) + ' s';
+    $('freqV').textContent = S.f + ' Hz';
+    $('velV').textContent = Math.round(uL(S.v)) + ' ' + U().vlab;
+    $('apV').textContent = fmtL(S.ap);
+    $('mNone').setAttribute('aria-pressed', S.mig === 'none');
+    $('m2D').setAttribute('aria-pressed', S.mig === '2d');
+    $('m3D').setAttribute('aria-pressed', S.mig === '3d');
+  }
+  function pushToInputs() {
+    $('w0').value = S.w0; $('wend').value = S.wend; $('div').value = S.div;
+    $('t0').value = S.t0; $('freq').value = S.f; $('vel').value = S.v; $('ap').value = S.ap;
+    $('units').value = S.units; $('showEnd').checked = S.end; $('showTrue').checked = S.truth;
+  }
+  function bump() { syncLabels(); refresh(); }
+
+  const slide = (id, key) => $(id).addEventListener('input', () => {
+    S[key] = parseFloat($(id).value); bump();
+  });
+  slide('w0', 'w0'); slide('wend', 'wend'); slide('div', 'div');
+  slide('t0', 't0'); slide('freq', 'f'); slide('vel', 'v'); slide('ap', 'ap');
+
+  const toggle = (id, val) => $(id).addEventListener('click', () => { S.mig = val; bump(); });
+  toggle('mNone', 'none'); toggle('m2D', '2d'); toggle('m3D', '3d');
+
+  $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
+  $('showEnd').addEventListener('change', () => { S.end = $('showEnd').checked; render(); });
+  $('showTrue').addEventListener('change', () => { S.truth = $('showTrue').checked; render(); });
+  $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
+  $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
+  $('pngBtn').addEventListener('click', () => SEIS.savePNG($('imgCanvas'), 'imaged-channel'));
+
+  attachPick('trueCanvas', 'trueRect');
+  attachPick('imgCanvas', 'imgRect');
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 120); });
+
+  pushToInputs(); syncLabels(); refresh();
+  document.fonts && document.fonts.ready.then(render);
+})();
+</script>
+</body>
+</html>
