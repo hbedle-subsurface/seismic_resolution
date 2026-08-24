@@ -125,7 +125,13 @@
     <div class="plot-head">
       <h3>From the surface to the probe depth</h3>
     </div>
-    <p class="hint-line">Drag <b>Inspect this depth</b> and watch every panel move together</p>
+    <p class="hint-line">Drag <b>Inspect this depth</b> and watch every panel move together. Panels 2 to 5
+      share one two-way time axis, so you can read straight across from the rock to the seismic.</p>
+    <p class="hint-line" style="margin-top:-6px">The thickness slider sets the <b>two marked beds only</b> —
+      one at the reference depth, one at your probe depth. Everything else in panel 4 is random background
+      between 15 and 70 m, there so you can watch the whole column lose character, not just the test bed.
+      Panel 4 is drawn in time like the seismic beside it, so the same thickness in metres looks thinner the
+      deeper it sits: 60 m is 54 ms at the reference and 26 ms at 3 s.</p>
 
     <div class="sec-row" id="pulseRow">
       <div class="panel-col">
@@ -147,10 +153,10 @@
       </div>
       <div class="panel-col">
         <p class="sublabel"><b>4</b> The rock
-          <span class="note">what is actually there</span></p>
+          <span class="note">drawn in time, like the seismic</span></p>
         <canvas id="lithoCanvas" aria-label="One-dimensional earth model beside the seismic"></canvas>
       </div>
-      <div class="panel-col">
+      <div class="panel-col" id="secCol">
         <p class="sublabel"><b>5</b> The seismic
           <span class="note" id="polNote">what you get to look at</span></p>
         <canvas id="secCanvas" aria-label="Synthetic seismic column showing loss of character with depth"></canvas>
@@ -472,15 +478,16 @@
     }
     const avail = W - 40;
     const w = {
-      vel:   Math.round(avail * 0.14),
-      lam:   Math.round(avail * 0.16),
-      litho: Math.round(avail * 0.09),
-      cmp:   Math.round(avail * 0.26),
+      vel:   Math.round(avail * 0.16),
+      lam:   Math.round(avail * 0.17),
+      litho: Math.round(avail * 0.08),
+      cmp:   Math.round(avail * 0.25),
     };
     w.sec = avail - w.vel - w.lam - w.litho - w.cmp;
-    return { stacked, W, w, secW: w.sec, cmpW: w.cmp, pulseW: W,
-             h: clamp(Math.round(W * 0.42), 360, 560),
-             topH: clamp(Math.round(W * 0.17), 150, 210) };
+    return { stacked, W, w, secW: w.sec, cmpW: w.cmp,
+             pulseW: clamp(Math.round(W * 0.46), 340, 560),
+             h: clamp(Math.round(W * 0.44), 380, 580),
+             topH: 175 };
   }
 
   /* ------------------------------ drawing --------------------------------- */
@@ -491,6 +498,21 @@
   // panel on the page that was really about depth was the only one not drawn
   // with depth downward.
   const yOfT = (rect, t) => rect.y + ((t - T0) / (TEND - T0)) * rect.h;
+
+  // Panels 2 to 5 are all two-way time, so they share one geometry: identical
+  // top and bottom margins, identical plot height, and the time axis drawn once
+  // on the left of the first of them. Anything else and the eye cannot read
+  // straight across from the rock to the seismic.
+  const TM = { t: 10, b: 46 };
+  function timeRect(w, h, leftMargin) {
+    return { x: leftMargin, y: TM.t, w: w - leftMargin - 12, h: h - TM.t - TM.b };
+  }
+  function timeAxis(ctx, rect, withLabels) {
+    SEIS.axisLeft(ctx, rect, T0 * 1000, TEND * 1000,
+                  withLabels ? 'Two-way time (ms)' : '',
+                  withLabels ? (v) => v.toFixed(0) : () => '',
+                  { ticks: 8 });
+  }
 
   function markerLines(ctx, rect) {
     [[refT, C_REF], [CACHE.probeT, C_PROBE]].forEach(([t, color]) => {
@@ -503,8 +525,7 @@
     const w = L.w.vel, h = L.h;
     const ctx = SEIS.fitCanvas($('velCanvas'), w, h);
     ctx.clearRect(0, 0, w, h);
-    const m = { l: 54, r: 10, t: 8, b: 42 };
-    const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
+    const rect = timeRect(w, h, 62);
     ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 
     const N = 160;
@@ -527,16 +548,15 @@
 
     markerLines(ctx, rect);
     SEIS.frame(ctx, rect);
-    SEIS.axisBottom(ctx, rect, lo, hi, 'Velocity (' + U().vlab + ')', (v) => v.toFixed(0));
-    SEIS.axisLeft(ctx, rect, T0 * 1000, TEND * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
+    SEIS.axisBottom(ctx, rect, lo, hi, 'Velocity (' + U().vlab + ')', (v) => v.toFixed(0), { ticks: 2 });
+    timeAxis(ctx, rect, true);
   }
 
   function drawLam(L) {
     const w = L.w.lam, h = L.h;
     const ctx = SEIS.fitCanvas($('lamCanvas'), w, h);
     ctx.clearRect(0, 0, w, h);
-    const m = { l: L.stacked ? 54 : 14, r: 10, t: 8, b: 42 };
-    const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
+    const rect = timeRect(w, h, L.stacked ? 62 : 10);
     ctx.fillStyle = '#fff'; ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
 
     const N = 160;
@@ -583,8 +603,8 @@
 
     markerLines(ctx, rect);
     SEIS.frame(ctx, rect);
-    SEIS.axisBottom(ctx, rect, 0, hi, 'λ/4 (' + U().lab + ')', (v) => v.toFixed(0));
-    SEIS.axisLeft(ctx, rect, T0 * 1000, TEND * 1000, L.stacked ? 'Two-way time (ms)' : '', (v) => v.toFixed(0));
+    SEIS.axisBottom(ctx, rect, 0, hi, 'λ/4 (' + U().lab + ')', (v) => v.toFixed(0), { ticks: 2 });
+    timeAxis(ctx, rect, L.stacked);
   }
 
   // The rock the seismic is trying to show, drawn on the same time axis so it
@@ -593,8 +613,7 @@
     const w = L.w.litho, h = L.h;
     const ctx = SEIS.fitCanvas($('lithoCanvas'), w, h);
     ctx.clearRect(0, 0, w, h);
-    const m = { l: L.stacked ? 54 : 10, r: 8, t: 8, b: 42 };
-    const rect = { x: m.l, y: m.t, w: w - m.l - m.r, h: h - m.t - m.b };
+    const rect = timeRect(w, h, L.stacked ? 62 : 8);
     const seq = CACHE.seq || [], imp = CACHE.imp || [1];
 
     const lg = imp.map(Math.log);
@@ -613,22 +632,25 @@
     }
 
     // the two test beds, the things the module is asking you to resolve
+    // The slider sets these two beds only; everything else in the column is
+    // random background 15-70 m thick. Marking them keeps that clear.
     [[refT, C_REF], [CACHE.probeT, C_PROBE]].forEach(([t, color]) => {
       const y0 = yOfT(rect, t), y1 = yOfT(rect, t + dtBedAt(t));
       ctx.save();
-      ctx.fillStyle = 'rgba(132,22,23,.30)';
+      ctx.fillStyle = 'rgba(132,22,23,.34)';
       ctx.fillRect(rect.x, y0, rect.w, Math.max(y1 - y0, 1));
-      ctx.strokeStyle = color; ctx.lineWidth = 1.6;
+      ctx.strokeStyle = color; ctx.lineWidth = 1.8;
       ctx.strokeRect(rect.x, y0, rect.w, Math.max(y1 - y0, 1));
       ctx.restore();
+      SEIS.tag(ctx, rect.x + rect.w + 3, (y0 + y1) / 2, fmtL(S.thick, 0), color);
     });
 
     SEIS.frame(ctx, rect);
-    SEIS.axisLeft(ctx, rect, T0 * 1000, TEND * 1000, L.stacked ? 'Two-way time (ms)' : '', (v) => v.toFixed(0));
+    timeAxis(ctx, rect, L.stacked);
     ctx.save();
     ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('impedance', rect.x + rect.w / 2, rect.y + rect.h + 6);
+    ctx.fillText('impedance', rect.x + rect.w / 2, rect.y + rect.h + 8);
     ctx.restore();
   }
 
@@ -694,8 +716,7 @@
   function drawSection(L) {
     const ctx = SEIS.fitCanvas($('secCanvas'), L.secW, L.h);
     ctx.clearRect(0, 0, L.secW, L.h);
-    const m = { l: 58, r: 14, t: 8, b: 34 };
-    const rect = { x: m.l, y: m.t, w: L.secW - m.l - m.r, h: L.h - m.t - m.b };
+    const rect = timeRect(L.secW, L.h, L.stacked ? 62 : 10);
     CACHE.rect = rect;
     const clip = 0.16;
 
@@ -721,11 +742,11 @@
     });
 
     SEIS.frame(ctx, rect);
-    SEIS.axisLeft(ctx, rect, T0 * 1000, TEND * 1000, 'Two-way time (ms)', (v) => v.toFixed(0));
+    timeAxis(ctx, rect, L.stacked);
     ctx.save();
-    ctx.font = '10px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
+    ctx.font = '9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = SLATE;
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('every trace is the same modeled column — only the noise differs',
+    ctx.fillText('one modeled column, repeated; only the noise differs',
       rect.x + rect.w / 2, rect.y + rect.h + 8);
     ctx.restore();
   }
