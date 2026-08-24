@@ -6,1522 +6,2716 @@
 
 <title>Sampling &amp; spatial aliasing — What Can You REALLY See in Seismic?</title>
 
-<meta name="description"
-      content="Explore spatial aliasing in seismic data by changing dip, velocity, trace spacing and frequency.">
+<meta
+  name="description"
+  content="Trace spacing against dip and frequency: where steep events become spatially aliased."
+>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
-      rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+  rel="stylesheet"
+>
 
 <link rel="stylesheet" href="../assets/style.css">
+
+<style>
+  .alias-debug {
+    display: none;
+  }
+
+  .formula {
+    font-family: "IBM Plex Mono", monospace;
+    background: #f3f4f5;
+    border-left: 3px solid #0B7285;
+    padding: 8px 12px;
+    margin: 10px 0;
+  }
+
+  canvas {
+    display: block;
+    max-width: 100%;
+  }
+
+  .stat b {
+    font-variant-numeric: tabular-nums;
+  }
+</style>
 </head>
 
 <body>
 
 <div class="wrap">
 
-<header class="masthead">
-  <a class="brand" href="../index.html">
-    <span class="dot"></span>
-    What can you <b>really</b> see in seismic?
-  </a>
+  <!-- ================================================================ -->
+  <!-- HEADER                                                           -->
+  <!-- ================================================================ -->
 
-  <nav>
-    <a href="../index.html">All modules</a>
-    <a href="#notes">Method &amp; references</a>
-  </nav>
-</header>
+  <header class="masthead">
+    <a class="brand" href="../index.html">
+      <span class="dot"></span>
+      What can you <b>really</b> see in seismic?
+    </a>
 
-
-<!-- ================================================================
-     HEADER
-================================================================ -->
-
-<div class="mod-head">
-
-  <p class="eyebrow">
-    Module 06 &nbsp;·&nbsp; Spatial sampling
-  </p>
-
-  <h1>
-    Is that dipping event real, or aliased?
-  </h1>
-
-  <p class="sub">
-    A dipping reflector changes its arrival time from trace to trace.
-    If that change becomes larger than half a period at a frequency
-    present in the data, the spatial sampling cannot uniquely represent
-    the dip. The event does not disappear — it can fold into a different,
-    apparently real dip.
-  </p>
-
-</div>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="#notes">Method &amp; references</a>
+    </nav>
+  </header>
 
 
-<!-- ================================================================
-     CONTROLS
-================================================================ -->
+  <!-- ================================================================ -->
+  <!-- TITLE                                                            -->
+  <!-- ================================================================ -->
 
-<section class="controls">
+  <div class="mod-head">
 
-  <!-- QUIZ -->
+    <p class="eyebrow">
+      Module 06 &nbsp;·&nbsp; Spatial sampling
+    </p>
 
-  <div class="ctl-col">
+    <h1>
+      Is that dipping event real, or aliased?
+    </h1>
 
-    <h2>Test yourself</h2>
-
-    <label class="check">
-      <input type="checkbox" id="quiz">
-      Hide the answer and randomize
-    </label>
-
-    <div id="quizBox" hidden>
-
-      <p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 10px">
-        You only get the recorded panel.
-        Decide whether the dip you can see is the real one.
-      </p>
-
-      <button class="btn small" id="qReal" type="button">
-        The dip is real
-      </button>
-
-      <button class="btn small" id="qAlias" type="button">
-        It is aliased
-      </button>
-
-      <button class="btn ghost small" id="newCase" type="button">
-        New case
-      </button>
-
-      <p id="verdict"
-         style="font-size:13px;margin:10px 0 0;min-height:1.2em">
-      </p>
-
-    </div>
+    <p class="sub">
+      A dipping reflector can only be sampled correctly if the time shift
+      from one trace to the next is smaller than half a period of the
+      highest frequency you want to preserve. When the trace spacing is
+      too large, the event does not disappear — it folds into a different
+      apparent dip.
+    </p>
 
   </div>
 
 
-  <!-- GEOLOGY -->
+  <!-- ================================================================ -->
+  <!-- CONTROLS                                                         -->
+  <!-- ================================================================ -->
 
-  <div class="ctl-col">
+  <section class="controls">
 
-    <h2>The geology</h2>
+    <!-- QUIZ -->
 
-    <div class="ctl">
+    <div class="ctl-col">
 
-      <label for="dip">
-        Reflector dip
-        <span class="val" id="dipV">20°</span>
+      <h2>Test yourself</h2>
+
+      <label class="check">
+        <input type="checkbox" id="quiz">
+        Hide the answer and randomize
       </label>
 
-      <input
-        type="range"
-        id="dip"
-        min="0"
-        max="60"
-        step="1"
-        value="20">
+      <div id="quizBox" hidden>
 
-    </div>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 10px">
+          You only get the recorded panel.
+          Decide whether the dip you can see is the real one.
+        </p>
 
-
-    <div class="ctl">
-
-      <label for="vel">
-        Velocity
-        <span class="val" id="velV">2500 m/s</span>
-      </label>
-
-      <input
-        type="range"
-        id="vel"
-        min="1500"
-        max="5000"
-        step="50"
-        value="2500">
-
-    </div>
-
-  </div>
-
-
-  <!-- SURVEY -->
-
-  <div class="ctl-col">
-
-    <h2>The survey</h2>
-
-    <div class="ctl">
-
-      <label for="dx">
-        Trace spacing
-        <span class="val" id="dxV">25 m</span>
-      </label>
-
-      <input
-        type="range"
-        id="dx"
-        min="5"
-        max="80"
-        step="1"
-        value="25">
-
-    </div>
-
-
-    <div class="ctl">
-
-      <label for="freq">
-        Peak frequency
-        <span class="val" id="freqV">30 Hz</span>
-      </label>
-
-      <input
-        type="range"
-        id="freq"
-        min="10"
-        max="70"
-        step="1"
-        value="30">
-
-    </div>
-
-
-    <div class="ctl">
-
-      <label for="units">
-        Units
-      </label>
-
-      <select id="units">
-        <option value="m">Meters</option>
-        <option value="ft">Feet</option>
-      </select>
-
-    </div>
-
-  </div>
-
-
-  <!-- DISPLAY -->
-
-  <div class="ctl-col">
-
-    <h2>Display</h2>
-
-    <div class="ctl">
-
-      <div class="seg"
-           role="group"
-           aria-label="Display style">
-
-        <button
-          type="button"
-          id="dVD"
-          aria-pressed="false">
-          Color
+        <button class="btn small" id="qReal" type="button">
+          The dip is real
         </button>
 
-        <button
-          type="button"
-          id="dBoth"
-          aria-pressed="true">
-          Both
+        <button class="btn small" id="qAlias" type="button">
+          It is aliased
         </button>
 
-        <button
-          type="button"
-          id="dWig"
-          aria-pressed="false">
-          Wiggle
+        <button class="btn ghost small" id="newCase" type="button">
+          New case
         </button>
+
+        <p
+          id="verdict"
+          style="font-size:13px;margin:10px 0 0;min-height:1.2em"
+        ></p>
 
       </div>
 
     </div>
 
 
-    <div class="ctl">
+    <!-- GEOLOGY -->
 
-      <label for="cmap">
-        Color map
-      </label>
+    <div class="ctl-col">
 
-      <select id="cmap">
+      <h2>The geology</h2>
 
-        <option value="bwr">
-          Blue peak / red trough
-        </option>
+      <div class="ctl">
 
-        <option value="cbsafe">
-          Blue peak / orange trough
-        </option>
+        <label for="dip">
+          Reflector dip
+          <span class="val" id="dipV">20°</span>
+        </label>
 
-        <option value="gray">
-          Grayscale
-        </option>
+        <input
+          type="range"
+          id="dip"
+          min="0"
+          max="75"
+          step="1"
+          value="20"
+        >
 
-      </select>
-
-    </div>
-
-
-    <div class="ctl">
-
-      <label for="gain">
-        Gain
-        <span class="val" id="gainV">1.0×</span>
-      </label>
-
-      <input
-        type="range"
-        id="gain"
-        min="0.4"
-        max="4"
-        step="0.1"
-        value="1">
-
-    </div>
+      </div>
 
 
-    <button class="btn ghost small"
-            id="copyBtn"
-            type="button">
-      Copy link to this setup
-    </button>
+      <div class="ctl">
 
-    <button class="btn ghost small"
-            id="pngBtn"
-            type="button">
-      Save recorded panel as PNG
-    </button>
+        <label for="vel">
+          Velocity
+          <span class="val" id="velV">2500 m/s</span>
+        </label>
 
-    <button class="btn ghost small"
-            id="resetBtn"
-            type="button">
-      Reset
-    </button>
+        <input
+          type="range"
+          id="vel"
+          min="1500"
+          max="5000"
+          step="50"
+          value="2500"
+        >
 
-  </div>
-
-</section>
-
-
-<!-- ================================================================
-     MAIN PANELS
-================================================================ -->
-
-<section class="plot" style="margin-top:18px">
-
-  <div class="plot-head">
-
-    <h3>
-      One dipping reflector
-    </h3>
-
-  </div>
-
-
-  <p class="hint-line" id="hintLine">
-    Same reflector sampled finely and at the chosen trace spacing.
-  </p>
-
-
-  <div class="sec-row" id="panelRow">
-
-
-    <!-- TRUTH -->
-
-    <div class="panel-col">
-
-      <p class="sublabel">
-
-        <b>1</b>
-        The truth
-
-        <span class="note">
-          finely sampled
-        </span>
-
-      </p>
-
-      <canvas
-        id="fineCanvas"
-        aria-label="Densely sampled seismic section showing the true dipping reflector">
-      </canvas>
+      </div>
 
     </div>
 
 
-    <!-- RECORDED -->
+    <!-- SURVEY -->
 
-    <div class="panel-col">
+    <div class="ctl-col">
 
-      <p class="sublabel">
+      <h2>The survey</h2>
 
-        <b>2</b>
-        What you recorded
+      <div class="ctl">
 
-        <span class="note"
-              id="recNote">
-          at your trace spacing
-        </span>
+        <label for="dx">
+          Trace spacing
+          <span class="val" id="dxV">25 m</span>
+        </label>
 
-      </p>
+        <input
+          type="range"
+          id="dx"
+          min="5"
+          max="80"
+          step="1"
+          value="25"
+        >
 
-      <canvas
-        id="recCanvas"
-        aria-label="Seismic section sampled at the selected trace spacing">
-      </canvas>
+      </div>
+
+
+      <div class="ctl">
+
+        <label for="freq">
+          Peak frequency
+          <span class="val" id="freqV">30 Hz</span>
+        </label>
+
+        <input
+          type="range"
+          id="freq"
+          min="10"
+          max="70"
+          step="1"
+          value="30"
+        >
+
+      </div>
+
+
+      <div class="ctl">
+
+        <label for="units">
+          Units
+        </label>
+
+        <select id="units">
+          <option value="m">Meters</option>
+          <option value="ft">Feet</option>
+        </select>
+
+      </div>
 
     </div>
 
 
-    <!-- FK -->
+    <!-- DISPLAY -->
 
-    <div class="panel-col">
+    <div class="ctl-col">
 
-      <p class="sublabel">
+      <h2>Display</h2>
 
-        <b>3</b>
-        Frequency vs wavenumber
+      <div class="ctl">
 
-        <span class="note">
-          where spatial folding appears
-        </span>
+        <div
+          class="seg"
+          role="group"
+          aria-label="Display style"
+        >
 
-      </p>
+          <button
+            type="button"
+            id="dVD"
+            aria-pressed="false"
+          >
+            Color
+          </button>
 
-      <canvas
-        id="fkCanvas"
-        aria-label="Frequency-wavenumber spectrum">
-      </canvas>
+          <button
+            type="button"
+            id="dBoth"
+            aria-pressed="true"
+          >
+            Both
+          </button>
+
+          <button
+            type="button"
+            id="dWig"
+            aria-pressed="false"
+          >
+            Wiggle
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="ctl">
+
+        <label for="cmap">
+          Color map
+        </label>
+
+        <select id="cmap">
+
+          <option value="bwr">
+            Blue peak / red trough
+          </option>
+
+          <option value="cbsafe">
+            Blue peak / orange trough
+          </option>
+
+          <option value="gray">
+            Grayscale
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="ctl">
+
+        <label for="gain">
+          Gain
+          <span class="val" id="gainV">1.0×</span>
+        </label>
+
+        <input
+          type="range"
+          id="gain"
+          min="0.4"
+          max="4"
+          step="0.1"
+          value="1"
+        >
+
+      </div>
+
+
+      <button
+        class="btn ghost small"
+        id="copyBtn"
+        type="button"
+      >
+        Copy link to this setup
+      </button>
+
+
+      <button
+        class="btn ghost small"
+        id="pngBtn"
+        type="button"
+      >
+        Save recorded panel as PNG
+      </button>
+
+
+      <button
+        class="btn ghost small"
+        id="resetBtn"
+        type="button"
+      >
+        Reset
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ================================================================ -->
+  <!-- MAIN PANELS                                                      -->
+  <!-- ================================================================ -->
+
+  <section class="plot" style="margin-top:18px">
+
+    <div class="plot-head">
+      <h3>One dipping reflector</h3>
+    </div>
+
+    <p class="hint-line" id="hintLine">
+      Same reflector, sampled two ways, with the wavenumber spectrum of
+      what was recorded.
+    </p>
+
+
+    <div class="sec-row" id="panelRow">
+
+      <!-- TRUTH -->
+
+      <div class="panel-col">
+
+        <p class="sublabel">
+
+          <b>1</b>
+          The truth
+
+          <span class="note">
+            densely sampled reference
+          </span>
+
+        </p>
+
+        <canvas
+          id="fineCanvas"
+          aria-label="Densely sampled section showing the true dip"
+        ></canvas>
+
+      </div>
+
+
+      <!-- RECORDED -->
+
+      <div class="panel-col">
+
+        <p class="sublabel">
+
+          <b>2</b>
+          What you recorded
+
+          <span
+            class="note"
+            id="recNote"
+          >
+            at your trace spacing
+          </span>
+
+        </p>
+
+        <canvas
+          id="recCanvas"
+          aria-label="Section at the chosen trace spacing"
+        ></canvas>
+
+      </div>
+
+
+      <!-- FK -->
+
+      <div class="panel-col">
+
+        <p class="sublabel">
+
+          <b>3</b>
+          Frequency vs wavenumber
+
+          <span class="note">
+            where folding shows
+          </span>
+
+        </p>
+
+        <canvas
+          id="fkCanvas"
+          aria-label="Frequency wavenumber spectrum"
+        ></canvas>
+
+      </div>
+
+    </div>
+
+
+    <div class="legend" id="mainLegend"></div>
+
+  </section>
+
+
+  <!-- ================================================================ -->
+  <!-- NUMBERS                                                          -->
+  <!-- ================================================================ -->
+
+  <div class="stats">
+
+    <div class="stat">
+      <span>Step from trace to trace</span>
+      <b id="rStep">— ms</b>
+    </div>
+
+    <div class="stat">
+      <span>Half a period at peak frequency</span>
+      <b id="rHalf">— ms</b>
+    </div>
+
+    <div class="stat key">
+      <span>Aliased above</span>
+      <b id="rFa">— Hz</b>
+    </div>
+
+    <div class="stat">
+      <span>Steepest dip this survey can record</span>
+      <b id="rDipMax">—</b>
+    </div>
+
+    <div class="stat">
+      <span>Spacing needed for this dip</span>
+      <b id="rDxMax">— m</b>
+    </div>
+
+    <div class="stat">
+      <span>Highest displayed wavelet frequency</span>
+      <b id="rFmax">— Hz</b>
+    </div>
+
+    <div class="stat wide">
+      <span>Verdict</span>
+      <b id="rVerdict">—</b>
+    </div>
+
+  </div>
+
+
+  <!-- ================================================================ -->
+  <!-- TEACHING                                                         -->
+  <!-- ================================================================ -->
+
+  <div class="teach">
+
+    <div class="tryit">
+
+      <h3>Try this</h3>
+
+      <ol>
+
+        <li>
+          <b>Break it slowly.</b>
+          Leave the dip at 20° and walk trace spacing out from 5 m to 80 m.
+
+          <span class="ans">
+            Watch the step from trace to trace. Once it becomes larger
+            than half a period at a given frequency, that frequency is
+            spatially aliased.
+          </span>
+        </li>
+
+
+        <li>
+          <b>Watch the fold in panel 3.</b>
+          Increase the trace spacing.
+
+          <span class="ans">
+            Energy moves toward the spatial Nyquist limit and then folds
+            back into the recorded wavenumber range.
+          </span>
+        </li>
+
+
+        <li>
+          <b>Raise frequency.</b>
+          Fix dip and spacing, then increase frequency.
+
+          <span class="ans">
+            Higher frequencies alias first because they have shorter
+            wavelengths and therefore require finer spatial sampling.
+          </span>
+        </li>
+
+
+        <li>
+          <b>Find the trade.</b>
+          Set spacing to 40 m and compare 30 Hz with 60 Hz.
+
+          <span class="ans">
+            Doubling frequency approximately halves the maximum
+            recordable dip for a fixed trace spacing and velocity.
+          </span>
+        </li>
+
+
+        <li>
+          <b>Change velocity.</b>
+          Increase velocity from 2000 to 5000 m/s.
+
+          <span class="ans">
+            The same geometric dip produces a smaller time shift between
+            traces in a faster medium.
+          </span>
+        </li>
+
+
+        <li>
+          <b>Then take the quiz.</b>
+
+          <span class="ans">
+            On real seismic there is no truth panel. Acquisition geometry
+            and spectral information are part of your evidence.
+          </span>
+        </li>
+
+      </ol>
+
+    </div>
+
+
+    <div class="takeaway">
+
+      <h3>What to carry away</h3>
+
+      <ul>
+
+        <li>
+          <b>The rule:</b>
+          the time step from one trace to the next must be smaller than
+          half a period of the frequency you want to preserve.
+        </li>
+
+        <li>
+          <b>The sampling equation:</b>
+          <span class="k">
+            dx ≤ V / (4 · f · sin θ)
+          </span>
+        </li>
+
+        <li>
+          <b>Aliased data does not look empty.</b>
+          It can look like a perfectly coherent event with the wrong dip.
+        </li>
+
+        <li>
+          <b>Steep + slow + high frequency</b>
+          is the dangerous combination.
+        </li>
+
+        <li>
+          <b>You cannot recover information that was never sampled.</b>
+        </li>
+
+      </ul>
 
     </div>
 
   </div>
 
 
-  <div class="legend"
-       id="mainLegend">
-  </div>
+  <!-- ================================================================ -->
+  <!-- NOTES                                                            -->
+  <!-- ================================================================ -->
 
-</section>
+  <details class="notes" id="notes">
 
+    <summary>
+      Method, assumptions, and where to read more
+    </summary>
 
-<!-- ================================================================
-     STATS
-================================================================ -->
+    <p>
+      A single plane reflector is represented by a zero-phase Ricker
+      wavelet whose arrival time varies with horizontal position as
+    </p>
 
-<div class="stats">
+    <div class="formula">
+      t(x) = t₀ + 2x sin θ / V
+    </div>
 
-  <div class="stat">
-    <span>Step from trace to trace</span>
-    <b id="rStep">— ms</b>
-  </div>
+    <p>
+      Therefore the two-way-time slope is
+    </p>
 
+    <div class="formula">
+      p = dt/dx = 2 sin θ / V
+    </div>
 
-  <div class="stat">
-    <span>Half a period at peak frequency</span>
-    <b id="rHalf">— ms</b>
-  </div>
+    <p>
+      and the time shift from one trace to the next is
+    </p>
 
+    <div class="formula">
+      Δt = p · dx
+    </div>
 
-  <div class="stat key">
-    <span>Aliased above</span>
-    <b id="rFa">— Hz</b>
-  </div>
+    <p>
+      Spatial aliasing begins when the phase change between adjacent
+      traces reaches π radians:
+    </p>
 
+    <div class="formula">
+      Δt ≥ 1 / (2f)
+    </div>
 
-  <div class="stat">
-    <span>Steepest dip at peak frequency</span>
-    <b id="rDipMax">—</b>
-  </div>
+    <p>
+      Combining those expressions gives the familiar maximum trace
+      spacing:
+    </p>
 
+    <div class="formula">
+      dx ≤ V / (4f sin θ)
+    </div>
 
-  <div class="stat">
-    <span>Spacing needed for this dip</span>
-    <b id="rDxMax">—</b>
-  </div>
+    <p>
+      The corresponding alias frequency for a particular dip and trace
+      spacing is
+    </p>
 
+    <div class="formula">
+      f<sub>alias</sub> = 1 / (2p dx)
+      = V / (4 dx sin θ)
+    </div>
 
-  <div class="stat">
-    <span>Highest displayed frequency</span>
-    <b id="rFmax">— Hz</b>
-  </div>
+    <p>
+      The truth panel is sampled much more finely than the recorded
+      panel. It is a visualization of the continuous model, not a
+      claim about a real acquisition system.
+    </p>
 
+    <p>
+      The f–k panel is calculated from the recorded traces using a
+      two-dimensional discrete Fourier transform. Spatial wavenumber
+      is expressed in cycles/m and the Nyquist wavenumber is
+    </p>
 
-  <div class="stat wide">
-    <span>Verdict</span>
-    <b id="rVerdict">—</b>
-  </div>
+    <div class="formula">
+      k<sub>Nyquist</sub> = 1 / (2 dx)
+    </div>
 
-</div>
-
-
-<!-- ================================================================
-     TEACHING
-================================================================ -->
-
-<div class="teach">
-
-  <div class="tryit">
-
-    <h3>Try this</h3>
-
-    <ol>
-
-      <li>
-        <b>Break it slowly.</b>
-        Leave the dip at 20° and increase trace spacing.
-        Watch the recorded panel.
-
-        <span class="ans">
-          The trace-to-trace time step eventually becomes too large
-          to represent the highest frequencies without folding.
-        </span>
-      </li>
-
-
-      <li>
-        <b>Change frequency.</b>
-        Hold dip and spacing fixed and increase frequency.
-
-        <span class="ans">
-          Higher frequencies have shorter periods, so they are the
-          first frequencies to violate the spatial sampling criterion.
-        </span>
-      </li>
-
-
-      <li>
-        <b>Change velocity.</b>
-        Keep dip and spacing fixed and increase velocity.
-
-        <span class="ans">
-          The same geometric dip produces a smaller time shift per
-          metre when velocity increases, making spatial aliasing less
-          likely.
-        </span>
-      </li>
-
-
-      <li>
-        <b>Watch the spectrum.</b>
-        Look at the frequency-wavenumber panel.
-
-        <span class="ans">
-          The dipping event follows a line in f-k space. Once that
-          line reaches the spatial Nyquist boundary, it folds back.
-        </span>
-      </li>
-
-
-      <li>
-        <b>Take the quiz.</b>
-        Hide the answer and judge the recorded panel alone.
-
-        <span class="ans">
-          On real seismic data there is no truth panel. Survey geometry
-          and knowledge of the spatial bandwidth are therefore essential.
-        </span>
-      </li>
-
-    </ol>
-
-  </div>
-
-
-  <div class="takeaway">
-
-    <h3>What to carry away</h3>
+    <p>
+      This simplified demonstration does not include anti-alias filters,
+      migration dip limits, interpolation, irregular acquisition,
+      noise, multiples, or diffraction effects.
+    </p>
 
     <ul>
 
       <li>
-        <b>The key quantity is time shift per trace.</b>
-        For a planar reflector:
-        <span class="k">
-          Δt = 2 dx sinθ / V
-        </span>.
+        Yilmaz, Ö., 2001,
+        <em>Seismic Data Analysis</em>: SEG.
       </li>
 
-
       <li>
-        Spatial aliasing begins when:
-        <span class="k">
-          Δt &gt; 1/(2f)
-        </span>.
+        Vermeer, G.J.O., 2012,
+        <em>3D Seismic Survey Design</em>, 2nd ed.: SEG.
       </li>
 
-
       <li>
-        Rearranging gives:
-        <span class="k">
-          dx &lt; V/(4 f sinθ)
-        </span>.
-      </li>
-
-
-      <li>
-        Aliasing does not necessarily make an event disappear.
-        It can make the event appear with the wrong dip.
-      </li>
-
-
-      <li>
-        Increasing frequency, increasing dip, or decreasing velocity
-        makes spatial aliasing more likely.
+        Liner, C.L., 2016,
+        <em>Elements of 3D Seismology</em>, 3rd ed.: SEG.
       </li>
 
     </ul>
 
-  </div>
-
-</div>
+  </details>
 
 
-<!-- ================================================================
-     NOTES
-================================================================ -->
+  <!-- ================================================================ -->
+  <!-- PAGINATION                                                       -->
+  <!-- ================================================================ -->
 
-<details class="notes" id="notes">
+  <div class="pager">
 
-  <summary>
-    Method, assumptions, and where to read more
-  </summary>
+    <a
+      class="btn ghost"
+      href="fresnel.html"
+    >
+      ← Horizontal resolution
+    </a>
 
-
-  <p>
-
-    The synthetic is a single planar reflector convolved with a
-    zero-phase Ricker wavelet.
-
-    The two-way-time slope is
-
-    <span class="k">
-      p = 2 sinθ / V
-    </span>
-
-    in seconds per metre.
-
-    Therefore the time shift between adjacent traces is
-
-    <span class="k">
-      Δt = p dx
-    </span>.
-
-  </p>
-
-
-  <p>
-
-    Spatial aliasing occurs when the phase change between adjacent
-    spatial samples exceeds π radians:
-
-    <span class="k">
-      2π f p dx &gt; π
-    </span>.
-
-    Therefore:
-
-    <span class="k">
-      f &gt; 1/(2p dx)
-    </span>.
-
-    Equivalently:
-
-    <span class="k">
-      dx &lt; V/(4 f sinθ)
-    </span>.
-
-  </p>
-
-
-  <p>
-
-    The truth panel is sampled eight times more finely than the
-    recorded panel. It is a visualization of the underlying synthetic
-    reflector, not a claim about what a real survey sampled.
-
-  </p>
-
-
-  <p>
-
-    The f-k panel is calculated from the actual recorded panel using
-    a two-dimensional FFT. A cosine taper is applied in time and
-    space before the transform to reduce edge leakage.
-
-  </p>
-
-
-  <p>
-
-    This simple demonstration does not include migration anti-alias
-    operators, interpolation, irregular geometry, noise, multiples,
-    diffraction, or the more complicated sampling requirements of
-    three-dimensional surveys.
-
-  </p>
-
-
-  <ul>
-
-    <li>
-      Yilmaz, Ö., 2001,
-      <em>Seismic Data Analysis</em>, SEG.
-    </li>
-
-    <li>
-      Vermeer, G.J.O., 2012,
-      <em>3D Seismic Survey Design</em>, 2nd ed., SEG.
-    </li>
-
-    <li>
-      Liner, C.L., 2016,
-      <em>Elements of 3D Seismology</em>, 3rd ed., SEG.
-    </li>
-
-  </ul>
-
-</details>
-
-
-<!-- ================================================================
-     FOOTER
-================================================================ -->
-
-<div class="pager">
-
-  <a class="btn ghost"
-     href="fresnel.html">
-    ← Horizontal resolution
-  </a>
-
-  <a class="btn"
-     href="../index.html#modules">
-    All modules →
-  </a>
-
-</div>
-
-
-<footer>
-
-  <div class="foot-grid">
-
-    <p>
-      Built for teaching by Heather Bedle,
-      School of Geosciences, University of Oklahoma —
-      with the AASPI consortium.
-      Free to use or adapt in your own courses with citation.
-    </p>
+    <a
+      class="btn"
+      href="../index.html#modules"
+    >
+      All modules →
+    </a>
 
   </div>
 
-</footer>
+
+  <!-- ================================================================ -->
+  <!-- FOOTER                                                           -->
+  <!-- ================================================================ -->
+
+  <footer>
+
+    <div class="foot-grid">
+
+      <p>
+        Built for teaching by Heather Bedle, School of Geosciences,
+        University of Oklahoma — with the
+        <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a>
+        consortium.
+        Free to use or adapt in your own courses with citation.
+      </p>
+
+    </div>
+
+  </footer>
 
 </div>
 
 
-<script src="../assets/seismic.js"></script>
-
+<!-- ================================================================== -->
+<!-- ALIASING ENGINE                                                    -->
+<!-- ================================================================== -->
 
 <script>
+
 (function () {
 
-'use strict';
+  'use strict';
 
 
-/* ================================================================
-   STATE
-================================================================ */
+  /* ================================================================
+     BASIC SETTINGS
+     ================================================================ */
 
-const DEF = {
+  const NX = 64;
 
-  dip: 20,
-  v: 2500,
-  dx: 25,
-  f: 30,
+  // Truth panel has eight times the spatial sampling density.
+  const FINE_FACTOR = 8;
 
-  disp: 'both',
-  cmap: 'bwr',
-  gain: 1,
-  units: 'm'
-
-};
+  // Must be a power of two for the FFT.
+  const NT = 2048;
 
 
-let S = SEIS.readState(DEF);
+  const DEF = {
+    dip: 20,
+    v: 2500,
+    dx: 25,
+    f: 30,
+    disp: 'both',
+    cmap: 'bwr',
+    gain: 1,
+    units: 'm'
+  };
 
 
-/* ================================================================
-   HELPERS
-================================================================ */
-
-const $ = id => document.getElementById(id);
-
-const clamp = (v, a, b) =>
-  Math.max(a, Math.min(b, v));
+  let S = readState(DEF);
 
 
-const DEG = Math.PI / 180;
-
-const TEAL = '#0B7285';
-const CRIMSON = '#841617';
-const SLATE = '#5C6670';
+  const $ = id => document.getElementById(id);
 
 
-/* ================================================================
-   DATASET SIZE
-================================================================ */
-
-/*
- * The recorded panel is deliberately 64 traces.
- *
- * 64 is a power of two so the f-k transform is efficient.
- */
-
-const NX = 64;
+  const clamp = (v, a, b) =>
+    Math.max(a, Math.min(b, v));
 
 
-/*
- * Truth panel is eight times more finely sampled spatially.
- */
-
-const FINE = 8;
+  const CRIMSON = '#841617';
+  const TEAL = '#0B7285';
+  const SLATE = '#5C6670';
 
 
-/*
- * Temporal samples.
- */
-
-const NT = 2048;
+  let CACHE = {};
 
 
-/*
- * Centre time of the reflector.
- *
- * IMPORTANT:
- *
- * The old version could construct the reflector relative to t = 0
- * while the display was centred around tMid.
- *
- * Here t0 is explicitly the centre of the reflector.
- */
+  /* ================================================================
+     UNITS
+     ================================================================ */
 
-const T0 = 1.5;
+  const UNITS = {
 
+    m: {
+      len: 1,
+      lab: 'm',
+      vel: 1,
+      vlab: 'm/s'
+    },
 
-/* ================================================================
-   QUIZ
-================================================================ */
-
-let Q = {
-
-  on: false,
-  hidden: null,
-  revealed: false,
-  asked: 0,
-  right: 0
-
-};
-
-
-/* ================================================================
-   ACTIVE PARAMETERS
-================================================================ */
-
-function active() {
-
-  return {
-
-    dip: Q.on && Q.hidden ? Q.hidden.dip : S.dip,
-    V:   Q.on && Q.hidden ? Q.hidden.v   : S.v,
-    dx:  Q.on && Q.hidden ? Q.hidden.dx  : S.dx,
-    f:   Q.on && Q.hidden ? Q.hidden.f   : S.f
+    ft: {
+      len: 3.28084,
+      lab: 'ft',
+      vel: 3.28084,
+      vlab: 'ft/s'
+    }
 
   };
 
-}
+
+  function U() {
+    return UNITS[S.units];
+  }
 
 
-/* ================================================================
-   PHYSICS
-================================================================ */
-
-function physics() {
-
-  const A = active();
-
-  const theta = A.dip * DEG;
+  function displayLength(m) {
+    return m * U().len;
+  }
 
 
-/*
- * Two-way-time dip of a planar reflector:
- *
- * p = dt/dx = 2 sin(theta) / V
- */
+  function fmtLength(m, decimals = 0) {
 
-  const p =
-    2 * Math.sin(theta) / A.V;
+    if (!isFinite(m)) {
+      return 'any spacing';
+    }
 
-
-/*
- * Time shift between adjacent traces.
- */
-
-  const step =
-    Math.abs(p) * A.dx;
+    return displayLength(m).toFixed(decimals)
+      + ' '
+      + U().lab;
+  }
 
 
-/*
- * Half a period.
- */
+  /* ================================================================
+     URL STATE
+     ================================================================ */
 
-  const halfPeriod =
-    1 / (2 * A.f);
+  function readState(defaults) {
 
+    const p = new URLSearchParams(location.search);
 
-/*
- * Spatial aliasing frequency:
- *
- * f_alias = 1 / (2 p dx)
- */
+    const out = Object.assign({}, defaults);
 
-  const fAlias =
-    step > 0
-      ? 1 / (2 * step)
-      : Infinity;
+    for (const key of Object.keys(defaults)) {
 
+      if (!p.has(key)) continue;
 
-/*
- * Useful Ricker bandwidth.
- *
- * A Ricker wavelet is not band-limited at 2.2 f.
- * This is simply a plotting convention for showing the
- * significant high-frequency part of the wavelet.
- */
+      const raw = p.get(key);
 
-  const fMax =
-    2.2 * A.f;
+      if (typeof defaults[key] === 'number') {
+        const n = parseFloat(raw);
+        if (Number.isFinite(n)) {
+          out[key] = n;
+        }
+      }
 
+      else if (typeof defaults[key] === 'boolean') {
+        out[key] =
+          raw === '1' ||
+          raw === 'true';
+      }
 
-/*
- * Maximum dip for the PEAK frequency.
- */
+      else {
+        out[key] = raw;
+      }
 
-  const sinMax =
-    A.V / (4 * A.dx * A.f);
+    }
 
-
-  const dipMax =
-    sinMax >= 1
-      ? 90
-      : Math.asin(Math.max(0, sinMax)) / DEG;
+    return out;
+  }
 
 
-/*
- * Maximum spacing for the selected dip and peak frequency.
- */
-
-  const s =
-    Math.sin(theta);
+  let writeTimer = null;
 
 
-  const dxMax =
-    s > 1e-9
-      ? A.V / (4 * A.f * s)
-      : Infinity;
+  function writeState(state, defaults) {
+
+    clearTimeout(writeTimer);
+
+    writeTimer = setTimeout(() => {
+
+      const p = new URLSearchParams();
+
+      for (const key of Object.keys(state)) {
+
+        if (
+          defaults &&
+          state[key] === defaults[key]
+        ) {
+          continue;
+        }
+
+        p.set(
+          key,
+          typeof state[key] === 'boolean'
+            ? (state[key] ? '1' : '0')
+            : state[key]
+        );
+
+      }
+
+      const q = p.toString();
+
+      history.replaceState(
+        null,
+        '',
+        q
+          ? '?' + q
+          : location.pathname
+      );
+
+    }, 200);
+  }
 
 
-  return {
+  /* ================================================================
+     RICKER WAVELET
+     ================================================================ */
 
-    ...A,
+  function ricker(t, f) {
 
-    theta,
-    p,
-    step,
-    halfPeriod,
-    fAlias,
-    fMax,
-    dipMax,
-    dxMax
+    const a =
+      Math.PI *
+      Math.PI *
+      f *
+      f *
+      t *
+      t;
+
+    return (
+      (1 - 2 * a) *
+      Math.exp(-a)
+    );
+  }
+
+
+  /*
+   * The wavelet is truncated at ±1.5/f.
+   *
+   * At this distance the Ricker wavelet is already very small.
+   */
+
+  function waveletHalfLength(f) {
+
+    return 1.5 / f;
+  }
+
+
+  /* ================================================================
+     CANVAS
+     ================================================================ */
+
+  function fitCanvas(canvas, cssW, cssH) {
+
+    const dpr =
+      window.devicePixelRatio || 1;
+
+    canvas.style.width =
+      cssW + 'px';
+
+    canvas.style.height =
+      cssH + 'px';
+
+    canvas.width =
+      Math.round(cssW * dpr);
+
+    canvas.height =
+      Math.round(cssH * dpr);
+
+    const ctx =
+      canvas.getContext('2d');
+
+    ctx.setTransform(
+      dpr,
+      0,
+      0,
+      dpr,
+      0,
+      0
+    );
+
+    return ctx;
+  }
+
+
+  /* ================================================================
+     COLOR MAPS
+     ================================================================ */
+
+  function lerp(a, b, t) {
+
+    return a + (b - a) * t;
+  }
+
+
+  function ramp(stops) {
+
+    return function (x) {
+
+      const v =
+        clamp(x, -1, 1);
+
+      const p =
+        ((v + 1) / 2) *
+        (stops.length - 1);
+
+      const i =
+        Math.min(
+          stops.length - 2,
+          Math.floor(p)
+        );
+
+      const f =
+        p - i;
+
+      const a = stops[i];
+      const b = stops[i + 1];
+
+      return [
+        Math.round(
+          lerp(a[0], b[0], f)
+        ),
+
+        Math.round(
+          lerp(a[1], b[1], f)
+        ),
+
+        Math.round(
+          lerp(a[2], b[2], f)
+        )
+      ];
+    };
+  }
+
+
+  const COLORMAPS = {
+
+    bwr: ramp([
+      [92, 14, 12],
+      [176, 36, 24],
+      [214, 138, 122],
+      [248, 248, 246],
+      [122, 168, 214],
+      [27, 79, 156],
+      [12, 44, 92]
+    ]),
+
+
+    cbsafe: ramp([
+      [127, 63, 0],
+      [224, 130, 20],
+      [253, 190, 110],
+      [247, 247, 247],
+      [146, 197, 222],
+      [33, 102, 172],
+      [8, 48, 107]
+    ]),
+
+
+    gray: ramp([
+      [253, 253, 252],
+      [226, 227, 228],
+      [188, 190, 193],
+      [140, 144, 148],
+      [92, 96, 100],
+      [48, 51, 55],
+      [12, 14, 16]
+    ])
 
   };
 
-}
+
+  /* ================================================================
+     PHYSICS
+     ================================================================ */
+
+  function physics() {
+
+    const dip =
+      S.dip *
+      Math.PI / 180;
+
+    const V = S.v;
+
+    const dx = S.dx;
+
+    const f = S.f;
 
 
-/* ================================================================
-   SYNTHETIC PANEL
-================================================================ */
+    /*
+     * Two-way-time slope of a planar reflector.
+     *
+     * p = dt/dx
+     *
+     * units: seconds / metre
+     */
 
-function buildPanel(nTrace, spacing, wav, dt, nt, P) {
-
-  const field =
-    new Float32Array(nTrace * nt);
-
-
-/*
- * Centre the spatial axis at zero.
- */
-
-  const xCentre =
-    (nTrace - 1) / 2;
+    const p =
+      2 *
+      Math.sin(dip) /
+      V;
 
 
-/*
- * Spatial extent.
- */
+    /*
+     * Time shift from one trace to the next.
+     */
 
-  for (let ix = 0; ix < nTrace; ix++) {
-
-    const x =
-      (ix - xCentre) * spacing;
+    const step =
+      Math.abs(p) * dx;
 
 
-/*
- * Plane reflector.
- *
- * t(x) = T0 + p x
- */
+    /*
+     * Half-period.
+     */
 
-    const tReflector =
-      T0 + P.p * x;
+    const halfPeriod =
+      1 / (2 * f);
 
 
-/*
- * Only calculate samples around the wavelet.
- */
+    /*
+     * Frequency whose phase shift between
+     * adjacent traces is exactly π.
+     */
+
+    const fAlias =
+      p === 0
+        ? Infinity
+        : 1 / (2 * Math.abs(p) * dx);
+
+
+    /*
+     * Maximum dip at the selected peak frequency.
+     */
+
+    const sinDipMax =
+      V /
+      (4 * f * dx);
+
+
+    let dipMax;
+
+    if (sinDipMax >= 1) {
+
+      dipMax = 90;
+
+    } else {
+
+      dipMax =
+        Math.asin(
+          Math.max(0, sinDipMax)
+        ) *
+        180 / Math.PI;
+
+    }
+
+
+    /*
+     * Maximum spacing for the selected dip.
+     */
+
+    const sinDip =
+      Math.sin(dip);
+
+    const dxMax =
+      sinDip < 1e-12
+        ? Infinity
+        : V /
+          (4 * f * sinDip);
+
+
+    /*
+     * Displayed wavelet bandwidth.
+     *
+     * This is deliberately a display value,
+     * not a claim that 2.2 f is a hard cutoff.
+     */
+
+    const fMax =
+      2.2 * f;
+
+
+    return {
+      dip,
+      V,
+      dx,
+      f,
+      p,
+      step,
+      halfPeriod,
+      fAlias,
+      dipMax,
+      dxMax,
+      fMax
+    };
+  }
+
+
+  /* ================================================================
+     BUILD THE SYNTHETIC REFLECTOR
+     ================================================================ */
+
+  function buildSection(
+    nTraces,
+    spacing,
+    nt,
+    dt,
+    t0,
+    P
+  ) {
+
+    const data =
+      new Float32Array(
+        nTraces * nt
+      );
+
 
     const half =
-      wav.halfLength;
+      waveletHalfLength(P.f);
 
 
-/*
- * IMPORTANT:
- *
- * Time coordinates are absolute seconds here.
- * This is why the reflector remains visible.
- */
+    /*
+     * IMPORTANT:
+     *
+     * This is the actual reflector:
+     *
+     * t(x) = t0 + p*x
+     *
+     * where
+     *
+     * p = 2 sin(theta) / V
+     *
+     */
 
-    const i0 =
-      Math.max(
-        0,
-        Math.ceil((tReflector - half) / dt)
+    for (
+      let ix = 0;
+      ix < nTraces;
+      ix++
+    ) {
+
+      /*
+       * Center x around zero.
+       */
+
+      const x =
+        (
+          ix -
+          (nTraces - 1) / 2
+        ) *
+        spacing;
+
+
+      /*
+       * Arrival time of the dipping
+       * reflector at this trace.
+       */
+
+      const arrival =
+        t0 +
+        P.p * x;
+
+
+      /*
+       * Only evaluate samples within
+       * the wavelet's useful support.
+       */
+
+      let i0 =
+        Math.floor(
+          (arrival - half) / dt
+        );
+
+      let i1 =
+        Math.ceil(
+          (arrival + half) / dt
+        );
+
+
+      i0 =
+        clamp(i0, 0, nt - 1);
+
+      i1 =
+        clamp(i1, 0, nt - 1);
+
+
+      /*
+       * Add the Ricker wavelet.
+       */
+
+      for (
+        let it = i0;
+        it <= i1;
+        it++
+      ) {
+
+        const t =
+          it * dt;
+
+        data[
+          ix * nt + it
+        ] =
+          ricker(
+            t - arrival,
+            P.f
+          );
+
+      }
+
+    }
+
+
+    return data;
+  }
+
+
+  /* ================================================================
+     COMPUTE ALL DATA
+     ================================================================ */
+
+  function compute() {
+
+    const P =
+      physics();
+
+
+    /*
+     * Panel width.
+     *
+     * Keep this independent of units.
+     */
+
+    const width =
+      (NX - 1) * P.dx;
+
+
+    /*
+     * Time variation of the event across
+     * the panel.
+     */
+
+    const eventTimeRange =
+      Math.abs(P.p) *
+      width;
+
+
+    /*
+     * Give the reflector plenty of vertical
+     * room while keeping the panel compact.
+     */
+
+    const waveletLength =
+      3.2 / P.f;
+
+
+    const window =
+      clamp(
+        eventTimeRange +
+        waveletLength +
+        0.12,
+        0.20,
+        4.0
       );
 
 
-    const i1 =
-      Math.min(
-        nt - 1,
-        Math.floor((tReflector + half) / dt)
+    const dt =
+      window /
+      (NT - 1);
+
+
+    /*
+     * Put the reflector in the middle
+     * of the time window.
+     */
+
+    const t0 =
+      window / 2;
+
+
+    /*
+     * Check that temporal sampling is
+     * comfortably above the wavelet frequency.
+     */
+
+    const temporalNyquist =
+      1 / (2 * dt);
+
+
+    /*
+     * Truth panel.
+     */
+
+    const fine =
+      buildSection(
+        NX * FINE_FACTOR,
+        P.dx / FINE_FACTOR,
+        NT,
+        dt,
+        t0,
+        P
       );
 
 
-    for (let it = i0; it <= i1; it++) {
+    /*
+     * Recorded panel.
+     */
 
-      const t =
-        it * dt;
+    const recorded =
+      buildSection(
+        NX,
+        P.dx,
+        NT,
+        dt,
+        t0,
+        P
+      );
 
 
-      field[ix * nt + it] =
-        wav.fn(t - tReflector);
+    /*
+     * f-k spectrum.
+     */
+
+    const fk =
+      computeFK(
+        recorded,
+        NX,
+        NT,
+        P.dx,
+        dt
+      );
+
+
+    CACHE = {
+      P,
+      width,
+      window,
+      dt,
+      t0,
+      fine,
+      recorded,
+      fk,
+      temporalNyquist
+    };
+
+  }
+
+
+  /* ================================================================
+     FFT
+     ================================================================ */
+
+  function fft(re, im, inverse) {
+
+    const n =
+      re.length;
+
+
+    /*
+     * Bit reversal.
+     */
+
+    for (
+      let i = 1, j = 0;
+      i < n;
+      i++
+    ) {
+
+      let bit =
+        n >> 1;
+
+      for (
+        ;
+        j & bit;
+        bit >>= 1
+      ) {
+
+        j ^= bit;
+
+      }
+
+      j ^= bit;
+
+
+      if (i < j) {
+
+        let tmp =
+          re[i];
+
+        re[i] =
+          re[j];
+
+        re[j] =
+          tmp;
+
+
+        tmp =
+          im[i];
+
+        im[i] =
+          im[j];
+
+        im[j] =
+          tmp;
+
+      }
+
+    }
+
+
+    /*
+     * Danielson-Lanczos.
+     */
+
+    for (
+      let len = 2;
+      len <= n;
+      len <<= 1
+    ) {
+
+      const angle =
+        2 *
+        Math.PI /
+        len *
+        (inverse ? 1 : -1);
+
+
+      const wlenR =
+        Math.cos(angle);
+
+      const wlenI =
+        Math.sin(angle);
+
+
+      for (
+        let i = 0;
+        i < n;
+        i += len
+      ) {
+
+        let wr = 1;
+        let wi = 0;
+
+
+        for (
+          let j = 0;
+          j < len / 2;
+          j++
+        ) {
+
+          const uR =
+            re[i + j];
+
+          const uI =
+            im[i + j];
+
+
+          const aR =
+            re[
+              i +
+              j +
+              len / 2
+            ];
+
+          const aI =
+            im[
+              i +
+              j +
+              len / 2
+            ];
+
+
+          const vR =
+            aR * wr -
+            aI * wi;
+
+          const vI =
+            aR * wi +
+            aI * wr;
+
+
+          re[i + j] =
+            uR + vR;
+
+          im[i + j] =
+            uI + vI;
+
+
+          re[
+            i +
+            j +
+            len / 2
+          ] =
+            uR - vR;
+
+          im[
+            i +
+            j +
+            len / 2
+          ] =
+            uI - vI;
+
+
+          const nextWR =
+            wr * wlenR -
+            wi * wlenI;
+
+          wi =
+            wr * wlenI +
+            wi * wlenR;
+
+          wr =
+            nextWR;
+
+        }
+
+      }
+
+    }
+
+
+    if (inverse) {
+
+      for (
+        let i = 0;
+        i < n;
+        i++
+      ) {
+
+        re[i] /= n;
+        im[i] /= n;
+
+      }
 
     }
 
   }
 
 
-  return field;
+  /* ================================================================
+     2-D F-K SPECTRUM
+     ================================================================ */
 
-}
-
-
-/* ================================================================
-   COMPUTATION
-================================================================ */
-
-let CACHE = {};
-
-
-function compute() {
-
-  const P =
-    physics();
-
-
-  const wav =
-    SEIS.makeWavelet({
-
-      type: 'ricker',
-
-      f: P.f
-
-    });
-
-
-/*
- * The spatial width of the recorded panel.
- */
-
-  const W =
-    NX * P.dx;
-
-
-/*
- * The reflector needs to remain inside the temporal window.
- *
- * Maximum excursion from centre:
- *
- * |p| W/2
- */
-
-  const excursion =
-    Math.abs(P.p) * W / 2;
-
-
-/*
- * Make a window large enough for:
- *
- * - the dipping reflector
- * - the wavelet
- * - comfortable margins
- */
-
-  const win =
-    Math.max(
-      3.0,
-      2 * excursion +
-      5.0 / P.f
-    );
-
-
-/*
- * Keep the display manageable.
- */
-
-  const displayWin =
-    clamp(win, 2.5, 8.0);
-
-
-/*
- * Temporal sampling.
- *
- * This is intentionally much finer than the wavelet period.
- *
- * 8 samples per period at fMax is already plenty for this
- * educational synthetic; 16 gives a very clean display.
- */
-
-  const dt =
-    1 / (16 * Math.max(P.fMax, P.f));
-
-
-  /*
-   * Force a power-of-two sample count for FFT.
-   */
-
-  let nt =
-    Math.pow(
-      2,
-      Math.ceil(
-        Math.log2(displayWin / dt)
-      )
-    );
-
-
-  nt =
-    clamp(nt, 2048, 16384);
-
-
-  const actualDt =
-    displayWin / nt;
-
-
-/*
- * Build recorded panel.
- */
-
-  const rec =
-    buildPanel(
-      NX,
-      P.dx,
-      wav,
-      actualDt,
-      nt,
-      P
-    );
-
-
-/*
- * Build finely sampled truth panel.
- */
-
-  const fine =
-    buildPanel(
-      NX * FINE,
-      P.dx / FINE,
-      wav,
-      actualDt,
-      nt,
-      P
-    );
-
-
-/*
- * Actual f-k transform.
- */
-
-  const fk =
-    SEIS.fkSpectrum(
-      rec,
-      NX,
-      nt
-    );
-
-
-  CACHE = {
-
-    P,
-    wav,
-
-    W,
-
+  function computeFK(
+    field,
+    nx,
     nt,
-    dt: actualDt,
+    dx,
+    dt
+  ) {
 
-    win: displayWin,
+    /*
+     * Time frequencies:
+     *
+     * 0 ... Nyquist
+     */
 
-    rec,
-    fine,
-    fk
-
-  };
-
-}
-
-
-/* ================================================================
-   LAYOUT
-================================================================ */
-
-function layout() {
-
-  const box =
-    $('recCanvas').closest('.plot');
+    const nf =
+      nt / 2;
 
 
-  const W =
-    Math.max(
-      300,
-      box.clientWidth - 28
+    /*
+     * First transform in time.
+     */
+
+    const tr =
+      new Float64Array(
+        nx * nf
+      );
+
+    const ti =
+      new Float64Array(
+        nx * nf
+      );
+
+
+    const re =
+      new Float64Array(nt);
+
+    const im =
+      new Float64Array(nt);
+
+
+    /*
+     * Hann taper in time.
+     */
+
+    const tw =
+      new Float64Array(nt);
+
+    for (
+      let i = 0;
+      i < nt;
+      i++
+    ) {
+
+      tw[i] =
+        0.5 -
+        0.5 *
+        Math.cos(
+          2 *
+          Math.PI *
+          i /
+          (nt - 1)
+        );
+
+    }
+
+
+    /*
+     * Hann taper in space.
+     */
+
+    const xw =
+      new Float64Array(nx);
+
+    for (
+      let i = 0;
+      i < nx;
+      i++
+    ) {
+
+      xw[i] =
+        0.5 -
+        0.5 *
+        Math.cos(
+          2 *
+          Math.PI *
+          i /
+          (nx - 1)
+        );
+
+    }
+
+
+    for (
+      let ix = 0;
+      ix < nx;
+      ix++
+    ) {
+
+      for (
+        let it = 0;
+        it < nt;
+        it++
+      ) {
+
+        re[it] =
+          field[
+            ix * nt + it
+          ] *
+          tw[it] *
+          xw[ix];
+
+        im[it] = 0;
+
+      }
+
+
+      fft(
+        re,
+        im,
+        false
+      );
+
+
+      for (
+        let f = 0;
+        f < nf;
+        f++
+      ) {
+
+        tr[
+          ix * nf + f
+        ] =
+          re[f];
+
+        ti[
+          ix * nf + f
+        ] =
+          im[f];
+
+      }
+
+    }
+
+
+    /*
+     * Now transform in space.
+     */
+
+    const mag =
+      new Float32Array(
+        nx * nf
+      );
+
+
+    const xr =
+      new Float64Array(nx);
+
+    const xi =
+      new Float64Array(nx);
+
+
+    for (
+      let f = 0;
+      f < nf;
+      f++
+    ) {
+
+      for (
+        let ix = 0;
+        ix < nx;
+        ix++
+      ) {
+
+        xr[ix] =
+          tr[
+            ix * nf + f
+          ];
+
+        xi[ix] =
+          ti[
+            ix * nf + f
+          ];
+
+      }
+
+
+      fft(
+        xr,
+        xi,
+        false
+      );
+
+
+      for (
+        let ik = 0;
+        ik < nx;
+        ik++
+      ) {
+
+        /*
+         * Shift zero wavenumber
+         * to the centre.
+         */
+
+        const shifted =
+          (
+            ik +
+            nx / 2
+          ) % nx;
+
+
+        mag[
+          ik * nf + f
+        ] =
+          Math.hypot(
+            xr[shifted],
+            xi[shifted]
+          );
+
+      }
+
+    }
+
+
+    /*
+     * Physical frequency/wavenumber axes.
+     *
+     * cycles/m
+     * Hz
+     */
+
+    const frequencies =
+      new Float64Array(nf);
+
+    for (
+      let i = 0;
+      i < nf;
+      i++
+    ) {
+
+      frequencies[i] =
+        i /
+        (nt * dt);
+
+    }
+
+
+    const wavenumbers =
+      new Float64Array(nx);
+
+    for (
+      let i = 0;
+      i < nx;
+      i++
+    ) {
+
+      /*
+       * After fftshift:
+       *
+       * -Nyquist ... 0 ... +Nyquist
+       */
+
+      let k;
+
+      if (
+        i <
+        nx / 2
+      ) {
+
+        k =
+          (
+            i -
+            nx / 2
+          ) /
+          (nx * dx);
+
+      } else {
+
+        k =
+          (
+            i -
+            nx / 2
+          ) /
+          (nx * dx);
+
+      }
+
+      wavenumbers[i] =
+        k;
+
+    }
+
+
+    return {
+      mag,
+      nx,
+      nf,
+      frequencies,
+      wavenumbers
+    };
+
+  }
+
+
+  /* ================================================================
+     DRAW VARIABLE DENSITY
+     ================================================================ */
+
+  function drawVariableDensity(
+    ctx,
+    data,
+    nx,
+    nt,
+    rect,
+    cmap,
+    gain,
+    clip
+  ) {
+
+    const off =
+      document.createElement(
+        'canvas'
+      );
+
+    off.width = nx;
+    off.height = nt;
+
+
+    const octx =
+      off.getContext('2d');
+
+
+    const image =
+      octx.createImageData(
+        nx,
+        nt
+      );
+
+
+    /*
+     * Determine amplitude clip.
+     */
+
+    let peak =
+      clip || 0;
+
+
+    if (!peak) {
+
+      for (
+        let i = 0;
+        i < data.length;
+        i++
+      ) {
+
+        peak =
+          Math.max(
+            peak,
+            Math.abs(data[i])
+          );
+
+      }
+
+    }
+
+
+    peak =
+      peak || 1;
+
+
+    for (
+      let ix = 0;
+      ix < nx;
+      ix++
+    ) {
+
+      for (
+        let it = 0;
+        it < nt;
+        it++
+      ) {
+
+        let a =
+          data[
+            ix * nt + it
+          ] /
+          peak;
+
+
+        a *= gain;
+
+
+        const c =
+          cmap(
+            clamp(a, -1, 1)
+          );
+
+
+        const p =
+          (
+            it * nx +
+            ix
+          ) * 4;
+
+
+        image.data[p] =
+          c[0];
+
+        image.data[p + 1] =
+          c[1];
+
+        image.data[p + 2] =
+          c[2];
+
+        image.data[p + 3] =
+          255;
+
+      }
+
+    }
+
+
+    octx.putImageData(
+      image,
+      0,
+      0
     );
 
 
-  const stacked =
-    W < 780;
+    ctx.save();
+
+    /*
+     * IMPORTANT:
+     *
+     * For the recorded panel we deliberately
+     * use nearest-neighbour rendering.
+     *
+     * This lets the user see the actual trace
+     * sampling instead of hiding it with
+     * interpolation.
+     */
+
+    ctx.imageSmoothingEnabled =
+      false;
+
+    ctx.drawImage(
+      off,
+      rect.x,
+      rect.y,
+      rect.w,
+      rect.h
+    );
+
+    ctx.restore();
+
+  }
 
 
-  if (stacked) {
+  /* ================================================================
+     DRAW WIGGLE
+     ================================================================ */
+
+  function drawWiggle(
+    ctx,
+    data,
+    nx,
+    nt,
+    rect,
+    gain,
+    step
+  ) {
+
+    const dx =
+      rect.w / nx;
+
+
+    const traceWidth =
+      dx *
+      step *
+      1.25;
+
+
+    ctx.save();
+
+    ctx.beginPath();
+
+    ctx.rect(
+      rect.x,
+      rect.y,
+      rect.w,
+      rect.h
+    );
+
+    ctx.clip();
+
+
+    ctx.lineWidth =
+      0.9;
+
+    ctx.strokeStyle =
+      'rgba(22,25,28,.80)';
+
+    ctx.fillStyle =
+      'rgba(22,25,28,.22)';
+
+
+    for (
+      let ix = 0;
+      ix < nx;
+      ix += step
+    ) {
+
+      const x0 =
+        rect.x +
+        (ix + 0.5) *
+        dx;
+
+
+      ctx.beginPath();
+
+
+      for (
+        let it = 0;
+        it < nt;
+        it++
+      ) {
+
+        const y =
+          rect.y +
+          it /
+          (nt - 1) *
+          rect.h;
+
+
+        const a =
+          data[
+            ix * nt + it
+          ] *
+          gain;
+
+
+        const x =
+          x0 +
+          a *
+          traceWidth;
+
+
+        if (it === 0) {
+
+          ctx.moveTo(
+            x,
+            y
+          );
+
+        } else {
+
+          ctx.lineTo(
+            x,
+            y
+          );
+
+        }
+
+      }
+
+
+      ctx.stroke();
+
+
+      /*
+       * Positive variable area.
+       */
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        x0,
+        rect.y
+      );
+
+
+      for (
+        let it = 0;
+        it < nt;
+        it++
+      ) {
+
+        const y =
+          rect.y +
+          it /
+          (nt - 1) *
+          rect.h;
+
+
+        const a =
+          Math.max(
+            0,
+            data[
+              ix * nt + it
+            ] *
+            gain
+          );
+
+
+        ctx.lineTo(
+          x0 +
+          a *
+          traceWidth,
+          y
+        );
+
+      }
+
+
+      ctx.lineTo(
+        x0,
+        rect.y +
+        rect.h
+      );
+
+      ctx.closePath();
+
+      ctx.fill();
+
+    }
+
+
+    ctx.restore();
+
+  }
+
+
+  /* ================================================================
+     AXES
+     ================================================================ */
+
+  function frame(
+    ctx,
+    rect
+  ) {
+
+    ctx.save();
+
+    ctx.strokeStyle =
+      'rgba(22,25,28,.55)';
+
+    ctx.lineWidth = 1;
+
+    ctx.strokeRect(
+      rect.x + 0.5,
+      rect.y + 0.5,
+      rect.w,
+      rect.h
+    );
+
+    ctx.restore();
+
+  }
+
+
+  function niceStep(
+    span,
+    target
+  ) {
+
+    const raw =
+      span / target;
+
+
+    const mag =
+      Math.pow(
+        10,
+        Math.floor(
+          Math.log10(raw)
+        )
+      );
+
+
+    const n =
+      raw / mag;
+
+
+    let step;
+
+    if (n < 1.5) {
+      step = 1;
+    } else if (n < 3) {
+      step = 2;
+    } else if (n < 7) {
+      step = 5;
+    } else {
+      step = 10;
+    }
+
+
+    return step * mag;
+  }
+
+
+  function ticks(
+    min,
+    max,
+    target = 5
+  ) {
+
+    const step =
+      niceStep(
+        max - min,
+        target
+      );
+
+
+    const first =
+      Math.ceil(
+        min / step
+      ) * step;
+
+
+    const result = [];
+
+
+    for (
+      let v = first;
+      v <= max + step * 1e-6;
+      v += step
+    ) {
+
+      result.push(
+        Math.abs(v) <
+        step * 1e-7
+          ? 0
+          : v
+      );
+
+    }
+
+
+    return result;
+
+  }
+
+
+  function drawAxes(
+    ctx,
+    rect,
+    xMin,
+    xMax,
+    xLabel,
+    yMin,
+    yMax,
+    yLabel,
+    yFlip
+  ) {
+
+    const font =
+      '11px "IBM Plex Mono", monospace';
+
+
+    ctx.save();
+
+    ctx.font = font;
+
+    ctx.fillStyle =
+      '#5C6670';
+
+    ctx.strokeStyle =
+      '#5C6670';
+
+    ctx.lineWidth = 1;
+
+
+    /*
+     * X axis.
+     */
+
+    ctx.textAlign =
+      'center';
+
+    ctx.textBaseline =
+      'top';
+
+
+    for (
+      const v of ticks(
+        xMin,
+        xMax,
+        5
+      )
+    ) {
+
+      const f =
+        (v - xMin) /
+        (xMax - xMin);
+
+
+      const x =
+        rect.x +
+        f * rect.w;
+
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        x,
+        rect.y +
+        rect.h
+      );
+
+      ctx.lineTo(
+        x,
+        rect.y +
+        rect.h +
+        4
+      );
+
+      ctx.stroke();
+
+
+      ctx.fillText(
+        String(
+          Math.round(v * 100) /
+          100
+        ),
+        x,
+        rect.y +
+        rect.h +
+        6
+      );
+
+    }
+
+
+    ctx.font =
+      '11px "IBM Plex Sans", sans-serif';
+
+
+    ctx.fillText(
+      xLabel,
+      rect.x +
+      rect.w / 2,
+      rect.y +
+      rect.h +
+      23
+    );
+
+
+    /*
+     * Y axis.
+     */
+
+    ctx.font =
+      font;
+
+    ctx.textAlign =
+      'right';
+
+    ctx.textBaseline =
+      'middle';
+
+
+    for (
+      const v of ticks(
+        yMin,
+        yMax,
+        5
+      )
+    ) {
+
+      const f =
+        (v - yMin) /
+        (yMax - yMin);
+
+
+      const y =
+        yFlip
+          ? rect.y +
+            rect.h -
+            f * rect.h
+          : rect.y +
+            f * rect.h;
+
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        rect.x - 4,
+        y
+      );
+
+      ctx.lineTo(
+        rect.x,
+        y
+      );
+
+      ctx.stroke();
+
+
+      ctx.fillText(
+        String(
+          Math.round(v * 100) /
+          100
+        ),
+        rect.x - 7,
+        y
+      );
+
+    }
+
+
+    if (yLabel) {
+
+      ctx.translate(
+        rect.x - 42,
+        rect.y +
+        rect.h / 2
+      );
+
+      ctx.rotate(
+        -Math.PI / 2
+      );
+
+
+      ctx.textAlign =
+        'center';
+
+      ctx.textBaseline =
+        'bottom';
+
+      ctx.font =
+        '11px "IBM Plex Sans", sans-serif';
+
+
+      ctx.fillText(
+        yLabel,
+        0,
+        0
+      );
+
+    }
+
+
+    ctx.restore();
+
+  }
+
+
+  /* ================================================================
+     SECTION LAYOUT
+     ================================================================ */
+
+  function layout() {
+
+    const box =
+      $('recCanvas')
+      .closest('.plot');
+
+
+    const W =
+      Math.max(
+        300,
+        box.clientWidth - 28
+      );
+
+
+    const stacked =
+      W < 780;
+
+
+    if (stacked) {
+
+      return {
+        stacked: true,
+        w: {
+          fine: W,
+          rec: W,
+          fk: W
+        },
+        h: 320
+      };
+
+    }
+
+
+    const available =
+      W - 20;
+
+
+    const each =
+      Math.round(
+        available / 3
+      );
+
 
     return {
 
-      stacked: true,
+      stacked: false,
 
       w: {
-        fine: W,
-        rec: W,
-        fk: W
+        fine: each,
+        rec: each,
+        fk:
+          available -
+          2 * each
       },
 
-      h: 340
+      h:
+        clamp(
+          Math.round(
+            W * 0.32
+          ),
+          280,
+          420
+        )
 
     };
 
   }
 
 
-  const avail =
-    W - 20;
+  /* ================================================================
+     MASK FOR QUIZ
+     ================================================================ */
 
-
-  const each =
-    Math.floor(avail / 3);
-
-
-  return {
-
-    stacked: false,
-
-    w: {
-
-      fine: each,
-      rec: each,
-      fk: avail - 2 * each
-
-    },
-
-    h:
-      clamp(
-        Math.round(W * 0.32),
-        300,
-        440
-      )
-
-  };
-
-}
-
-
-/* ================================================================
-   QUIZ MASK
-================================================================ */
-
-function masked() {
-
-  return Q.on && !Q.revealed;
-
-}
-
-
-function drawMask(ctx, rect, title) {
-
-  ctx.save();
-
-  ctx.beginPath();
-
-  ctx.rect(
-    rect.x,
-    rect.y,
-    rect.w,
-    rect.h
-  );
-
-  ctx.clip();
-
-
-  ctx.fillStyle =
-    '#E9EBEE';
-
-  ctx.fillRect(
-    rect.x,
-    rect.y,
-    rect.w,
-    rect.h
-  );
-
-
-  ctx.strokeStyle =
-    'rgba(92,102,112,.20)';
-
-  ctx.lineWidth = 1;
-
-
-  for (
-    let d = -rect.h;
-    d < rect.w;
-    d += 13
-  ) {
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      rect.x + d,
-      rect.y + rect.h
-    );
-
-    ctx.lineTo(
-      rect.x + d + rect.h,
-      rect.y
-    );
-
-    ctx.stroke();
-
-  }
-
-
-  ctx.fillStyle =
-    SLATE;
-
-  ctx.font =
-    '12px "IBM Plex Mono", monospace';
-
-  ctx.textAlign =
-    'center';
-
-  ctx.textBaseline =
-    'middle';
-
-
-  ctx.fillText(
-    title,
-    rect.x + rect.w / 2,
-    rect.y + rect.h / 2
-  );
-
-
-  ctx.restore();
-
-  SEIS.frame(
+  function drawMask(
     ctx,
-    rect
-  );
-
-}
-
-
-/* ================================================================
-   SECTION DRAWING
-================================================================ */
-
-function drawSection(
-  id,
-  field,
-  n,
-  L,
-  key,
-  isRecorded
-) {
-
-  const canvas =
-    $(id);
-
-
-  const width =
-    L.w[key];
-
-
-  const ctx =
-    SEIS.fitCanvas(
-      canvas,
-      width,
-      L.h
-    );
-
-
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    L.h
-  );
-
-
-  const margin = {
-
-    l:
-      L.stacked || key === 'fine'
-        ? 54
-        : 34,
-
-    r: 12,
-    t: 8,
-    b: 42
-
-  };
-
-
-  const rect = {
-
-    x: margin.l,
-
-    y: margin.t,
-
-    w:
-      width -
-      margin.l -
-      margin.r,
-
-    h:
-      L.h -
-      margin.t -
-      margin.b
-
-  };
-
-
-  const {
-
-    nt,
-    W,
-    P,
-    win
-
-  } = CACHE;
-
-
-  if (
-    !isRecorded &&
-    masked()
+    rect,
+    title
   ) {
 
-    drawMask(
-      ctx,
-      rect,
-      'Truth hidden'
-    );
-
-    return;
-
-  }
-
-
-/* ---------------------------------------------------------------
-   COLOR IMAGE
----------------------------------------------------------------- */
-
-  if (S.disp !== 'wiggle') {
-
-    SEIS.drawVarDensity(
-
-      ctx,
-
-      field,
-
-      n,
-
-      nt,
-
-      rect,
-
-      {
-
-        cmap:
-          SEIS.COLORMAPS[S.cmap],
-
-        gain:
-          S.gain,
-
-        /*
-         * Because the synthetic has unit-amplitude wavelets,
-         * clipping at 1 is appropriate.
-         */
-
-        clip: 1,
-
-        /*
-         * DO NOT interpolate the recorded traces.
-         * That would visually create samples that don't exist.
-         */
-
-        smooth:
-          !isRecorded
-
-      }
-
-    );
-
-  } else {
+    ctx.save();
 
     ctx.fillStyle =
-      '#fff';
+      '#E9EBEE';
 
     ctx.fillRect(
       rect.x,
@@ -1530,1085 +2724,1134 @@ function drawSection(
       rect.h
     );
 
-  }
+
+    ctx.strokeStyle =
+      'rgba(92,102,112,.20)';
+
+    ctx.lineWidth = 1;
 
 
-/* ---------------------------------------------------------------
-   WIGGLES
----------------------------------------------------------------- */
+    for (
+      let x =
+        rect.x -
+        rect.h;
+      x <
+        rect.x +
+        rect.w;
+      x += 13
+    ) {
 
-  if (S.disp !== 'vd') {
+      ctx.beginPath();
 
-    SEIS.drawWiggle(
+      ctx.moveTo(
+        x,
+        rect.y +
+        rect.h
+      );
 
+      ctx.lineTo(
+        x +
+        rect.h,
+        rect.y
+      );
+
+      ctx.stroke();
+
+    }
+
+
+    ctx.fillStyle =
+      SLATE;
+
+    ctx.font =
+      '12px "IBM Plex Mono", monospace';
+
+    ctx.textAlign =
+      'center';
+
+    ctx.textBaseline =
+      'middle';
+
+
+    ctx.fillText(
+      title,
+      rect.x +
+      rect.w / 2,
+      rect.y +
+      rect.h / 2
+    );
+
+
+    ctx.restore();
+
+    frame(
       ctx,
-
-      field,
-
-      n,
-
-      nt,
-
-      rect,
-
-      {
-
-        step:
-          isRecorded
-            ? 1
-            : FINE,
-
-        clip:
-          1 / S.gain,
-
-        excursion:
-          1.15,
-
-        stroke:
-          S.disp === 'both'
-            ? 'rgba(22,25,28,.55)'
-            : 'rgba(22,25,28,.90)',
-
-        fill:
-          S.disp === 'both'
-            ? 'rgba(22,25,28,.22)'
-            : 'rgba(22,25,28,.70)'
-
-      }
-
+      rect
     );
 
   }
 
 
-/* ---------------------------------------------------------------
-   FRAME
----------------------------------------------------------------- */
+  /* ================================================================
+     DRAW SECTION
+     ================================================================ */
 
-  SEIS.frame(
-    ctx,
-    rect
-  );
+  function drawSection(
+    canvasId,
+    field,
+    n,
+    L,
+    key,
+    isRecorded
+  ) {
 
-
-/* ---------------------------------------------------------------
-   AXES
----------------------------------------------------------------- */
-
-  const halfWidth =
-    W / 2;
-
-
-  SEIS.axisBottom(
-
-    ctx,
-
-    rect,
-
-    -uL(halfWidth),
-    uL(halfWidth),
-
-    'Distance (' +
-      U().lab +
-      ')',
-
-    v =>
-      v.toFixed(0)
-
-  );
+    const canvas =
+      $(canvasId);
 
 
-  SEIS.axisLeft(
-
-    ctx,
-
-    rect,
-
-    0,
-    win * 1000,
-
-    L.stacked || key === 'fine'
-      ? 'Two-way time (ms)'
-      : '',
-
-    v =>
-      v.toFixed(0)
-
-  );
-
-}
+    const width =
+      L.w[key];
 
 
-/* ================================================================
-   F-K PANEL
-================================================================ */
-
-function drawFK(L) {
-
-  const canvas =
-    $('fkCanvas');
+    const ctx =
+      fitCanvas(
+        canvas,
+        width,
+        L.h
+      );
 
 
-  const ctx =
-    SEIS.fitCanvas(
-      canvas,
-      L.w.fk,
+    ctx.clearRect(
+      0,
+      0,
+      width,
       L.h
     );
 
 
-  ctx.clearRect(
-    0,
-    0,
-    L.w.fk,
-    L.h
-  );
-
-
-  const margin = {
-
-    l:
-      L.stacked
+    const left =
+      (
+        L.stacked ||
+        key === 'fine'
+      )
         ? 54
-        : 46,
-
-    r: 12,
-    t: 8,
-    b: 42
-
-  };
+        : 32;
 
 
-  const rect = {
+    const rect = {
 
-    x: margin.l,
-    y: margin.t,
+      x: left,
 
-    w:
-      L.w.fk -
-      margin.l -
-      margin.r,
+      y: 8,
 
-    h:
-      L.h -
-      margin.t -
-      margin.b
+      w:
+        width -
+        left -
+        12,
 
-  };
+      h:
+        L.h -
+        8 -
+        42
 
-
-  if (masked()) {
-
-    drawMask(
-      ctx,
-      rect,
-      'Spectrum hidden'
-    );
-
-    return;
-
-  }
+    };
 
 
-  const {
-
-    fk,
-    P,
-    nt,
-    dt
-
-  } = CACHE;
+    const C =
+      CACHE;
 
 
-/*
- * Spatial Nyquist.
- *
- * cycles / metre.
- */
-
-  const kNy =
-    1 / (2 * P.dx);
-
-
-/*
- * Display frequency.
- */
-
-  const fNyquistTime =
-    1 / (2 * dt);
-
-
-  const fShown =
-    Math.min(
-      fNyquistTime,
-      Math.max(
-        90,
-        P.fMax * 1.25
-      )
-    );
-
-
-/*
- * Number of FFT frequency bins shown.
- */
-
-  const nfShow =
-    Math.max(
-      4,
-      Math.min(
-        fk.nf,
-        Math.floor(
-          fShown * CACHE.win
-        )
-      )
-    );
-
-
-/*
- * Find maximum amplitude.
- */
-
-  let peak =
-    1e-12;
-
-
-  for (
-    let ik = 0;
-    ik < fk.nk;
-    ik++
-  ) {
-
-    for (
-      let i = 1;
-      i < nfShow;
-      i++
+    if (
+      !isRecorded &&
+      QUIZ.on &&
+      !QUIZ.revealed
     ) {
 
-      peak =
-        Math.max(
-          peak,
-          fk.mag[
-            ik * fk.nf + i
-          ]
-        );
+      drawMask(
+        ctx,
+        rect,
+        'Truth hidden'
+      );
+
+      return;
 
     }
 
-  }
 
+    /*
+     * White background first.
+     */
 
-/*
- * Image.
- */
+    ctx.fillStyle =
+      '#ffffff';
 
-  const off =
-    document.createElement(
-      'canvas'
+    ctx.fillRect(
+      rect.x,
+      rect.y,
+      rect.w,
+      rect.h
     );
-
-
-  off.width =
-    fk.nk;
-
-  off.height =
-    nfShow;
-
-
-  const octx =
-    off.getContext('2d');
-
-
-  const img =
-    octx.createImageData(
-      fk.nk,
-      nfShow
-    );
-
-
-  for (
-    let ik = 0;
-    ik < fk.nk;
-    ik++
-  ) {
 
 
     /*
-     * The FFT output is ordered:
-     *
-     * 0, +k, ..., +Nyquist,
-     * -Nyquist, ..., -k
-     *
-     * Shift it so negative k is on
-     * the left and positive k on
-     * the right.
+     * Color display.
      */
 
-    const shiftedIndex =
-      (ik + Math.floor(fk.nk / 2))
-      % fk.nk;
+    if (
+      S.disp !== 'wiggle'
+    ) {
+
+      drawVariableDensity(
+        ctx,
+        field,
+        n,
+        NT,
+        rect,
+        COLORMAPS[S.cmap],
+        S.gain,
+        1
+      );
+
+    }
+
+
+    /*
+     * Wiggle display.
+     */
+
+    if (
+      S.disp !== 'vd'
+    ) {
+
+      drawWiggle(
+        ctx,
+        field,
+        n,
+        NT,
+        rect,
+        1.0,
+        isRecorded
+          ? 1
+          : FINE_FACTOR
+      );
+
+    }
+
+
+    frame(
+      ctx,
+      rect
+    );
+
+
+    drawAxes(
+      ctx,
+      rect,
+
+      -C.width / 2,
+      C.width / 2,
+
+      'Distance (' +
+      U().lab +
+      ')',
+
+      0,
+      C.window * 1000,
+
+      L.stacked ||
+      key === 'fine'
+        ? 'Two-way time (ms)'
+        : '',
+
+      false
+    );
+
+  }
+
+
+  /* ================================================================
+     DRAW F-K
+     ================================================================ */
+
+  function drawFK(L) {
+
+    const canvas =
+      $('fkCanvas');
+
+
+    const width =
+      L.w.fk;
+
+
+    const ctx =
+      fitCanvas(
+        canvas,
+        width,
+        L.h
+      );
+
+
+    ctx.clearRect(
+      0,
+      0,
+      width,
+      L.h
+    );
+
+
+    const rect = {
+
+      x:
+        L.stacked
+          ? 54
+          : 46,
+
+      y: 8,
+
+      w:
+        width -
+        (
+          L.stacked
+            ? 54
+            : 46
+        ) -
+        12,
+
+      h:
+        L.h -
+        8 -
+        42
+
+    };
+
+
+    if (
+      QUIZ.on &&
+      !QUIZ.revealed
+    ) {
+
+      drawMask(
+        ctx,
+        rect,
+        'Spectrum hidden'
+      );
+
+      return;
+
+    }
+
+
+    const F =
+      CACHE.fk;
+
+
+    const P =
+      CACHE.P;
+
+
+    const kNy =
+      1 /
+      (2 * P.dx);
+
+
+    /*
+     * Show enough frequency to see
+     * the wavelet and the aliasing.
+     */
+
+    const fShown =
+      Math.min(
+        CACHE.temporalNyquist,
+        Math.max(
+          90,
+          P.fMax * 1.5
+        )
+      );
+
+
+    const nfShown =
+      Math.max(
+        2,
+        Math.min(
+          F.nf,
+          Math.floor(
+            fShown *
+            CACHE.window
+          )
+        )
+      );
+
+
+    /*
+     * Find spectrum maximum.
+     */
+
+    let peak =
+      1e-12;
+
+
+    for (
+      let ik = 0;
+      ik < F.nx;
+      ik++
+    ) {
+
+      for (
+        let fi = 1;
+        fi < nfShown;
+        fi++
+      ) {
+
+        peak =
+          Math.max(
+            peak,
+            F.mag[
+              ik * F.nf + fi
+            ]
+          );
+
+      }
+
+    }
+
+
+    /*
+     * Create the spectrum image.
+     */
+
+    const off =
+      document.createElement(
+        'canvas'
+      );
+
+
+    off.width =
+      F.nx;
+
+    off.height =
+      nfShown;
+
+
+    const octx =
+      off.getContext('2d');
+
+
+    const image =
+      octx.createImageData(
+        F.nx,
+        nfShown
+      );
+
+
+    for (
+      let ik = 0;
+      ik < F.nx;
+      ik++
+    ) {
+
+      for (
+        let fi = 0;
+        fi < nfShown;
+        fi++
+      ) {
+
+        const a =
+          Math.pow(
+            F.mag[
+              ik * F.nf + fi
+            ] /
+            peak,
+            0.42
+          );
+
+
+        /*
+         * Pale background →
+         * dark teal energy.
+         */
+
+        const r =
+          Math.round(
+            250 -
+            185 * a
+          );
+
+        const g =
+          Math.round(
+            250 -
+            155 * a
+          );
+
+        const b =
+          Math.round(
+            248 -
+            130 * a
+          );
+
+
+        /*
+         * Image coordinates have
+         * frequency increasing downward,
+         * so reverse fi.
+         */
+
+        const row =
+          nfShown -
+          1 -
+          fi;
+
+
+        const p =
+          (
+            row *
+            F.nx +
+            ik
+          ) * 4;
+
+
+        image.data[p] =
+          r;
+
+        image.data[p + 1] =
+          g;
+
+        image.data[p + 2] =
+          b;
+
+        image.data[p + 3] =
+          255;
+
+      }
+
+    }
+
+
+    octx.putImageData(
+      image,
+      0,
+      0
+    );
+
+
+    ctx.save();
+
+    ctx.imageSmoothingEnabled =
+      true;
+
+    ctx.imageSmoothingQuality =
+      'high';
+
+
+    ctx.drawImage(
+      off,
+      rect.x,
+      rect.y,
+      rect.w,
+      rect.h
+    );
+
+
+    ctx.restore();
+
+
+    /*
+     * Coordinate transforms.
+     */
+
+    function xOf(k) {
+
+      return (
+        rect.x +
+        (
+          (k + kNy) /
+          (2 * kNy)
+        ) *
+        rect.w
+      );
+
+    }
+
+
+    function yOf(f) {
+
+      return (
+        rect.y +
+        rect.h *
+        (
+          1 -
+          f / fShown
+        )
+      );
+
+    }
+
+
+    /*
+     * Draw the theoretical dipping
+     * line and its folded copies.
+     */
+
+    ctx.save();
+
+    ctx.strokeStyle =
+      TEAL;
+
+    ctx.lineWidth =
+      1.6;
+
+    ctx.setLineDash([
+      5,
+      4
+    ]);
+
+
+    let previousK =
+      null;
+
+    let previousF =
+      null;
 
 
     for (
       let i = 0;
-      i < nfShow;
+      i <= 800;
       i++
     ) {
 
-      const raw =
-        fk.mag[
-          shiftedIndex *
-            fk.nf + i
-        ] / peak;
-
-
-      const a =
-        Math.pow(
-          clamp(raw, 0, 1),
-          0.45
-        );
-
-
-      const r =
-        Math.round(
-          252 - 160 * a
-        );
-
-
-      const g =
-        Math.round(
-          250 - 232 * a
-        );
-
-
-      const b =
-        Math.round(
-          246 - 230 * a
-        );
+      const f =
+        fShown *
+        i /
+        800;
 
 
       /*
-       * ImageData rows run from top to bottom.
-       * Put zero frequency at the bottom.
+       * For a plane wave:
+       *
+       * k = p f
+       *
+       * where p is seconds/m
+       * and f is cycles/s.
+       *
+       * k is therefore cycles/m.
        */
 
-      const row =
-        nfShow - 1 - i;
+      let k =
+        P.p * f;
 
 
-      const p =
-        (row * fk.nk + ik) * 4;
+      /*
+       * Wrap into the recorded
+       * Nyquist interval.
+       */
+
+      while (
+        k > kNy
+      ) {
+
+        k -=
+          2 * kNy;
+
+      }
 
 
-      img.data[p] =
-        r;
+      while (
+        k < -kNy
+      ) {
 
-      img.data[p + 1] =
-        g;
+        k +=
+          2 * kNy;
 
-      img.data[p + 2] =
-        b;
+      }
 
-      img.data[p + 3] =
-        255;
+
+      const x =
+        xOf(k);
+
+      const y =
+        yOf(f);
+
+
+      /*
+       * If the wrapped branch jumps,
+       * start a new line.
+       */
+
+      if (
+        previousK !== null &&
+        Math.abs(
+          k - previousK
+        ) >
+        kNy
+      ) {
+
+        ctx.stroke();
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+          x,
+          y
+        );
+
+      }
+
+      else if (
+        previousK === null
+      ) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+          x,
+          y
+        );
+
+      }
+
+      else {
+
+        ctx.lineTo(
+          x,
+          y
+        );
+
+      }
+
+
+      previousK = k;
+      previousF = f;
 
     }
+
+
+    ctx.stroke();
+
+    ctx.restore();
+
+
+    /*
+     * Alias frequency line.
+     */
+
+    if (
+      isFinite(P.fAlias) &&
+      P.fAlias < fShown
+    ) {
+
+      const y =
+        yOf(
+          P.fAlias
+        );
+
+
+      ctx.save();
+
+      ctx.setLineDash([
+        6,
+        4
+      ]);
+
+      ctx.strokeStyle =
+        CRIMSON;
+
+      ctx.lineWidth =
+        1.6;
+
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        rect.x,
+        y
+      );
+
+      ctx.lineTo(
+        rect.x +
+        rect.w,
+        y
+      );
+
+      ctx.stroke();
+
+
+      ctx.fillStyle =
+        CRIMSON;
+
+      ctx.font =
+        '10px "IBM Plex Mono", monospace';
+
+      ctx.textAlign =
+        'left';
+
+      ctx.textBaseline =
+        'bottom';
+
+
+      ctx.fillText(
+        'aliasing begins',
+        rect.x + 5,
+        y - 4
+      );
+
+
+      ctx.restore();
+
+    }
+
+
+    /*
+     * Nyquist lines.
+     */
+
+    ctx.save();
+
+    ctx.strokeStyle =
+      'rgba(92,102,112,.35)';
+
+    ctx.lineWidth =
+      1;
+
+    ctx.setLineDash([
+      3,
+      4
+    ]);
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      xOf(-kNy),
+      rect.y
+    );
+
+    ctx.lineTo(
+      xOf(-kNy),
+      rect.y +
+      rect.h
+    );
+
+    ctx.moveTo(
+      xOf(kNy),
+      rect.y
+    );
+
+    ctx.lineTo(
+      xOf(kNy),
+      rect.y +
+      rect.h
+    );
+
+    ctx.stroke();
+
+    ctx.restore();
+
+
+    frame(
+      ctx,
+      rect
+    );
+
+
+    drawAxes(
+      ctx,
+      rect,
+
+      -kNy,
+      kNy,
+
+      'Wavenumber (cycles/m)',
+
+      0,
+      fShown,
+
+      'Frequency (Hz)',
+
+      true
+    );
 
   }
 
 
-  octx.putImageData(
-    img,
-    0,
-    0
-  );
+  /* ================================================================
+     QUIZ
+     ================================================================ */
+
+  const QUIZ = {
+
+    on: false,
+
+    hidden: null,
+
+    revealed: false,
+
+    asked: 0,
+
+    right: 0
+
+  };
 
 
-  ctx.save();
-
-  ctx.imageSmoothingEnabled =
-    true;
-
-  ctx.imageSmoothingQuality =
-    'high';
-
-
-  ctx.drawImage(
-    off,
-    rect.x,
-    rect.y,
-    rect.w,
-    rect.h
-  );
-
-
-  ctx.restore();
-
-
-/* ---------------------------------------------------------------
-   AXIS TRANSFORMS
----------------------------------------------------------------- */
-
-  const xOf =
-    k =>
-      rect.x +
-      (
-        (k + kNy) /
-        (2 * kNy)
-      ) *
-      rect.w;
-
-
-  const yOf =
-    f =>
-      rect.y +
-      rect.h *
-      (
-        1 - f / fShown
-      );
-
-
-/* ---------------------------------------------------------------
-   THEORETICAL ALIAS LINE
----------------------------------------------------------------- */
-
-  ctx.save();
-
-  ctx.setLineDash([
-    4,
-    3
-  ]);
-
-  ctx.strokeStyle =
-    TEAL;
-
-  ctx.lineWidth =
-    1.6;
-
-
-  /*
-   * The unaliased line is:
-   *
-   * k = p f
-   *
-   * because the event is:
-   *
-   * t = p x
-   *
-   * and a Fourier phase term
-   * exp(i 2π f p x) gives
-   * k = f p.
-   *
-   * Once |k| > kNyquist it wraps.
-   */
-
-
-  let previous = null;
-
-
-  for (
-    let i = 0;
-    i <= 600;
-    i++
-  ) {
-
-    const f =
-      fShown *
-      i / 600;
-
-
-    let k =
-      P.p * f;
-
-
-    /*
-     * Wrap spatial frequency into
-     * the recorded Nyquist interval.
-     */
-
-    k =
-      ((k + kNy) %
-        (2 * kNy) +
-        (2 * kNy)) %
-        (2 * kNy) -
-        kNy;
-
-
-    const x =
-      xOf(k);
-
-
-    const y =
-      yOf(f);
-
-
-    /*
-     * Break the line at a wrap.
-     */
+  function quizValues() {
 
     if (
-      previous &&
-      Math.abs(
-        x - previous.x
-      ) >
-        rect.w * 0.5
+      QUIZ.on &&
+      QUIZ.hidden
     ) {
 
-      ctx.stroke();
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        x,
-        y
-      );
-
-    } else if (!previous) {
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        x,
-        y
-      );
-
-    } else {
-
-      ctx.lineTo(
-        x,
-        y
-      );
+      return QUIZ.hidden;
 
     }
 
 
-    previous = {
-      x,
-      y
+    return {
+
+      dip: S.dip,
+
+      v: S.v,
+
+      dx: S.dx,
+
+      f: S.f
+
     };
 
   }
 
 
-  ctx.stroke();
+  function newCase() {
 
-  ctx.restore();
-
-
-/* ---------------------------------------------------------------
-   ALIAS FREQUENCY
----------------------------------------------------------------- */
-
-  if (
-    Number.isFinite(P.fAlias) &&
-    P.fAlias < fShown
-  ) {
-
-    const y =
-      yOf(P.fAlias);
+    const random =
+      Math.random;
 
 
-    SEIS.dashedLine(
-
-      ctx,
-
-      rect.x,
-      y,
-
-      rect.x + rect.w,
-      y,
-
-      CRIMSON,
-
-      [6, 4],
-
-      1.6
-
-    );
+    const V =
+      1800 +
+      Math.round(
+        random() * 2800
+      );
 
 
-    SEIS.tag(
+    const f =
+      15 +
+      Math.round(
+        random() * 45
+      );
 
-      ctx,
 
-      rect.x + 4,
-      y - 9,
+    const dip =
+      4 +
+      Math.round(
+        random() * 40
+      );
 
-      'aliasing begins',
 
-      CRIMSON
+    const radians =
+      dip *
+      Math.PI /
+      180;
 
-    );
+
+    const criticalDx =
+      V /
+      (
+        4 *
+        f *
+        Math.sin(radians)
+      );
+
+
+    const factor =
+      random() < 0.5
+        ? 0.35 +
+          random() * 0.45
+        : 1.15 +
+          random() * 1.5;
+
+
+    const dx =
+      clamp(
+        Math.round(
+          criticalDx *
+          factor
+        ),
+        5,
+        80
+      );
+
+
+    QUIZ.hidden = {
+      dip,
+      v: V,
+      dx,
+      f
+    };
+
+
+    QUIZ.revealed =
+      false;
+
+
+    $('verdict').textContent =
+      '';
+
+
+    refresh();
 
   }
 
 
-/* ---------------------------------------------------------------
-   AXES
----------------------------------------------------------------- */
+  function judge(
+    saidAliased
+  ) {
 
-  SEIS.frame(
-    ctx,
-    rect
-  );
+    if (
+      !QUIZ.hidden ||
+      QUIZ.revealed
+    ) {
 
+      return;
 
-  SEIS.axisBottom(
-
-    ctx,
-
-    rect,
-
-    -kNy * 1000,
-    kNy * 1000,
-
-    'Wavenumber (cycles / km)',
-
-    v =>
-      v.toFixed(0)
-
-  );
-
-
-  SEIS.axisLeft(
-
-    ctx,
-
-    rect,
-
-    0,
-    fShown,
-
-    'Frequency (Hz)',
-
-    v =>
-      v.toFixed(0),
-
-    {
-      flip: true
     }
 
-  );
 
-}
-
-
-/* ================================================================
-   UNITS
-================================================================ */
-
-function U() {
-
-  return SEIS.UNITS[S.units];
-
-}
+    const v =
+      QUIZ.hidden;
 
 
-function uL(m) {
-
-  return m * U().len;
-
-}
-
-
-function fmtL(
-  m,
-  decimals
-) {
-
-  const d =
-    decimals === undefined
-      ? 0
-      : decimals;
+    const dipRad =
+      v.dip *
+      Math.PI /
+      180;
 
 
-  return (
-    uL(m).toFixed(d) +
-    ' ' +
-    U().lab
-  );
-
-}
+    const p =
+      2 *
+      Math.sin(dipRad) /
+      v.v;
 
 
-/* ================================================================
-   LEGEND
-================================================================ */
-
-function updateLegend() {
-
-  $('mainLegend').innerHTML =
-
-    '<span>' +
-    '<i style="border-color:' +
-    TEAL +
-    ';border-top-style:dashed"></i>' +
-    'theoretical dip in f-k space' +
-    '</span>' +
-
-    '<span>' +
-    '<i style="border-color:' +
-    CRIMSON +
-    ';border-top-style:dashed"></i>' +
-    'spatial aliasing frequency' +
-    '</span>';
+    const fAlias =
+      1 /
+      (
+        2 *
+        Math.abs(p) *
+        v.dx
+      );
 
 
-  $('recNote').textContent =
-    Q.on
-      ? 'this is all you get'
-      : fmtL(active().dx) +
-        ' apart';
+    const trulyAliased =
+      fAlias <
+      2.2 * v.f;
 
 
-  $('hintLine').textContent =
-    Q.on
-      ? 'Only the recorded panel is shown. Real dip, or an alias?'
-      : 'Same reflector, sampled finely and at the selected trace spacing.';
+    QUIZ.revealed =
+      true;
 
 
-  $('quizBox').hidden =
-    !Q.on;
-
-}
+    QUIZ.asked++;
 
 
-/* ================================================================
-   STATISTICS
-================================================================ */
-
-function updateStats() {
-
-  const P =
-    CACHE.P;
+    const correct =
+      saidAliased ===
+      trulyAliased;
 
 
-  const hidden =
-    masked();
+    if (correct) {
+      QUIZ.right++;
+    }
 
 
-  if (hidden) {
+    $('verdict').style.color =
+      correct
+        ? '#1F6F43'
+        : 'var(--crimson)';
 
-    $('rStep').textContent =
-      'hidden';
 
-    $('rHalf').textContent =
-      'hidden';
+    $('verdict').textContent =
 
-    $('rFa').textContent =
-      'hidden';
+      (
+        correct
+          ? 'Correct. '
+          : 'Not this time. '
+      )
 
-    $('rDipMax').textContent =
-      'hidden';
+      +
 
-    $('rDxMax').textContent =
-      'hidden';
+      'Dip ' +
+      v.dip +
+      '°, ' +
 
-    $('rFmax').textContent =
-      'hidden';
+      Math.round(v.v) +
+      ' m/s, ' +
 
-    $('rVerdict').textContent =
-      'Make your call';
+      v.dx +
+      ' m spacing, ' +
 
-    return;
+      v.f +
+      ' Hz. '
+
+      +
+
+      'Alias frequency = ' +
+
+      fAlias.toFixed(0) +
+      ' Hz. '
+
+      +
+
+      (
+        trulyAliased
+          ? 'The recorded event is aliased.'
+          : 'The peak-frequency event is properly sampled.'
+      )
+
+      +
+
+      ' Score ' +
+      QUIZ.right +
+      ' / ' +
+      QUIZ.asked +
+      '.';
+
+
+    refresh();
 
   }
 
 
-  $('rStep').textContent =
-    (
-      P.step * 1000
-    ).toFixed(2) +
-    ' ms';
+  /* ================================================================
+     DRAWING
+     ================================================================ */
 
+  function render() {
 
-  $('rHalf').textContent =
-    (
-      P.halfPeriod * 1000
-    ).toFixed(2) +
-    ' ms';
+    const L =
+      layout();
 
 
-  $('rFmax').textContent =
-    P.fMax.toFixed(0) +
-    ' Hz';
-
-
-  $('rFa').textContent =
-    Number.isFinite(P.fAlias)
-      ? P.fAlias.toFixed(0) +
-        ' Hz'
-      : 'never';
-
-
-  $('rDipMax').textContent =
-    P.dipMax >= 89.9
-      ? 'any dip'
-      : P.dipMax.toFixed(0) +
-        '°';
-
-
-  $('rDxMax').textContent =
-    Number.isFinite(P.dxMax)
-      ? fmtL(P.dxMax)
-      : 'any spacing';
-
-
-/*
- * Peak-frequency criterion.
- *
- * This is intentionally separate from the
- * "significant wavelet bandwidth" test.
- */
-
-  if (P.fAlias < P.f) {
-
-    $('rVerdict').textContent =
-      'Aliased at the peak frequency — the recorded dip is not uniquely determined';
-
-  }
-
-  else if (P.fAlias < P.fMax) {
-
-    $('rVerdict').textContent =
-      'Partly aliased — the high-frequency tail folds first';
-
-  }
-
-  else {
-
-    $('rVerdict').textContent =
-      'Properly sampled at the displayed bandwidth';
-
-  }
-
-}
-
-
-/* ================================================================
-   QUIZ
-================================================================ */
-
-function newCase() {
-
-  const r =
-    Math.random;
-
-
-  const V =
-    1800 +
-    Math.round(
-      r() * 2800
-    );
-
-
-  const f =
-    15 +
-    Math.round(
-      r() * 45
-    );
-
-
-  const dip =
-    4 +
-    Math.round(
-      r() * 40
-    );
-
-
-  const sinD =
-    Math.sin(
-      dip * DEG
-    );
-
-
-  const dxCrit =
-    V /
-    (
-      4 *
-      f *
-      sinD
-    );
-
-
-  /*
-   * Some clean, some aliased.
-   */
-
-  const factor =
-    r() < 0.5
-
-      ? 0.35 +
-        r() * 0.50
-
-      : 1.15 +
-        r() * 1.4;
-
-
-  const dx =
-    clamp(
-      Math.round(
-        dxCrit * factor
-      ),
-      5,
-      80
-    );
-
-
-  Q.hidden = {
-
-    dip,
-    v: V,
-    f,
-    dx
-
-  };
-
-
-  Q.revealed =
-    false;
-
-
-  $('verdict').textContent =
-    '';
-
-
-  $('verdict').style.color =
-    '';
-
-
-  refresh();
-
-}
-
-
-function judge(
-  saidAliased
-) {
-
-  if (
-    !Q.hidden ||
-    Q.revealed
-  ) {
-
-    return;
-
-  }
-
-
-  const P =
-    physics();
-
-
-  const truly =
-    P.fAlias < P.f;
-
-
-  Q.revealed =
-    true;
-
-
-  Q.asked++;
-
-
-  const ok =
-    saidAliased === truly;
-
-
-  if (ok)
-    Q.right++;
-
-
-  const msg =
-
-    (ok
-      ? 'Correct. '
-      : 'Not this time. ') +
-
-    'Dip ' +
-    P.dip +
-    '°, ' +
-
-    Math.round(P.V) +
-    ' m/s, ' +
-
-    fmtL(P.dx) +
-    ' spacing, ' +
-
-    P.f +
-    ' Hz. ' +
-
-    'Trace-to-trace time shift = ' +
-
-    (
-      P.step * 1000
-    ).toFixed(2) +
-
-    ' ms; half period = ' +
-
-    (
-      P.halfPeriod * 1000
-    ).toFixed(2) +
-
-    ' ms. ' +
-
-    (
-      truly
-        ? 'The peak frequency is spatially aliased.'
-        : 'The peak frequency is properly sampled.'
-    ) +
-
-    ' Score ' +
-
-    Q.right +
-    ' / ' +
-    Q.asked +
-    '.';
-
-
-  $('verdict').textContent =
-    msg;
-
-
-  $('verdict').style.color =
-    ok
-      ? '#1F6F43'
-      : 'var(--crimson)';
-
-
-  render();
-
-}
-
-
-/* ================================================================
-   RENDER
-================================================================ */
-
-function render() {
-
-  if (!CACHE.rec)
-    return;
-
-
-  const L =
-    layout();
-
-
-  const cols =
-    $('panelRow')
+    const cols =
+      $('panelRow')
       .querySelectorAll(
         '.panel-col'
       );
 
 
-  ['fine', 'rec', 'fk']
-    .forEach(
-      (k, i) => {
+    const names =
+      [
+        'fine',
+        'rec',
+        'fk'
+      ];
+
+
+    names.forEach(
+      (name, i) => {
 
         if (cols[i]) {
 
           cols[i].style.width =
-            L.w[k] + 'px';
+            L.w[name] +
+            'px';
 
         }
 
@@ -2616,173 +3859,313 @@ function render() {
     );
 
 
-  drawSection(
+    /*
+     * IMPORTANT:
+     *
+     * We always draw the truth panel
+     * from CACHE.fine and the recorded
+     * panel from CACHE.recorded.
+     */
 
-    'fineCanvas',
-
-    CACHE.fine,
-
-    NX * FINE,
-
-    L,
-
-    'fine',
-
-    false
-
-  );
-
-
-  drawSection(
-
-    'recCanvas',
-
-    CACHE.rec,
-
-    NX,
-
-    L,
-
-    'rec',
-
-    true
-
-  );
+    drawSection(
+      'fineCanvas',
+      CACHE.fine,
+      NX * FINE_FACTOR,
+      L,
+      'fine',
+      false
+    );
 
 
-  drawFK(L);
+    drawSection(
+      'recCanvas',
+      CACHE.recorded,
+      NX,
+      L,
+      'rec',
+      true
+    );
 
 
-  updateLegend();
-
-  updateStats();
-
-}
+    drawFK(L);
 
 
-/* ================================================================
-   REFRESH
-================================================================ */
+    updateLegend();
 
-function refresh() {
+    updateStats();
 
-  compute();
-
-  render();
-
-  SEIS.writeState(
-    S,
-    DEF
-  );
-
-}
+  }
 
 
-/* ================================================================
-   UI LABELS
-================================================================ */
+  function refresh() {
 
-function syncLabels() {
+    compute();
 
-  $('dipV').textContent =
-    S.dip + '°';
+    render();
 
+    syncLabels();
 
-  $('velV').textContent =
-    Math.round(
-      uL(S.v)
-    ) +
-    ' ' +
-    U().vlab;
+    writeState(
+      S,
+      DEF
+    );
+
+  }
 
 
-  $('dxV').textContent =
-    fmtL(S.dx);
+  /* ================================================================
+     LABELS
+     ================================================================ */
+
+  function syncLabels() {
+
+    $('dipV').textContent =
+      S.dip +
+      '°';
 
 
-  $('freqV').textContent =
-    S.f +
-    ' Hz';
+    $('velV').textContent =
+      Math.round(
+        S.v *
+        U().vel
+      ) +
+      ' ' +
+      U().vlab;
 
 
-  $('gainV').textContent =
-    S.gain.toFixed(1) +
-    '×';
+    $('dxV').textContent =
+      fmtLength(
+        S.dx
+      );
 
 
-  $('dVD')
-    .setAttribute(
+    $('freqV').textContent =
+      S.f +
+      ' Hz';
+
+
+    $('gainV').textContent =
+      S.gain.toFixed(1) +
+      '×';
+
+
+    $('dVD').setAttribute(
       'aria-pressed',
       S.disp === 'vd'
     );
 
 
-  $('dBoth')
-    .setAttribute(
+    $('dBoth').setAttribute(
       'aria-pressed',
       S.disp === 'both'
     );
 
 
-  $('dWig')
-    .setAttribute(
+    $('dWig').setAttribute(
       'aria-pressed',
       S.disp === 'wiggle'
     );
 
-}
+  }
 
 
-/* ================================================================
-   INPUTS
-================================================================ */
+  /* ================================================================
+     LEGEND
+     ================================================================ */
 
-function pushToInputs() {
+  function updateLegend() {
 
-  $('dip').value =
-    S.dip;
+    $('mainLegend').innerHTML =
 
-  $('vel').value =
-    S.v;
+      '<span>' +
+      '<i style="border-color:' +
+      TEAL +
+      ';border-top-style:dashed"></i>' +
+      'theoretical dip / folded event' +
+      '</span>' +
 
-  $('dx').value =
-    S.dx;
-
-  $('freq').value =
-    S.f;
-
-  $('gain').value =
-    S.gain;
-
-  $('cmap').value =
-    S.cmap;
-
-  $('units').value =
-    S.units;
-
-}
+      '<span>' +
+      '<i style="border-color:' +
+      CRIMSON +
+      ';border-top-style:dashed"></i>' +
+      'aliasing begins' +
+      '</span>';
 
 
-function bump() {
-
-  syncLabels();
-
-  refresh();
-
-}
+    $('recNote').textContent =
+      QUIZ.on
+        ? 'this is all you get'
+        : fmtLength(S.dx) +
+          ' apart';
 
 
-/* ================================================================
-   SLIDERS
-================================================================ */
+    $('hintLine').textContent =
+      QUIZ.on
+        ? 'Only the recorded panel is shown. Real dip, or an alias?'
+        : 'Same reflector, sampled densely and at survey spacing, with its f–k spectrum.';
 
-function slide(
-  id,
-  key
-) {
 
-  $(id)
-    .addEventListener(
+    $('quizBox').hidden =
+      !QUIZ.on;
+
+  }
+
+
+  /* ================================================================
+     STATS
+     ================================================================ */
+
+  function updateStats() {
+
+    const P =
+      CACHE.P;
+
+
+    if (
+      QUIZ.on &&
+      !QUIZ.revealed
+    ) {
+
+      $('rStep').textContent =
+        'hidden';
+
+      $('rHalf').textContent =
+        'hidden';
+
+      $('rFa').textContent =
+        'hidden';
+
+      $('rDipMax').textContent =
+        'hidden';
+
+      $('rDxMax').textContent =
+        'hidden';
+
+      $('rFmax').textContent =
+        'hidden';
+
+      $('rVerdict').textContent =
+        'Make your call';
+
+      return;
+
+    }
+
+
+    $('rStep').textContent =
+      (
+        P.step *
+        1000
+      ).toFixed(2) +
+      ' ms';
+
+
+    $('rHalf').textContent =
+      (
+        P.halfPeriod *
+        1000
+      ).toFixed(2) +
+      ' ms';
+
+
+    $('rFa').textContent =
+      isFinite(P.fAlias)
+        ? P.fAlias.toFixed(0) +
+          ' Hz'
+        : 'never';
+
+
+    $('rFmax').textContent =
+      P.fMax.toFixed(0) +
+      ' Hz';
+
+
+    $('rDipMax').textContent =
+      P.dipMax >= 89.9
+        ? 'any dip'
+        : P.dipMax.toFixed(1) +
+          '°';
+
+
+    $('rDxMax').textContent =
+      isFinite(P.dxMax)
+        ? fmtLength(
+            P.dxMax,
+            1
+          )
+        : 'any spacing';
+
+
+    const bad =
+      P.fAlias <
+      P.fMax;
+
+
+    const peakBad =
+      P.fAlias <
+      P.f;
+
+
+    if (peakBad) {
+
+      $('rVerdict').textContent =
+        'Aliased at peak frequency — the apparent dip cannot be trusted.';
+
+    }
+
+    else if (bad) {
+
+      $('rVerdict').textContent =
+        'Partly aliased — the high-frequency end of the wavelet folds first.';
+
+    }
+
+    else {
+
+      $('rVerdict').textContent =
+        'Properly sampled at the peak frequency.';
+
+    }
+
+  }
+
+
+  /* ================================================================
+     INPUTS
+     ================================================================ */
+
+  function pushToInputs() {
+
+    $('dip').value =
+      S.dip;
+
+    $('vel').value =
+      S.v;
+
+    $('dx').value =
+      S.dx;
+
+    $('freq').value =
+      S.f;
+
+    $('gain').value =
+      S.gain;
+
+    $('cmap').value =
+      S.cmap;
+
+    $('units').value =
+      S.units;
+
+  }
+
+
+  function slider(
+    id,
+    key
+  ) {
+
+    $(id).addEventListener(
       'input',
       () => {
 
@@ -2791,100 +4174,117 @@ function slide(
             $(id).value
           );
 
-        bump();
+        refresh();
 
       }
     );
 
-}
+  }
 
 
-slide('dip', 'dip');
-slide('vel', 'v');
-slide('dx', 'dx');
-slide('freq', 'f');
-slide('gain', 'gain');
+  slider(
+    'dip',
+    'dip'
+  );
+
+  slider(
+    'vel',
+    'v'
+  );
+
+  slider(
+    'dx',
+    'dx'
+  );
+
+  slider(
+    'freq',
+    'f'
+  );
+
+  slider(
+    'gain',
+    'gain'
+  );
 
 
-/* ================================================================
-   DISPLAY BUTTONS
-================================================================ */
+  /* ================================================================
+     DISPLAY BUTTONS
+     ================================================================ */
 
-function toggle(
-  id,
-  value
-) {
+  function displayButton(
+    id,
+    value
+  ) {
 
-  $(id)
-    .addEventListener(
+    $(id).addEventListener(
       'click',
       () => {
 
         S.disp =
           value;
 
-        bump();
+        refresh();
 
       }
     );
 
-}
+  }
 
 
-toggle(
-  'dVD',
-  'vd'
-);
-
-toggle(
-  'dBoth',
-  'both'
-);
-
-toggle(
-  'dWig',
-  'wiggle'
-);
+  displayButton(
+    'dVD',
+    'vd'
+  );
 
 
-/* ================================================================
-   SELECTS
-================================================================ */
+  displayButton(
+    'dBoth',
+    'both'
+  );
 
-$('cmap')
-  .addEventListener(
+
+  displayButton(
+    'dWig',
+    'wiggle'
+  );
+
+
+  /* ================================================================
+     SELECTS
+     ================================================================ */
+
+  $('cmap').addEventListener(
     'change',
     () => {
 
       S.cmap =
         $('cmap').value;
 
-      bump();
+      refresh();
 
     }
   );
 
 
-$('units')
-  .addEventListener(
+  $('units').addEventListener(
     'change',
     () => {
 
       S.units =
         $('units').value;
 
-      bump();
+      refresh();
 
     }
   );
 
 
-/* ================================================================
-   BUTTONS
-================================================================ */
+  /* ================================================================
+     RESET
+     ================================================================ */
 
-$('resetBtn')
-  .addEventListener(
+  $('resetBtn').addEventListener(
     'click',
     () => {
 
@@ -2896,53 +4296,109 @@ $('resetBtn')
 
       pushToInputs();
 
-      bump();
+      refresh();
 
     }
   );
 
 
-$('copyBtn')
-  .addEventListener(
+  /* ================================================================
+     COPY LINK
+     ================================================================ */
+
+  $('copyBtn').addEventListener(
     'click',
-    e => {
+    async () => {
 
-      SEIS.copyLink(
-        e.currentTarget
-      );
+      try {
+
+        await navigator.clipboard.writeText(
+          location.href
+        );
+
+
+        const button =
+          $('copyBtn');
+
+
+        const old =
+          button.textContent;
+
+
+        button.textContent =
+          'Link copied';
+
+
+        setTimeout(
+          () => {
+            button.textContent =
+              old;
+          },
+          1500
+        );
+
+      }
+
+      catch (err) {
+
+        console.warn(
+          'Could not copy link:',
+          err
+        );
+
+      }
 
     }
   );
 
 
-$('pngBtn')
-  .addEventListener(
+  /* ================================================================
+     PNG
+     ================================================================ */
+
+  $('pngBtn').addEventListener(
     'click',
     () => {
 
-      SEIS.savePNG(
-        $('recCanvas'),
-        'aliasing-recorded'
-      );
+      const canvas =
+        $('recCanvas');
+
+
+      const link =
+        document.createElement(
+          'a'
+        );
+
+
+      link.download =
+        'aliasing-recorded-panel.png';
+
+
+      link.href =
+        canvas.toDataURL(
+          'image/png'
+        );
+
+
+      link.click();
 
     }
   );
 
 
-/* ================================================================
-   QUIZ CONTROLS
-================================================================ */
+  /* ================================================================
+     QUIZ CONTROLS
+     ================================================================ */
 
-$('quiz')
-  .addEventListener(
+  $('quiz').addEventListener(
     'change',
     () => {
 
-      Q.on =
+      QUIZ.on =
         $('quiz').checked;
 
 
-      if (Q.on) {
+      if (QUIZ.on) {
 
         newCase();
 
@@ -2950,10 +4406,10 @@ $('quiz')
 
       else {
 
-        Q.hidden =
+        QUIZ.hidden =
           null;
 
-        Q.revealed =
+        QUIZ.revealed =
           false;
 
         refresh();
@@ -2964,84 +4420,71 @@ $('quiz')
   );
 
 
-$('qAlias')
-  .addEventListener(
+  $('qReal').addEventListener(
     'click',
     () => {
-
-      judge(true);
-
-    }
-  );
-
-
-$('qReal')
-  .addEventListener(
-    'click',
-    () => {
-
       judge(false);
-
     }
   );
 
 
-$('newCase')
-  .addEventListener(
+  $('qAlias').addEventListener(
+    'click',
+    () => {
+      judge(true);
+    }
+  );
+
+
+  $('newCase').addEventListener(
     'click',
     newCase
   );
 
 
-/* ================================================================
-   RESIZE
-================================================================ */
+  /* ================================================================
+     RESIZE
+     ================================================================ */
 
-let resizeTimer;
-
-
-window.addEventListener(
-  'resize',
-  () => {
-
-    clearTimeout(
-      resizeTimer
-    );
+  let resizeTimer;
 
 
-    resizeTimer =
-      setTimeout(
-        render,
-        120
+  window.addEventListener(
+    'resize',
+    () => {
+
+      clearTimeout(
+        resizeTimer
       );
 
-  }
-);
 
+      resizeTimer =
+        setTimeout(
+          () => {
 
-/* ================================================================
-   START
-================================================================ */
+            render();
 
-pushToInputs();
+          },
+          120
+        );
 
-syncLabels();
-
-refresh();
-
-
-if (
-  document.fonts &&
-  document.fonts.ready
-) {
-
-  document.fonts.ready.then(
-    render
+    }
   );
 
-}
+
+  /* ================================================================
+     START
+     ================================================================ */
+
+  pushToInputs();
+
+  syncLabels();
+
+  refresh();
+
 
 })();
+
 </script>
 
 </body>
