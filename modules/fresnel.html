@@ -32,7 +32,7 @@
   <!-- ============================ THE IDEA FIRST =========================== -->
   <div class="teach" style="padding-top:6px">
     <div class="tryit">
-      <h3>Start here — one trace does not see one point</h3>
+      <h3>One trace does not see one point</h3>
       <p style="margin-top:0;font-size:14.5px">Picture the sound pulse leaving the surface and spreading out
         as it goes down, like the beam of a torch widening. When it strikes the reflector it does not touch
         a single spot. It lights up a circular patch, and the echo you record is <b>everything in that patch
@@ -197,30 +197,32 @@
   <!-- ============================== TEACHING ============================== -->
   <div class="teach">
     <div class="tryit">
-      <h3>Try this</h3>
+      <h3>Try this — and what to watch for</h3>
       <ol>
-        <li><b>Turn the focus ring.</b> The page opens unmigrated, the way the data comes off the boat.
+        <li><b>Turn the focus ring.</b> <em>Why bother: it is the single biggest improvement anything in processing makes to a map.</em> The page opens unmigrated, the way the data comes off the boat.
           Click <em>3D</em> and watch panels 1 and 4.
           <span class="ans">The blur drops from a few hundred meters across to a few tens. Everything you
             believe about the shape of a feature in map view — a channel edge, the limit of a sand, the trace
             of a fault — depends on that one step having worked.</span></li>
-        <li><b>Slide them together.</b> Press the button and watch panel 2 and the slice below it.
+        <li><b>Slide them together.</b> <em>Why bother: it is the same λ/4 you met vertically, now acting sideways.</em> Press the button and watch panel 2 and the slice below it.
           <span class="ans">They stay two until the gap closes to about a quarter of a wavelength, then merge
             into one blob that gets brighter rather than wider. Two gas pockets become one. Two channels
             become one channel. Nothing in the map tells you which it was.</span></li>
-        <li><b>Try it unmigrated.</b> Set migration to <em>Unmigrated</em> and separate them by 300 m.
-          <span class="ans">They are inside the same Fresnel patch and there is no separating them at any
-            amplitude. Migration is not a tidying-up step. It is the step that makes lateral interpretation
-            possible at all.</span></li>
-        <li><b>Go deeper.</b> Take the horizon from 1.2 s down to 3 s.
+        <li><b>Ask what the unfocused panel could ever tell you.</b> <em>Why bother: it shows what migration
+          is actually for.</em> Back on <em>Unmigrated</em>, separate the two features by 300 m and try to
+          convince yourself there are two.
+          <span class="ans">You cannot. They sit inside the same Fresnel patch and no amount of staring, or
+            gain, or colour will separate them. Migration is not a tidying-up step at the end. It is the step
+            that makes lateral interpretation possible at all.</span></li>
+        <li><b>Go deeper.</b> <em>Why bother: feature sizes are not comparable between a shallow field and a deep one.</em> Take the horizon from 1.2 s down to 3 s.
           <span class="ans">The unfocused patch grows and the focused limit worsens too, though more slowly.
             The deeper the target, the more you are relying on migration having done its job.</span></li>
-        <li><b>Shrink the survey.</b> Pull the survey width down to 600 m.
+        <li><b>Shrink the survey.</b> <em>Why bother: it is why surveys are shot larger than the prospect, and why the edges of one are less trustworthy.</em> Pull the survey width down to 600 m.
           <span class="ans">The focus goes soft. A camera lens gathers light across its whole opening, and a
             narrow opening cannot focus sharply. Migration works the same way, which is why surveys are shot
             larger than the prospect, and why features near the edge of a survey are less trustworthy than
             the ones in the middle.</span></li>
-        <li><b>Switch to 2D.</b> Look at the shape of the blur in panel 1.
+        <li><b>Switch to 2D.</b> <em>Why bother: on a 2D grid, the shape of what you map is set partly by the direction you shot it.</em> Look at the shape of the blur in panel 1.
           <span class="ans">It becomes a cigar rather than a circle — sharp along the line, still smeared
             across it. Whether you can separate two features now depends on which way they happen to lie
             relative to your line. That is a geological conclusion being decided by the survey
@@ -229,7 +231,7 @@
     </div>
 
     <div class="takeaway">
-      <h3>What to carry away</h3>
+      <h3>If you remember nothing else</h3>
       <ul>
         <li><b>Unmigrated, a trace reports one number for a patch hundreds of meters across.</b> The Fresnel
           zone is <span class="k">(V/2)·√(t/f)</span> in radius.</li>
@@ -272,12 +274,24 @@
       <li>Chen, J., and Schuster, G.T., 1999, Resolution limits of migrated images:
         <em>Geophysics</em>, 64, 1046–1053.</li>
       <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.: AAPG/SEG.</li>
+      <li>For anything unfamiliar, the SEG Wiki hosts Sheriff's <em>Encyclopedic Dictionary of Applied
+        Geophysics</em> free at <a href="https://wiki.seg.org/wiki/Dictionary">wiki.seg.org/wiki/Dictionary</a>.</li>
     </ul>
   </details>
 
+  <section class="nextup">
+    <p class="eyebrow">Next up</p>
+    <h3><a href="depth.html">05 · Resolution with depth</a></h3>
+    <p>You have now met the λ/4 limit twice, downward and sideways. The next module asks what happens to it
+      as you go deeper — where velocity climbs, the earth strips out your high frequencies, and the thinnest
+      bed you can see quietly grows by a factor of five between the shallow section and the deep one.</p>
+    <a class="btn" href="depth.html">Open module 05 →</a>
+    <a class="btn ghost" href="../index.html">All modules</a>
+  </section>
+
   <div class="pager">
     <a class="btn ghost" href="faults.html">← Can you see the fault?</a>
-    <a class="btn" href="mapres.html">Next: resolution in map view →</a>
+    <a class="btn" href="depth.html">Next: resolution with depth →</a>
   </div>
 
   <footer>
