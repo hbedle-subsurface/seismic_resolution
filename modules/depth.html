@@ -24,11 +24,35 @@
   <div class="mod-head">
     <p class="eyebrow">Module 05 &nbsp;·&nbsp; Vertical resolution in practice</p>
     <h1>Resolution with depth</h1>
-    <p class="sub">The λ/4 limit from the wedge model is not one number for a whole survey. Velocity climbs as you
-      go down, which stretches the wavelength on its own. On top of that the earth absorbs high frequencies
-      faster than low ones, so the wavelet you are convolved with keeps getting broader the longer it travels.
-      Both effects push the same way: a bed that is a crisp two-reflector event near the surface can become a
-      single soft kick lower in the same trace, with no change at all in how thick it really is.</p>
+    <p class="sub">The λ/4 limit is not one number for a whole survey. It gets worse all the way down, for
+      two reasons at once, and the same bed can be a clean pair of reflections at the top of a section and a
+      single soft kick at the bottom of it — without a single thing changing about the rock.</p>
+  </div>
+
+  <!-- ============================ THE IDEA FIRST =========================== -->
+  <div class="teach" style="padding-top:6px">
+    <div class="tryit">
+      <h3>Two things gang up on you</h3>
+      <p style="margin-top:0;font-size:14.5px">Resolution comes down to wavelength,
+        <span class="k">λ = V / f</span>, and going deeper works on both halves of that fraction in the
+        wrong direction.</p>
+      <p style="font-size:14.5px"><b>Velocity climbs.</b> Rocks compact under their own weight, so the wave
+        speeds up as it goes down. Bigger V on top of the fraction means a longer wavelength.</p>
+      <p style="font-size:14.5px;margin-bottom:0"><b>Frequency falls.</b> The earth absorbs energy, and it
+        takes the high frequencies first. Smaller f underneath means a longer wavelength again. The number
+        describing how much the rock absorbs is called <b>Q</b>, and a low Q is a thirsty rock.</p>
+    </div>
+    <div class="takeaway">
+      <h3>Why this one is worth your time</h3>
+      <p style="margin-top:0;font-size:14.5px">Multiply those two together and the thinnest bed you can
+        resolve typically grows <b>five-fold</b> between the shallow section and four kilometres down. Ten
+        metres becomes fifty.</p>
+      <p style="font-size:14.5px">That is not a processing failure and it is not the interpreter being
+        careless. It is the earth, and no amount of reprocessing fully undoes it.</p>
+      <p style="font-size:14.5px;margin-bottom:0">It also means a rule of thumb picked up on a shallow field
+        will quietly mislead you on a deep one. If you take one habit from this site, let it be checking what
+        λ/4 is <em>at your target</em> before trusting anything you have mapped there.</p>
+    </div>
   </div>
 
   <!-- ============================== CONTROLS ============================== -->
@@ -183,46 +207,46 @@
   <!-- ============================== TEACHING ============================== -->
   <div class="teach">
     <div class="tryit">
-      <h3>Try this</h3>
+      <h3>Try this — and what to watch for</h3>
       <ol>
-        <li><b>Turn attenuation off.</b> Push Q to 500, then drag the probe from the top of the section to the
+        <li><b>Turn attenuation off.</b> <em>Why bother: it isolates the velocity effect, so you can see how much of the damage is compaction alone.</em> Push Q to 500, then drag the probe from the top of the section to the
           bottom.
           <span class="ans">The verdict still degrades. Velocity growth alone stretches λ enough to lose a
             thin bed by depth, even in a nearly lossless earth. This is the part of the story that is pure
             geometry, not absorption.</span></li>
-        <li><b>Now turn it back on.</b> Drop Q to 20 and repeat the same drag.
+        <li><b>Now turn it back on.</b> <em>Why bother: this is the other half, and usually the larger half.</em> Drop Q to 20 and repeat the same drag.
           <span class="ans">The bed is lost much shallower. Attenuation compounds the velocity effect instead
             of replacing it — real sections lose resolution faster than a velocity-only argument would
             predict.</span></li>
-        <li><b>Try to fix it with a hotter source.</b> Raise the peak frequency from 25 Hz to 80 Hz and compare
+        <li><b>Try to fix it with a hotter source.</b> <em>Why bother: it shows why you cannot simply buy your way out of this at the source.</em> Raise the peak frequency from 25 Hz to 80 Hz and compare
           the surface λ/4 stat against the probe λ/4 stat.
           <span class="ans">Surface resolution improves a great deal. The probe barely moves. High frequencies
             are exactly what the earth removes fastest, so more bandwidth at the source buys you shallow
             resolution far more than deep resolution.</span></li>
-        <li><b>Find the crossing.</b> Set the bed to 15 m and drag the probe until the verdict flips from
+        <li><b>Find the crossing.</b> <em>Why bother: it turns the whole module into one number you can look up for your own target.</em> Set the bed to 15 m and drag the probe until the verdict flips from
           Resolved to Below detection. Read the two-way time off the stat strip, then look for the same
           crossing on panel 3, where the teal λ/4 curve crosses the dashed line marking your bed.
           <span class="ans">The two should agree. Panel 3 is the readout stat turned into a curve, so you can
             see the whole depth range at once instead of one point at a time, and it draws a marker across the
             panel at the depth where your bed stops being resolvable.</span></li>
-        <li><b>Isolate the velocity term.</b> Set the base velocity equal to the surface velocity, so the
+        <li><b>Isolate the velocity term.</b> <em>Why bother: it separates two causes that are easy to blame on each other.</em> Set the base velocity equal to the surface velocity, so the
           gradient is zero, and drag the probe.
           <span class="ans">Resolution still gets worse with depth from attenuation alone. Set Q back up near
             500 with the flat velocity and the verdict should barely change at all — that is the closest this
             module gets to an earth with no depth-dependent resolution loss.</span></li>
-        <li><b>Watch panel 6 directly.</b> With a fairly thin bed and a mid-range Q, compare the reference trace
+        <li><b>Watch panel 6 directly.</b> <em>Why bother: same rock, same thickness, two depths — the cleanest comparison on the page.</em> With a fairly thin bed and a mid-range Q, compare the reference trace
           against the probe trace. Both are drawn to the same scale.
           <span class="ans">Same reflection coefficients, same physical thickness, same convolution machinery —
             only the local wavelet differs. The reference stays two clean kicks; the probe blurs into one, and
             it is weaker as well as broader, which is why the two share one scale rather than each being
             stretched to fill its own box.</span></li>
-        <li><b>Compare panels 4 and 5, side by side.</b> The rock is on the left, the seismic on the right, on
+        <li><b>Compare panels 4 and 5, side by side.</b> <em>Why bother: it is the gap between the geology and the picture, drawn on one time axis.</em> The rock is on the left, the seismic on the right, on
           the same time axis.
           <span class="ans">Read straight across at any depth. Near the top, almost every bed in the rock has
             its own reflection. Deep down, whole groups of beds have collapsed into single events, and some
             have vanished entirely. That gap between the two panels is the whole subject of this module, and
             it widens the further down you look.</span></li>
-        <li><b>Read panel 5 as an interpreter would.</b> Look at the background reflectivity above and below the
+        <li><b>Read panel 5 as an interpreter would.</b> <em>Why bother: it is how deep sections actually look, and why they feel vaguer.</em> Look at the background reflectivity above and below the
           dashed PROBE line, not just at the marked bed.
           <span class="ans">The whole column loses character with depth, not only the highlighted test bed.
             That washed-out look on the lower part of a real section is usually this effect, not necessarily
@@ -231,7 +255,7 @@
     </div>
 
     <div class="takeaway">
-      <h3>What to carry away</h3>
+      <h3>If you remember nothing else</h3>
       <ul>
         <li><b>λ/4 is not a fixed number for a survey.</b> It grows with two-way time because both the terms in
           λ = V/f are moving against you: V goes up, and the earth's absorption pulls f down.</li>
@@ -288,9 +312,19 @@
     </ul>
   </details>
 
+  <section class="nextup">
+    <p class="eyebrow">Next up</p>
+    <h3><a href="mapres.html">06 · Resolution in map view</a></h3>
+    <p>Take the horizontal limit from module 04 and point it at something you would actually map: a channel
+      that narrows and splits in two. Watch where it appears to end — and find out that the ending is in the
+      acquisition rather than in the geology.</p>
+    <a class="btn" href="mapres.html">Open module 06 →</a>
+    <a class="btn ghost" href="../index.html">All modules</a>
+  </section>
+
   <div class="pager">
-    <a class="btn ghost" href="faults.html">← Can you see the fault?</a>
-    <a class="btn" href="../index.html#modules">All modules →</a>
+    <a class="btn ghost" href="fresnel.html">← Horizontal resolution</a>
+    <a class="btn" href="mapres.html">Next: resolution in map view →</a>
   </div>
 
   <footer>
