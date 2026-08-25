@@ -160,9 +160,9 @@
         <div class="card-body">
           <div class="card-no">07</div>
           <h3>Tuning in map view</h3>
-          <p>A channel with real thickness variation, turned into an amplitude extraction — so you can see
-            exactly how a thickness map goes wrong.</p>
-          <div class="q">Does bright mean thick?</div>
+          <p>A sand thinning updip onto a salt dome, turned into an amplitude extraction. A bright rim
+            appears around the flank — and there is no hydrocarbon anywhere in the model.</p>
+          <div class="q">Is that bright rim gas, or is it tuning?</div>
         </div>
       </a>
 
@@ -424,81 +424,82 @@
     const w = canvas.parentElement.clientWidth, h = 118;
     const ctx = SEIS.fitCanvas(canvas, w, h);
     ctx.clearRect(0, 0, w, h);
-    const NXn = 256, NYn = 128, FS = 0.34, KC = 0.708;
+    // the branching channel as the seismic images it, with the true outline
+    // over the top so the early fade-out is the thing you notice
+    const NXn = 256, NYn = 128, FS = 0.34, KC = 0.708, FX0 = 0.17, EDGE = 0.075;
     const w0 = 900, wend = 0, div = 700, res = 84;
     const XD = 4500, YD = XD * NYn / NXn;
+    const ramp = (fx) => fx <= 0 ? 0 : fx >= EDGE ? 1 : 0.5 - 0.5 * Math.cos(Math.PI * fx / EDGE);
     const shape = (fx) => {
-      if (fx < 0.04 || fx > 0.985) return null;
+      if (fx < 0 || fx > 0.985) return null;
       const yc = YD / 2 + 0.085 * YD * Math.sin(2 * Math.PI * fx * 1.25);
       const wS = Math.max(wend * 2.4, w0 * 0.62);
-      if (fx < FS) return [{ y: yc, w: w0 + (wS - w0) * (fx - 0.04) / (FS - 0.04) }];
+      if (fx < FS) return [{ y: yc, w: w0 + (wS - w0) * (fx / FS) }];
       const t = (fx - FS) / (0.985 - FS);
       const wb = wS * 0.5 + (wend - wS * 0.5) * t;
       if (wb <= 0.5) return null;
       const off = (wS * 0.5 + div * Math.pow(t, 1.25)) / 2;
       return [{ y: yc - off, w: wb }, { y: yc + off, w: wb }];
     };
-    const src = new Float64Array(NXn * NYn);
-    for (let iy = 0; iy < NYn; iy++) for (let ix = 0; ix < NXn; ix++) {
-      const ls = shape((ix + 0.5) / NXn); if (!ls) continue;
-      const y = ((iy + 0.5) / NYn) * YD;
-      for (const L of ls) if (Math.abs(y - L.y) <= L.w / 2) { src[iy * NXn + ix] = 1; break; }
-    }
     const re = new Float64Array(NXn * NYn), im = new Float64Array(NXn * NYn);
-    re.set(src);
+    for (let iy = 0; iy < NYn; iy++) for (let ix = 0; ix < NXn; ix++) {
+      const fx = (ix + 0.5) / NXn, ls = shape(fx); if (!ls) continue;
+      const y = ((iy + 0.5) / NYn) * YD;
+      for (const L of ls) if (Math.abs(y - L.y) <= L.w / 2) { re[iy * NXn + ix] = ramp(fx); break; }
+    }
     const rr = new Float64Array(NXn), ri = new Float64Array(NXn);
     const cr = new Float64Array(NYn), ci = new Float64Array(NYn);
     const rows = (inv) => { for (let iy = 0; iy < NYn; iy++) {
       for (let ix = 0; ix < NXn; ix++) { rr[ix] = re[iy * NXn + ix]; ri[ix] = im[iy * NXn + ix]; }
       SEIS.fft(rr, ri, inv);
       for (let ix = 0; ix < NXn; ix++) { re[iy * NXn + ix] = rr[ix]; im[iy * NXn + ix] = ri[ix]; } } };
-    const colsF = (inv) => { for (let ix = 0; ix < NXn; ix++) {
+    const cols = (inv) => { for (let ix = 0; ix < NXn; ix++) {
       for (let iy = 0; iy < NYn; iy++) { cr[iy] = re[iy * NXn + ix]; ci[iy] = im[iy * NXn + ix]; }
       SEIS.fft(cr, ci, inv);
       for (let iy = 0; iy < NYn; iy++) { re[iy * NXn + ix] = cr[iy]; im[iy * NXn + ix] = ci[iy]; } } };
-    rows(false); colsF(false);
+    rows(false); cols(false);
     const dx = XD / NXn, dy = YD / NYn, kc = KC / res;
     for (let iy = 0; iy < NYn; iy++) {
       const ky = Math.abs((iy <= NYn / 2 ? iy : iy - NYn) / (NYn * dy));
       for (let ix = 0; ix < NXn; ix++) {
         const kx = Math.abs((ix <= NXn / 2 ? ix : ix - NXn) / (NXn * dx));
         const q = Math.hypot(kx / kc, ky / kc);
-        const wgt = q <= 1 ? 1 : q >= 1.15 ? 0 : 0.5 + 0.5 * Math.cos(Math.PI * (q - 1) / 0.15);
-        re[iy * NXn + ix] *= wgt; im[iy * NXn + ix] *= wgt;
+        const wt = q <= 1 ? 1 : q >= 1.15 ? 0 : 0.5 + 0.5 * Math.cos(Math.PI * (q - 1) / 0.15);
+        re[iy * NXn + ix] *= wt; im[iy * NXn + ix] *= wt;
       }
     }
-    colsF(true); rows(true);
+    cols(true); rows(true);
     const stops = [[252,251,248],[226,236,238],[170,208,216],[96,168,188],[38,116,146],[16,58,84]];
-    const off2 = document.createElement('canvas');
-    off2.width = NXn; off2.height = NYn;
-    const octx = off2.getContext('2d');
-    const img = octx.createImageData(NXn, NYn);
+    const ix0 = Math.round(FX0 * NXn), NXD = NXn - ix0;
+    const off = document.createElement('canvas');
+    off.width = NXD; off.height = NYn;
+    const octx = off.getContext('2d');
+    const img = octx.createImageData(NXD, NYn);
     let mx = 1e-9;
     for (let i = 0; i < re.length; i++) mx = Math.max(mx, re[i]);
-    for (let i = 0; i < NXn * NYn; i++) {
-      const u = Math.max(0, Math.min(1, re[i] / mx)) * (stops.length - 1);
+    for (let iy = 0; iy < NYn; iy++) for (let ix = 0; ix < NXD; ix++) {
+      const u = Math.max(0, Math.min(1, re[iy * NXn + ix + ix0] / mx)) * (stops.length - 1);
       const k = Math.min(stops.length - 2, Math.floor(u)), f = u - k;
-      const a = stops[k], b = stops[k + 1];
-      img.data[i * 4] = a[0] + (b[0] - a[0]) * f;
-      img.data[i * 4 + 1] = a[1] + (b[1] - a[1]) * f;
-      img.data[i * 4 + 2] = a[2] + (b[2] - a[2]) * f;
-      img.data[i * 4 + 3] = 255;
+      const a = stops[k], b = stops[k + 1], q = iy * NXD + ix;
+      img.data[q * 4] = a[0] + (b[0] - a[0]) * f;
+      img.data[q * 4 + 1] = a[1] + (b[1] - a[1]) * f;
+      img.data[q * 4 + 2] = a[2] + (b[2] - a[2]) * f;
+      img.data[q * 4 + 3] = 255;
     }
     octx.putImageData(img, 0, 0);
     ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(off2, 0, 0, w, h);
-    // the channel that is really there, over the one the seismic shows
+    ctx.drawImage(off, 0, 0, w, h);
     ctx.save();
-    ctx.strokeStyle = 'rgba(22,25,28,.6)'; ctx.lineWidth = 1.1;
+    ctx.strokeStyle = 'rgba(22,25,28,.65)'; ctx.lineWidth = 1.1;
     ctx.setLineDash([4, 3]);
     [-1, 1].forEach((side) => [0, 1].forEach((br) => {
       ctx.beginPath();
       let pen = false;
-      for (let i = 0; i < NXn; i++) {
+      for (let i = ix0; i < NXn; i++) {
         const fx = (i + 0.5) / NXn, ls = shape(fx);
         if (!ls) { if (pen) { ctx.stroke(); pen = false; } continue; }
         const Lb = ls[Math.min(br, ls.length - 1)];
-        const x = fx * w, y = ((Lb.y + side * Lb.w / 2) / YD) * h;
+        const x = ((fx - FX0) / (1 - FX0)) * w, y = ((Lb.y + side * Lb.w / 2) / YD) * h;
         pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
         pen = true;
       }
@@ -580,37 +581,51 @@
     const w = canvas.parentElement.clientWidth, h = 118;
     const ctx = SEIS.fitCanvas(canvas, w, h);
     ctx.clearRect(0, 0, w, h);
-    // a channel whose bright rails run along its flanks, not down its axis
-    const V = 2600, f = 30, hmax = 42, wid = 620, sinu = 240, taper = 0.30;
-    const YD = 1700, XD = 2 * YD;
+    // a sand lapping onto a salt dome: the bright ring is tuning, not fluid
+    const XD = 7000, YD = 4600, XC = 2500, YC = YD / 2, RD = 1500, ZREF = 2600;
+    const hmax = 55, taper = 1800, pinch = 1100, relief = 600, dip = 34, contact = 2660;
+    const V = 2700, f = 25;
     const wav = SEIS.makeWavelet({ type: 'ricker', f });
-    const thk = (fx, fy) => {
-      const yc = YD / 2 + sinu * Math.sin(2 * Math.PI * fx * 1.15);
-      const d = Math.abs(fy * YD - yc), hw = wid / 2;
-      if (d >= hw) return 0;
-      return hmax * (taper + (1 - taper) * (1 - fx)) * Math.pow(1 - (d / hw) * (d / hw), 0.7);
+    const rad = (x, y) => Math.hypot(x - XC, y - YC);
+    const thk = (x, y) => {
+      const r = rad(x, y);
+      return r <= pinch ? 0 : hmax * Math.min(1, (r - pinch) / taper);
     };
-    const NL = 90, hTop = hmax * 1.05, lut = new Float32Array(NL + 1);
-    for (let i = 0; i <= NL; i++) {
-      const gap = 2 * ((i / NL) * hTop) / V;
-      let best = 0;
-      for (let tt = -wav.halfLength; tt <= gap + wav.halfLength; tt += 0.0006) {
-        const v = 0.13 * wav.fn(tt) - 0.13 * wav.fn(tt - gap);
-        if (v > best) best = v;
+    const dep = (x, y) => ZREF + (dip / 1000) * (x - XC)
+      - relief * Math.exp(-(rad(x, y) * rad(x, y)) / (RD * RD));
+    // tabulate amplitude against thickness once per fluid, rather than
+    // convolving at every one of fifteen thousand map cells
+    const NL = 80, hTop = hmax * 1.05, lut = {};
+    [['brine', -0.055, 0.055], ['gas', -0.20, 0.20]].forEach(([k, r1, r2]) => {
+      const arr = new Float32Array(NL + 1);
+      for (let i = 0; i <= NL; i++) {
+        const gap = 2 * ((i / NL) * hTop) / V;
+        let best = 0;
+        for (let t = -wav.halfLength; t <= gap + wav.halfLength; t += 0.0006) {
+          const v = r1 * wav.fn(t) + r2 * wav.fn(t - gap);
+          if (Math.sign(v) === Math.sign(r1) && Math.abs(v) > Math.abs(best)) best = v;
+        }
+        arr[i] = Math.abs(best);
       }
-      lut[i] = best;
-    }
-    const ampOf = (hh) => {
+      lut[k] = arr;
+    });
+    const amp = (hh, gas) => {
       const q = Math.max(0, Math.min(1, hh / hTop)) * NL;
       const i = Math.min(NL - 1, Math.floor(q)), fr = q - i;
-      return lut[i] + (lut[i + 1] - lut[i]) * fr;
+      const a = lut[gas ? 'gas' : 'brine'];
+      return a[i] + (a[i + 1] - a[i]) * fr;
     };
-    const stops = [[252,250,246],[253,231,160],[247,190,90],[233,131,60],[196,60,45],[110,16,20]];
-    const NXm = 150, NYm = 90;
+    const stops = [[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],
+                   [31,158,137],[53,183,121],[109,205,89],[180,222,44],[253,231,37]];
+    const NXm = 150, NYm = 98;
     const vals = new Float32Array(NXm * NYm);
     let mx = 1e-9;
     for (let iy = 0; iy < NYm; iy++) for (let ix = 0; ix < NXm; ix++) {
-      const a = ampOf(thk((ix + 0.5) / NXm, (iy + 0.5) / NYm));
+      const x = ((ix + 0.5) / NXm) * XD, y = ((iy + 0.5) / NYm) * YD;
+      const hh = thk(x, y);
+      if (hh <= 0.5) { vals[iy * NXm + ix] = -1; continue; }
+      const gas = dep(x, y) < contact;
+      const a = amp(hh, gas);
       vals[iy * NXm + ix] = a; mx = Math.max(mx, a);
     }
     const off = document.createElement('canvas');
@@ -618,12 +633,16 @@
     const octx = off.getContext('2d');
     const img = octx.createImageData(NXm, NYm);
     for (let i = 0; i < NXm * NYm; i++) {
-      const q = Math.max(0, Math.min(1, vals[i] / mx)) * (stops.length - 1);
-      const k = Math.min(stops.length - 2, Math.floor(q)), fr = q - k;
-      const a = stops[k], b = stops[k + 1];
-      img.data[i * 4] = a[0] + (b[0] - a[0]) * fr;
-      img.data[i * 4 + 1] = a[1] + (b[1] - a[1]) * fr;
-      img.data[i * 4 + 2] = a[2] + (b[2] - a[2]) * fr;
+      if (vals[i] < 0) {
+        img.data[i * 4] = 238; img.data[i * 4 + 1] = 238; img.data[i * 4 + 2] = 235;
+      } else {
+        const u = Math.max(0, Math.min(1, vals[i] / mx)) * (stops.length - 1);
+        const k = Math.min(stops.length - 2, Math.floor(u)), f2 = u - k;
+        const a = stops[k], b = stops[k + 1];
+        img.data[i * 4] = a[0] + (b[0] - a[0]) * f2;
+        img.data[i * 4 + 1] = a[1] + (b[1] - a[1]) * f2;
+        img.data[i * 4 + 2] = a[2] + (b[2] - a[2]) * f2;
+      }
       img.data[i * 4 + 3] = 255;
     }
     octx.putImageData(img, 0, 0);
