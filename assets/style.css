@@ -268,6 +268,25 @@ a.card:hover {
 }
 .flag.next { background: var(--crimson); }
 
+/* --- next module ---------------------------------------------------------- */
+
+.nextup {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--crimson);
+  padding: 16px 20px 18px;
+  margin: 26px 0 2px;
+}
+.nextup .eyebrow { margin-bottom: 9px; }
+.nextup h3 {
+  font-family: var(--display); font-weight: 700; font-size: 1.24rem;
+  margin: 0 0 7px; letter-spacing: -0.012em; line-height: 1.2;
+}
+.nextup h3 a { color: var(--ink); text-decoration: none; }
+.nextup h3 a:hover { color: var(--crimson); }
+.nextup p { margin: 0 0 13px; font-size: 14.5px; color: var(--ink-soft); max-width: 82ch; }
+.nextup .btn { margin-right: 8px; }
+
 /* --- disclaimer ---------------------------------------------------------- */
 
 .disclaimer {
