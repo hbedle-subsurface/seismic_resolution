@@ -24,11 +24,40 @@
   <div class="mod-head">
     <p class="eyebrow">Module 01 &nbsp;·&nbsp; The foundation</p>
     <h1>Where a seismic trace comes from</h1>
-    <p class="sub">One column of rock. Give each layer a thickness, a velocity and a density, and the trace
-      follows from there with nothing hidden: velocity times density is acoustic impedance, the contrast
-      between two impedances is a reflection coefficient, and those coefficients convolved with a wavelet are
-      the trace. Change any number on the left and watch which panel moves. Everything else on this site is
-      this model, repeated sideways.</p>
+    <p class="sub">One column of rock, and the trace it produces. Type a thickness, a velocity and a
+      density into the table, and follow them left to right through five panels until a seismic wiggle comes
+      out the other end. Nothing is hidden and nothing is approximated. Change any number and watch which
+      panels move — and, just as usefully, which ones do not.</p>
+  </div>
+
+  <!-- ============================ THE IDEA FIRST =========================== -->
+  <div class="teach" style="padding-top:6px">
+    <div class="tryit">
+      <h3>A seismic section is not a photograph</h3>
+      <p style="margin-top:0;font-size:14.5px">It is tempting to read a seismic line the way you would read
+        a photograph of a cliff face — as a picture of the rock, only blurrier. It is not one, and almost
+        every mistake in interpretation starts with treating it as one.</p>
+      <p style="font-size:14.5px">A seismic trace is a <b>sum</b>. Every sample on it is the total of
+        everything that happened to arrive at that instant. It responds only to the <em>boundaries</em>
+        between rocks, never to the rocks themselves, and only then when those rocks differ in a particular
+        way.</p>
+      <p style="font-size:14.5px;margin-bottom:0">This module builds one from scratch so you can watch that
+        happen. Three steps, and each is a single line of arithmetic you could do on paper.</p>
+    </div>
+    <div class="takeaway">
+      <h3>The whole chain, in three steps</h3>
+      <p style="margin-top:0;font-size:14.5px"><b>1 · Velocity × density = impedance.</b> How hard the rock
+        pushes back on a passing wave. It is one number per layer, and it is the only rock property seismic
+        responds to.</p>
+      <p style="font-size:14.5px"><b>2 · A change in impedance = a reflection.</b> Where two layers meet, the
+        contrast between them sets how much energy bounces back. Same impedance either side, no echo, no
+        matter how different the rocks look in core.</p>
+      <p style="font-size:14.5px"><b>3 · Each reflection ⊛ the wavelet, added up = the trace.</b> Every
+        boundary sends back a copy of the same pulse, scaled and delayed. They overlap, they add, and what
+        you interpret is the total.</p>
+      <p style="font-size:14.5px;margin-bottom:0">Panels 1 to 5 below are those three steps, in order. Get
+        this chain and the rest of the site is detail.</p>
+    </div>
   </div>
 
   <!-- ============================== CONTROLS ============================== -->
@@ -169,20 +198,25 @@
   <!-- ============================== TEACHING ============================== -->
   <div class="teach">
     <div class="tryit">
-      <h3>Try this</h3>
+      <h3>Try this — and what to watch for</h3>
       <ol>
-        <li><b>Make a reflection disappear.</b> Pick any interface and change the velocity and density of the
-          layer below until its impedance matches the layer above.
+        <li><b>Make a reflection vanish.</b> Pick any interface and nudge the velocity and density of the
+          layer below until its impedance matches the layer above — watch the RC column hit zero.
+          <em>Why bother:</em> it is the fastest way to see that seismic responds to contrast, not to rock
+          type.
           <span class="ans">The reflection coefficient goes to zero and the event vanishes, even though the
             rock type still changes. Seismic sees impedance contrast, not geology. A sand and a shale with the
             same impedance are invisible to each other, and that is why some perfectly real formation tops
             have no reflector to pick.</span></li>
-        <li><b>Separate velocity from density.</b> Raise the velocity of one layer by 20%, then put it back and
-          raise its density by 20% instead.
+        <li><b>Separate velocity from density.</b> Raise one layer's velocity by 20%, put it back, then
+          raise its density by 20% instead. <em>Why bother:</em> it shows why seismic alone cannot tell you
+          which rock property changed.
           <span class="ans">Both change impedance and both change the reflection. Seismic cannot tell you
             which one did it — that ambiguity is the reason we need well logs, and the reason inversion is
             harder than it looks.</span></li>
-        <li><b>Flip a reflection over.</b> Make one layer slower and lighter than the one above it.
+        <li><b>Flip a reflection over.</b> Make one layer slower and lighter than the one above it, so its
+          impedance drops. <em>Why bother:</em> soft-over-hard and hard-over-soft look opposite on a section,
+          and mixing them up is the classic well-tie error.
           <span class="ans">The reflection coefficient goes negative and the event changes color. A soft
             layer over a hard one and a hard layer over a soft one produce opposite events. Getting this
             backwards is the classic well-tie error.</span></li>
@@ -204,8 +238,8 @@
           <span class="ans">One is upside down relative to the other, so where they overlap they subtract.
             Thin enough and they nearly erase each other, which is why a very thin bed with strong contrasts
             can be almost invisible. Beds whose coefficients share a sign do the opposite and reinforce.</span></li>
-        <li><b>Change the wavelet, not the rock.</b> Leave the model alone and sweep frequency from 15 Hz to
-          70 Hz.
+        <li><b>Change the wavelet, not the rock.</b> Leave the table alone and sweep frequency from 15 Hz to
+          70 Hz. <em>Why bother:</em> it separates what the earth did from what your data did to it.
           <span class="ans">Panels 1 to 3 never move, because the earth has not changed. Only the wavelets in
             panel 4 get narrower or broader, and the trace follows them. Every argument about what is or is
             not resolvable is an argument about the shape in panel 4.</span></li>
@@ -217,7 +251,7 @@
     </div>
 
     <div class="takeaway">
-      <h3>What to carry away</h3>
+      <h3>If you remember nothing else</h3>
       <ul>
         <li><b>Impedance is the only rock property seismic responds to</b>, and only through the contrast at
           a boundary. A thick uniform layer returns nothing from its middle.</li>
@@ -250,8 +284,21 @@
       <li>Sheriff, R.E., and Geldart, L.P., 1995, <em>Exploration Seismology</em>, 2nd ed.: Cambridge University Press.</li>
       <li>Simm, R., and Bacon, M., 2014, <em>Seismic Amplitude: An Interpreter's Handbook</em>: Cambridge University Press.</li>
       <li>Widess, M.B., 1973, How thin is a thin bed?: <em>Geophysics</em>, 38, 1176–1180.</li>
+      <li>For anything unfamiliar, the SEG Wiki hosts Sheriff's <em>Encyclopedic Dictionary of Applied
+        Geophysics</em> free at <a href="https://wiki.seg.org/wiki/Dictionary">wiki.seg.org/wiki/Dictionary</a>.</li>
     </ul>
   </details>
+
+  <section class="nextup">
+    <p class="eyebrow">Next up</p>
+    <h3><a href="wedge.html">02 · The wedge model and tuning</a></h3>
+    <p>You have just watched two reflections from a single bed sit neatly apart. Now take that bed and thin
+      it sideways until they collide. The next module is where the trace stops telling you the truth about
+      how thick the rock is — and it is the single most useful thing on this site for anyone mapping
+      amplitudes.</p>
+    <a class="btn" href="wedge.html">Open module 02 →</a>
+    <a class="btn ghost" href="../index.html">All modules</a>
+  </section>
 
   <div class="pager">
     <a class="btn ghost" href="depthtrends.html">← How the earth changes with depth</a>
