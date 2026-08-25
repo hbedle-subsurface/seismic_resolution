@@ -24,16 +24,16 @@
   <div class="mod-head">
     <p class="eyebrow">Module 00 &nbsp;·&nbsp; Start here</p>
     <h1>How the earth changes as you go down</h1>
-    <p class="sub">Before any of the resolution questions make sense, you need a feel for the earth the sound
-      is travelling through. Rocks get faster and denser with burial, seismic is recorded in time rather than
-      depth, and the earth quietly eats your high frequencies on the way down. Build a column here from the
-      surface — or the sea surface — to five kilometres, and watch all three happen at once.</p>
+    <p class="sub">If you are new to seismic, start here. Before any question about what you can and cannot
+      see makes sense, you need a feel for the earth the sound is travelling through. Build a column below,
+      from the sea surface down to five kilometres, and three things happen at once — all of which shape
+      everything you will interpret later.</p>
   </div>
 
   <!-- ============================ THE IDEA FIRST =========================== -->
   <div class="teach" style="padding-top:6px">
     <div class="tryit">
-      <h3>Start here — three things happen with depth</h3>
+      <h3>Three things happen as you go down</h3>
       <p style="margin-top:0;font-size:14.5px"><b>Rocks compact.</b> Pile sediment on top of sediment and the
         grains pack tighter, water is squeezed out, and the rock gets both faster and denser. Velocity climbs
         roughly in a straight line with depth, and density follows it. That is the background trend, and most
@@ -44,21 +44,22 @@
         velocity that is itself changing.</p>
       <p style="font-size:14.5px;margin-bottom:0"><b>The earth absorbs energy.</b> It takes the high
         frequencies first, so the pulse that started sharp arrives at depth long and smooth. This is
-        attenuation, measured by a number called Q, and it is the reason deep data always looks dimmer than
+        attenuation, measured by a number called Q, and it is the reason deep data always looks softer than
         shallow data.</p>
     </div>
     <div class="takeaway">
-      <h3>Why it matters for everything else</h3>
-      <p style="margin-top:0;font-size:14.5px">Those three trends fight each other in exactly the wrong
-        direction. Resolution depends on wavelength, <span class="k">λ = V / f</span>. Going down, the
-        velocity on top of that fraction gets <em>bigger</em> and the frequency underneath it gets
-        <em>smaller</em>. Both push the wavelength up.</p>
+      <h3>Why you should care</h3>
+      <p style="margin-top:0;font-size:14.5px">Those three trends gang up on you. How much detail seismic
+        can show depends on its <b>wavelength</b>, and wavelength is just velocity divided by frequency:
+        <span class="k">λ = V / f</span>. Going down, the velocity on top of that fraction gets
+        <em>bigger</em> and the frequency underneath it gets <em>smaller</em>. Both push the wavelength up,
+        and a longer wavelength means less detail.</p>
       <p style="font-size:14.5px">So the thinnest bed you can resolve grows steadily with depth — often from
         ten metres near the surface to fifty or more at four kilometres. That is not a failure of processing
         or of the interpreter. It is the earth.</p>
-      <p style="font-size:14.5px;margin-bottom:0">Watch the last panel as you drag the depth marker down. It
-        is the single most useful plot on this page, and it is the reason every other module on this site has
-        a depth caveat in it.</p>
+      <p style="font-size:14.5px;margin-bottom:0">Drag the depth marker down and watch the last panel. It is
+        the most useful plot on this page: it tells you the thinnest bed you could hope to see, at any depth,
+        for the data you have. Keep that number in mind and every other module will make more sense.</p>
     </div>
   </div>
 
@@ -214,13 +215,17 @@
   <!-- ============================== TEACHING ============================== -->
   <div class="teach">
     <div class="tryit">
-      <h3>Try this</h3>
+      <h3>Try this — and what to watch for</h3>
       <ol>
-        <li><b>Drag the depth marker from top to bottom</b> and watch the last stat cell.
+        <li><b>Drag the depth marker from top to bottom</b> and watch the last stat cell — the thinnest bed
+          you could resolve. <em>Why bother:</em> it is the one number that explains why a prospect that
+          looked crisp shallow turns to mush deep.
           <span class="ans">The thinnest resolvable bed grows several times over between the shallow section
             and the deep one. Nothing about the equipment changed. This single number explains why a
             prospect that looked crisp at 1.5 s is a smear at 4 s.</span></li>
-        <li><b>Find the overpressured zone in panel 2.</b> It is the kick to the left in the velocity curve.
+        <li><b>Find the overpressured zone in panel 2.</b> It is the kick to the left in the velocity curve,
+          where the rock stops getting faster. <em>Why bother:</em> spotting this early is one of the
+          genuinely high-value things an interpreter does, and it is a drilling-safety issue.
           <span class="ans">Compaction reverses because the pore fluid is carrying some of the weight the
             grains should be carrying, so the rock stays looser than its depth suggests. Velocity drops,
             density drops with it, and drilling into it without knowing is how wells get into
@@ -234,7 +239,9 @@
           <span class="ans">The whole time axis shifts up by the two-way time through the water, and the
             shear velocity curve now starts at the surface instead of at the seabed. Water carries no shear
             wave at all, which is why marine streamer data records only P waves.</span></li>
-        <li><b>Take Q from 300 down to 50</b> and watch panels 6, 7 and 8 together.
+        <li><b>Take Q from 300 down to 50</b> and watch panels 6, 7 and 8 together. <em>Why bother:</em>
+          it shows that a bad shallow section damages everything beneath it, which no processing fully
+          undoes.
           <span class="ans">The pulse visibly fattens and the resolvable bed thickness grows. Gassy or very
             soft shallow sediment can do this, and everything beneath it is degraded — the damage is done on
             the way through and no processing fully undoes it.</span></li>
@@ -246,7 +253,7 @@
     </div>
 
     <div class="takeaway">
-      <h3>What to carry away</h3>
+      <h3>If you remember nothing else</h3>
       <ul>
         <li><b>Velocity and density climb together with burial</b>, and impedance climbs faster than either,
           because it is their product.</li>
@@ -291,8 +298,21 @@
         shear-wave velocities: <em>Geophysics</em>, 50, 571–581.</li>
       <li>Dutta, N.C., 2002, Geopressure prediction using seismic data: <em>Geophysics</em>, 67, 2012–2041.</li>
       <li>Sheriff, R.E., and Geldart, L.P., 1995, <em>Exploration Seismology</em>, 2nd ed.: Cambridge.</li>
+      <li>For definitions of anything unfamiliar, the SEG Wiki hosts Sheriff's
+        <em>Encyclopedic Dictionary of Applied Geophysics</em> free at
+        <a href="https://wiki.seg.org/wiki/Dictionary">wiki.seg.org/wiki/Dictionary</a>.</li>
     </ul>
   </details>
+
+  <section class="nextup">
+    <p class="eyebrow">Next up</p>
+    <h3><a href="model1d.html">01 · Where a seismic trace comes from</a></h3>
+    <p>You now have an earth with velocities and densities in it. The next module takes a handful of those
+      layers and follows them all the way to a seismic trace, one step at a time, with nothing hidden: rock
+      to impedance, impedance to reflections, reflections to a wiggle.</p>
+    <a class="btn" href="model1d.html">Open module 01 →</a>
+    <a class="btn ghost" href="../index.html">All modules</a>
+  </section>
 
   <div class="pager">
     <a class="btn ghost" href="../index.html">← All modules</a>
