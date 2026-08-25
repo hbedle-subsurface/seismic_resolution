@@ -450,17 +450,23 @@
       else if (seen && best < 0.5 && endFx === null) endFx = fx;
     }
 
-    // upstream-most place the two branches read as two
+    // The most upstream place the two branches read as two, found by walking
+    // downstream from the fork until a trough opens between them.
+    //
+    // This used to walk the other way, starting at the last column of the grid.
+    // That column sits past the end of the channel, so the shape lookup came
+    // back empty and the loop broke on its first step every single time — the
+    // readout could only ever say "never".
     let splitFx = null;
-    for (let i = NX - 1; i >= 0; i--) {
+    for (let i = 0; i < NX; i++) {
       const fx = (i + 0.5) / NX;
-      const s = shapeAt(fx, D);
-      if (!s || s.kind !== 'branches') break;
+      if (fx < FSPLIT) continue;
+      const sh = shapeAt(fx, D);
+      if (!sh || sh.kind !== 'branches') continue;
       const ix = clamp(Math.round(fx * NX - 0.5), 0, NX - 1);
       const col = [];
       for (let iy = 0; iy < NY; iy++) col.push(img[iy * NX + ix]);
-      if (!twoPeaks(col)) break;
-      splitFx = fx;
+      if (twoPeaks(col)) { splitFx = fx; break; }
     }
 
     // everything reported is in display coordinates, measured from the left
