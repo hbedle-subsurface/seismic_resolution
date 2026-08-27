@@ -113,4 +113,15 @@ reflections and tip diffractions, and migration artefacts.
 
 ## Licence
 
-Free to use, fork, and adapt for teaching. A citation back is appreciated.
+© 2026 H. Bedle. All rights reserved.
+
+This project is provided as a free educational resource for teaching and learning in geophysics. You are welcome to use and share the publicly available website for educational purposes, including use in university courses, provided that appropriate credit is given to the author and the associated technical report is cited.
+
+The source code, algorithms, graphics, and other original materials in this repository are the intellectual property of the author. No license is granted to copy, modify, redistribute, or incorporate the source code into other software without prior written permission.
+
+Please cite this project as: 
+H. Bedle, , SSRN, 2026.
+
+## Citation
+If you use these tools in a course, lecture, publication, presentation, or other educational material, please cite the associated technical report:
+Bedle, H. (2026). 
