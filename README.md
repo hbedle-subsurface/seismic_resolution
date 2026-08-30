@@ -1,127 +1,130 @@
 # What Can You REALLY See in Seismic?
 
-Browser-based experiments in seismic resolution, built for teaching.
+Browser-based experiments in seismic resolution, built for teaching. Free to
+use, nothing to install, and everything on the screen is computed live while you
+change it.
 
-Aimed at three groups who mostly get skipped: undergraduates meeting seismic for the first time,
-graduate students who *use* seismic data in their research without having been taught how it is
-made, and people who went straight to industry and are now expected to map horizons on it (that was how I got started!). No
-install, no account, no math prerequisite beyond `λ = V / f`.
+**[Open the modules →](https://hbedle-subsurface.github.io/seismic_resolution/)**
 
-Built by Heather Bedle, School of Geosciences, University of Oklahoma, with the
+Heather Bedle, School of Geosciences, University of Oklahoma, with the
 [AASPI](https://www.ou.edu/mcee/labs/aaspi) consortium.
 
 ---
-## Get started
 
-**[Open the site](https://hbedle-subsurface.github.io/seismic_resolution/)**
+## Why this exists
 
-New to this? Go straight to the wedge model — it's the one everything else builds on:
+Seismic data does not show you the earth. It shows you the earth blurred by a
+wavelet, and the blur is not a small correction — it decides which beds you can
+see at all, how thick they appear, where their tops seem to be, and whether a
+fault exists as far as your data is concerned.
 
-**[Start here: The wedge model & tuning](https://hbedle-subsurface.github.io/seismic_resolution/modules/wedge.html)**
+Most people meet that as a rule: λ/4, quarter of a wavelength, resolution limit.
+A rule that has been read is fragile. It gets applied where it is remembered and
+forgotten everywhere else. What is much harder to forget is having *watched* a
+bed thin until it disappeared while the seismic went on confidently reporting a
+thickness that stopped being real thirty metres ago.
+
+These are experiments, not lectures. Move a slider and watch something break.
+
+## Who it is for
+
+Three groups who mostly get skipped:
+
+- **Undergraduates** meeting seismic for the first time, who need the pictures
+  before the equations.
+- **Graduate students** who *use* seismic data in their research without having
+  been taught how it is made.
+- **People who went straight to industry** and are now expected to map horizons
+  on it. That is how I got started.
+
+No install, no account, and no mathematics beyond `λ = V / f`.
+
+## Start here
+
+New to this? Go straight to the wedge model — it is the one everything else
+builds on.
+
+**[The wedge model and tuning](https://hbedle-subsurface.github.io/seismic_resolution/modules/wedge.html)**
 
 Move the frequency slider, watch a bed thin to nothing, and see the seismic keep
-reporting a thickness that stopped being real. Ten minutes, no install, nothing to set up.
+reporting a thickness that stopped being real. Ten minutes, nothing to set up.
 
 Then try **[Can you see the fault?](https://hbedle-subsurface.github.io/seismic_resolution/modules/faults.html)**
 and turn on quiz mode.
 
----
-## Live modules
+## The modules
 
-| # | Module | Question it answers |
-|---|--------|---------------------|
-| 02 | `modules/wedge.html` | Why is the thin edge of my channel the brightest part? |
-| 03 | `modules/faults.html` | How small a fault am I missing? |
+In the order they build on each other.
 
-Modules 01 and 04–08 are stubbed on the landing page and not yet built.
-
-## Publishing to GitHub Pages
-
-1. Push this folder to a repository.
-2. **Settings → Pages → Source → Deploy from a branch**, pick `main` and `/ (root)`.
-3. It goes live at `https://<user>.github.io/<repo>/` within a minute or so.
-
-There is no build step, no bundler, and no dependency to install. Everything is vanilla JavaScript
-and one stylesheet. Opening `index.html` straight off your hard drive works too — handy for lecturing
-on conference wifi.
-
-## Structure
-
-```
-index.html              landing page, animated wedge hero, module grid
-assets/
-  seismic.js            all the physics and plotting (~450 lines, commented)
-  style.css             one stylesheet, OU crimson and cream
-modules/
-  wedge.html            module 02
-  faults.html           module 03
-```
-
-Each module is a standalone page that pulls in `assets/seismic.js`. Adding a module means copying an
-existing one and rewriting the model and the two teaching blocks at the bottom — the wavelets,
-convolution, colour maps, axes, unit handling, and URL state are all already there.
+| # | Module | The question it answers |
+|---|--------|-------------------------|
+| 00 | [How the earth changes with depth](modules/depthtrends.html) | Why does deep data always look softer? |
+| 01 | [Where a seismic trace comes from](modules/model1d.html) | Why does that formation top have no reflector? |
+| 02 | [The wedge model and tuning](modules/wedge.html) | Why is the thin edge of my channel the brightest part? |
+| 03 | [Can you see the fault?](modules/faults.html) | How small a fault am I missing? |
+| 04 | [Horizontal resolution](modules/fresnel.html) | How small a feature can I map in plan view? |
+| 05 | [Resolution with depth](modules/depth.html) | Why does my deep interpretation feel so much vaguer? |
+| 06 | [Resolution in map view](modules/mapres.html) | Where does my channel really end? |
+| 07 | [Tuning in map view](modules/mapview.html) | Is that bright rim gas, or is it tuning? |
+| 08 | [Phase, polarity and well ties](modules/phase.html) | Am I picking the top of the sand, or near it? |
 
 ## Using these in a class
 
-**Deep links.** Every module writes its full state into the URL, and has a *Copy link to this setup*
-button. So you can set up a specific scenario and hand students the link:
+**Hand out a link, not instructions.** Every module writes its full state into
+the URL and has a *Copy link to this setup* button, so you can set up a specific
+scenario and give students the link. Everyone starts on the identical
+configuration, which makes these straightforward to assign as problem sets.
 
-```
-modules/wedge.html?f=18&v=5200&maxh=160&rc=0.2
-modules/faults.html?thr=8&f=20&snr=4
-```
+**Every module ends with guided experiments** — *Try this*, with the answer
+written out — and a short *what to carry away*. The questions can be assigned
+directly as homework.
 
-Good for problem sets — everyone starts on the identical configuration.
+**Save as PNG** exports the current panel for slides and reports. **Units**
+toggle between metres and feet throughout.
 
-**Structure of each module.** Controls on the left, live plots in the middle, then *Try this*
-(guided experiments, each with the answer written out) and *What to carry away*. The *Try this*
-questions are written so they can be assigned directly as homework.
+**It works offline.** Download the folder and open `index.html` from your hard
+drive. Useful for lecturing on conference wifi.
 
-**Save as PNG** exports the current panel for lecture slides and reports.
+## One number worth knowing
 
-**Units** toggle between metres and feet throughout.
+The wedge module measures a tuning thickness of **λ/5.1** for a Ricker wavelet,
+not the λ/4 of the usual rule of thumb. That is not a mistake. It is Kallweit and
+Wood's 1/(2.6·f), and the gap between the two numbers is one of the things the
+module is for.
 
-## Notes on the physics
+## What this is not
 
-Traces are 1D convolutional models. Reflection coefficients are convolved with a zero-phase wavelet
-analytically — as a sum of shifted, scaled wavelets rather than on a sample grid — so reflector
-timing is exact and tuning curves come out smooth rather than stair-stepped.
+These are teaching models, built to make ideas visible. The traces are
+one-dimensional convolutional models on small synthetics, and each module says
+what it leaves out. For real work on real volumes use
+[AASPI](https://www.ou.edu/mcee/labs/aaspi) or your interpretation package: the
+numbers here describe the model on the screen, not your survey.
 
-Amplitudes and apparent thicknesses are picked the way you would pick them in an interpretation
-package: significant local extrema, matched by polarity to the top and base reflections, refined by
-parabolic interpolation.
+## Privacy
 
-The wedge module measures a tuning thickness of **λ/5.1** for a Ricker wavelet, not the λ/4 of the
-usual rule of thumb. That is not a bug — it is Kallweit and Wood's 1/(2.6·f), and the gap between
-the two numbers is one of the things the module is for.
+Nothing you do inside a module leaves your browser. No slider setting, no click,
+no computed trace is transmitted anywhere.
 
-Noise is band-limited (random reflectivity convolved with the same wavelet) and laterally correlated,
-so it looks like seismic noise rather than static, and so it is not trivially distinguishable from
-real structure.
+The site does record an anonymous page count, with no cookie and no identifier,
+so that the modules people actually use are the ones that get improved. See
+`assets/count.js`, which explains exactly what is sent and how to switch it off.
 
-Deliberately omitted, each deserving its own module: non-zero wavelet phase, offset and NMO stretch,
-anything genuinely 3D, transmission loss and internal multiples, lateral velocity variation, fault-plane
-reflections and tip diffractions, and migration artefacts.
-
-## References
-
-- Widess, M.B., 1973, How thin is a thin bed?: *Geophysics*, 38, 1176–1180.
-- Kallweit, R.S., and Wood, L.C., 1982, The limits of resolution of zero-phase wavelets: *Geophysics*, 47, 1035–1046.
-- Chung, H., and Lawton, D.C., 1995, Frequency characteristics of seismic reflections from thin beds: *CJEG*, 31, 32–37.
-- Chopra, S., and Marfurt, K.J., 2007, *Seismic Attributes for Prospect Identification and Reservoir Characterization*: SEG.
-- Simm, R., and Bacon, M., 2014, *Seismic Amplitude: An Interpreter's Handbook*: Cambridge University Press.
-
-## Licence
+## Licence and citation
 
 © 2026 H. Bedle. All rights reserved.
 
-This project is provided as a free educational resource for teaching and learning in geophysics. You are welcome to use and share the publicly available website for educational purposes, including use in university courses, provided that appropriate credit is given to the author and the associated technical report is cited.
+Free to use for teaching, demonstration and non-commercial study, provided the
+source is credited — including use in university courses. The source code,
+algorithms and graphics in this repository remain the author's property, and no
+licence is granted to copy, modify, redistribute or incorporate the source into
+other software without prior written permission.
 
-The source code, algorithms, graphics, and other original materials in this repository are the intellectual property of the author. No license is granted to copy, modify, redistribute, or incorporate the source code into other software without prior written permission.
+If you use these in a course, lecture, presentation or publication, please cite:
 
-Please cite this project as: 
-H. Bedle, , SSRN, 2026.
+> Bedle, H. (2026). *What Can You REALLY See in Seismic?* University of Oklahoma.
+> SSRN: [article link to follow]
 
-## Citation
-If you use these tools in a course, lecture, publication, presentation, or other educational material, please cite the associated technical report:
-Bedle, H. (2026). 
+## For anyone maintaining this
+
+Notes on the file layout, the physics, and how to add a module are in
+[`docs/MAINTAINING.md`](docs/MAINTAINING.md).
