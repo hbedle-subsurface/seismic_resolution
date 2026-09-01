@@ -67,7 +67,11 @@ each page removes it entirely.
 
 The footers on every page were brought into line with the other sites using
 `tools/retrofit-footer.py` in the `single-trace` repository. If footers change
-again, change them there and re-run it rather than editing ten files by hand.
+again, change them there and re-run it rather than editing twelve files by hand.
+
+The footer carries the CC BY-SA 4.0 statement and the citation line, and both
+have to match `LICENSE` at the repository root and the license section of
+`README.md`. Changing one without the other two is the usual way these drift.
 
 ## References
 

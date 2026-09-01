@@ -109,20 +109,24 @@ The site does record an anonymous page count, with no cookie and no identifier,
 so that the modules people actually use are the ones that get improved. See
 `assets/count.js`, which explains exactly what is sent and how to switch it off.
 
-## Licence and citation
+## License and citation
 
-© 2026 H. Bedle. All rights reserved.
-
-Free to use for teaching, demonstration and non-commercial study, provided the
-source is credited — including use in university courses. The source code,
-algorithms and graphics in this repository remain the author's property, and no
-licence is granted to copy, modify, redistribute or incorporate the source into
-other software without prior written permission.
-
-If you use these in a course, lecture, presentation or publication, please cite:
+Licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Free
+to use, adapt and share, including in teaching and including commercially,
+provided the source is credited and any adaptation is released under the same
+license. If you use it in a course or a talk, a credit line and a link back are
+all that is asked. The full legal text is in `LICENSE` at the repository root.
 
 > Bedle, H. (2026). *What Can You REALLY See in Seismic?* University of Oklahoma.
+> https://hbedle-subsurface.github.io/seismic_resolution/
 > SSRN: [article link to follow]
+
+The license statement appears in the footer of all eleven module pages and the
+landing page, and the citation line on all twelve. `LICENSE` at the root carries
+the full CC BY-SA 4.0 text, which is what GitHub reads to show the license on the
+repository page — the footer sentence on its own is not enough. When the SSRN
+working paper is published, the link needs adding in thirteen places: this file
+and the citation line in each page's footer.
 
 ## For anyone maintaining this
 
