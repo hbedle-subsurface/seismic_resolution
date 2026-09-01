@@ -69,9 +69,6 @@ directly as homework.
 **Save as PNG** exports the current panel for slides and reports. **Units**
 toggle between metres and feet throughout.
 
-**It works offline.** Download the folder and open `index.html` from your hard
-drive. Useful for lecturing on conference wifi.
-
 ## One number worth knowing
 
 The wedge module measures a tuning thickness of **λ/5.1** for a Ricker wavelet,
