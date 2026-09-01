@@ -39,19 +39,6 @@ Three groups who mostly get skipped:
 
 No install, no account, and no mathematics beyond `λ = V / f`.
 
-## Start here
-
-New to this? Go straight to the wedge model — it is the one everything else
-builds on.
-
-**[The wedge model and tuning](https://hbedle-subsurface.github.io/seismic_resolution/modules/wedge.html)**
-
-Move the frequency slider, watch a bed thin to nothing, and see the seismic keep
-reporting a thickness that stopped being real. Ten minutes, nothing to set up.
-
-Then try **[Can you see the fault?](https://hbedle-subsurface.github.io/seismic_resolution/modules/faults.html)**
-and turn on quiz mode.
-
 ## The modules
 
 In the order they build on each other.
