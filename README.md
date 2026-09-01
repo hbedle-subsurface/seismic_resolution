@@ -128,7 +128,3 @@ repository page — the footer sentence on its own is not enough. When the SSRN
 working paper is published, the link needs adding in thirteen places: this file
 and the citation line in each page's footer.
 
-## For anyone maintaining this
-
-Notes on the file layout, the physics, and how to add a module are in
-[`docs/MAINTAINING.md`](docs/MAINTAINING.md).
