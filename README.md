@@ -105,10 +105,3 @@ all that is asked. The full legal text is in `LICENSE` at the repository root.
 > https://hbedle-subsurface.github.io/seismic_resolution/
 > SSRN: [article link to follow]
 
-The license statement appears in the footer of all eleven module pages and the
-landing page, and the citation line on all twelve. `LICENSE` at the root carries
-the full CC BY-SA 4.0 text, which is what GitHub reads to show the license on the
-repository page — the footer sentence on its own is not enough. When the SSRN
-working paper is published, the link needs adding in thirteen places: this file
-and the citation line in each page's footer.
-
