@@ -161,7 +161,11 @@
   </div>
 
   <!-- ============================== TEACHING ============================== -->
-  <div class="teach">
+  <div class="teach-head">
+    <button class="btn ghost small" id="popBtn" type="button">Open the exercises in a second window</button>
+    <span class="hint" id="popNote"></span>
+  </div>
+  <div class="teach" id="teach">
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
@@ -237,11 +241,15 @@
       has a fill whose properties change along it. Every one of them makes the edge harder to find, not
       easier.</p>
     <ul>
-      <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.: AAPG/SEG.</li>
+      <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.:
+        AAPG Memoir 42 / SEG Investigations in Geophysics No. 9.</li>
       <li>Chen, J., and Schuster, G.T., 1999, Resolution limits of migrated images:
         <em>Geophysics</em>, 64, 1046–1053.</li>
       <li>Lindsey, J.P., 1989, The Fresnel zone and its interpretive significance:
         <em>The Leading Edge</em>, 8, 33–39.</li>
+      <li>Zeng, H., and Hentz, T.F., 2004, High-frequency sequence stratigraphy from seismic
+        sedimentology: applied to Miocene, Vermilion Block 50, Tiger Shoal area, offshore
+        Louisiana: <em>AAPG Bulletin</em>, 88, 153–174.</li>
       <li>For anything unfamiliar, the SEG Wiki hosts Sheriff's <em>Encyclopedic Dictionary of Applied
         Geophysics</em> free at <a href="https://wiki.seg.org/wiki/Dictionary">wiki.seg.org/wiki/Dictionary</a>.</li>
     </ul>
@@ -265,10 +273,11 @@
   <footer>
     <div class="foot-grid">
       <div style="flex:1 1 330px;max-width:46ch">
-        <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
-          <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
-        <p>To cite: H. Bedle, <i>What Can You REALLY See in Seismic?</i>, University of
-          Oklahoma. <span class="k">SSRN: [article link to follow]</span></p>
+        <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma,
+          with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+        <p>To cite: H. Bedle and A. Moreno-Ward, 2026, <i>What Can You REALLY See in Seismic? A Set of
+          Browser-Based Interactive Modules for Teaching Seismic Resolution</i>: SSRN working paper,
+          University of Oklahoma.</p>
       </div>
       <div style="flex:1 1 330px;max-width:52ch">
         <p>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Free to
@@ -276,7 +285,7 @@
           is released under the same license. If you use it in a course or a talk, a credit line and a
           link back are all that is asked.</p>
         <p>Nothing you do in this module leaves your browser. The only thing recorded is that
-          the page was opened, so that I can show the university these are being used &mdash; no cookie, no
+          the page was opened, so that the university can see these are being used &mdash; no cookie, no
           account, nothing about you.</p>
       </div>
     </div>
@@ -337,7 +346,7 @@
     return { XD, YD: XD * NY / NX };   // square cells, so the filter stays isotropic
   }
 
-  // trunk width, and the two branch centrelines and widths, at a position along
+  // trunk width, and the two branch centerlines and widths, at a position along
   // the map. Returns null upstream or downstream of the body.
   // amplitude taper inside the hidden margin, so nothing has a hard edge
   function edgeRamp(fx) {
@@ -618,10 +627,10 @@
     ctx.restore();
     SEIS.dashedLine(ctx, rect.x, yOf(0.5), rect.x + rect.w, yOf(0.5), 'rgba(132,22,23,.4)', [3, 4], 1);
 
-    const line = (arr, colour, width, dash, div) => {
+    const line = (arr, color, width, dash, div) => {
       ctx.save();
       if (dash) ctx.setLineDash(dash);
-      ctx.strokeStyle = colour; ctx.lineWidth = width;
+      ctx.strokeStyle = color; ctx.lineWidth = width;
       ctx.beginPath();
       arr.forEach((v, i) => {
         const x = xOf(i), y = yOf(v / div);

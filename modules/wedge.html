@@ -207,7 +207,11 @@
   </div>
 
   <!-- ============================== TEACHING ============================== -->
-  <div class="teach">
+  <div class="teach-head">
+    <button class="btn ghost small" id="popBtn" type="button">Open the exercises in a second window</button>
+    <span class="hint" id="popNote"></span>
+  </div>
+  <div class="teach" id="teach">
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
@@ -231,11 +235,11 @@
             depends on wavelength, not on contrast. What changes is how loud the whole thing is. Brightness
             and resolution are separate questions, and confusing them is how a strong reflector gets mistaken
             for a well-resolved one.</span></li>
-        <li><b>Turn the behaviour upside down.</b> <em>Why bother: the tuning curve is not a fixed law — its shape depends on the rocks you happen to have.</em> Edit the middle layer until its impedance sits between the layers
+        <li><b>Turn the behavior upside down.</b> <em>Why bother: the tuning curve is not a fixed law — its shape depends on the rocks you happen to have.</em> Edit the middle layer until its impedance sits between the layers
           above and below — try the "hardening downward" preset.
           <span class="ans">Now both reflection coefficients have the same sign, and the wedge behaves in
-            reverse: the two reflections cancel near λ/4 and reinforce as the bed vanishes. Same geometry,
-            opposite amplitude behaviour. Nothing about the wedge changed except the rocks on either side,
+            reverse: the two reflections cancel near λ/5 and reinforce as the bed vanishes. Same geometry,
+            opposite amplitude behavior. Nothing about the wedge changed except the rocks on either side,
             which is why you cannot read a tuning curve without knowing your impedance profile.</span></li>
         <li><b>Add some honesty.</b> <em>Why bother: every limit quoted in a textbook assumes clean data, and yours is not.</em> Set signal-to-noise to about 4 and look for the thin end.
           <span class="ans">The λ/8 detection limit assumes noiseless data. With real noise you lose the thin
@@ -266,8 +270,12 @@
     <p>Three layers, each with a velocity and a density. Acoustic impedance is their product, and the two
       reflection coefficients follow from <span class="k">R = (I₂ − I₁) / (I₂ + I₁)</span> at the top and base
       of the wedge. The middle layer's velocity converts thickness to two-way time as <span class="k">2h/V</span>.
-      Whether the wedge tunes at λ/4 or at λ/2 is therefore decided by the rocks you choose, not by a setting:
-      opposite-sign coefficients tune near λ/4, same-sign ones near λ/2.</p>
+      Which way the wedge behaves is therefore decided by the rocks, not by a setting. Opposite-sign
+      coefficients reach maximum amplitude near λ/5 for a Ricker wavelet. Same-sign coefficients do the
+      reverse: they are loudest as the bed vanishes, where the two reflections coincide and add to roughly
+      twice a single coefficient, and they are quietest near that same λ/5 separation, where the peak of one
+      wavelet sits on the trough of the other. A same-sign wedge therefore has no tuning thickness in the
+      usual sense, and the measured value is reported as none.</p>
     <p>Each trace is convolved analytically, as a sum of shifted and scaled wavelets rather than on a sample
       grid, so reflector timing is exact and the tuning curves come out smooth instead of stair-stepped. The
       top of the wedge sits at 50 ms, clear of the start of the display.</p>
@@ -308,10 +316,11 @@
   <footer>
     <div class="foot-grid">
       <div style="flex:1 1 330px;max-width:46ch">
-        <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
-          <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
-        <p>To cite: H. Bedle, <i>What Can You REALLY See in Seismic?</i>, University of
-          Oklahoma. <span class="k">SSRN: [article link to follow]</span></p>
+        <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma,
+          with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+        <p>To cite: H. Bedle and A. Moreno-Ward, 2026, <i>What Can You REALLY See in Seismic? A Set of
+          Browser-Based Interactive Modules for Teaching Seismic Resolution</i>: SSRN working paper,
+          University of Oklahoma.</p>
       </div>
       <div style="flex:1 1 330px;max-width:52ch">
         <p>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Free to
@@ -319,7 +328,7 @@
           is released under the same license. If you use it in a course or a talk, a credit line and a
           link back are all that is asked.</p>
         <p>Nothing you do in this module leaves your browser. The only thing recorded is that
-          the page was opened, so that I can show the university these are being used &mdash; no cookie, no
+          the page was opened, so that the university can see these are being used &mdash; no cookie, no
           account, nothing about you.</p>
       </div>
     </div>
@@ -416,13 +425,20 @@
     };
   }
 
-  function wavelet() {
-    if (S.wav !== 'ormsby') return SEIS.makeWavelet({ type: 'ricker', f: S.f });
+  // The four corners have to stay in order, so a slider that would cross its
+  // neighbour is pushed past it. The labels read from here too, otherwise the
+  // numbers on screen can differ from the wavelet being drawn.
+  function ormsbyCorners() {
     const f1 = S.f1;
     const f2 = Math.max(S.f2, f1 + 2);
     const f3 = Math.max(S.f3, f2 + 2);
     const f4 = Math.max(S.f4, f3 + 2);
-    return SEIS.makeWavelet({ type: 'ormsby', f1, f2, f3, f4 });
+    return { f1, f2, f3, f4 };
+  }
+
+  function wavelet() {
+    if (S.wav !== 'ormsby') return SEIS.makeWavelet({ type: 'ricker', f: S.f });
+    return SEIS.makeWavelet(Object.assign({ type: 'ormsby' }, ormsbyCorners()));
   }
 
   /* ------------------------ picking the events ------------------------- */
@@ -518,6 +534,13 @@
       curve.app.push(R.v * e.sep / 2);
       if (h > 1e-6 && na > tunA) { tunA = na; tunH = h; }
     }
+    // With same-sign coefficients the amplitude maximum sits at zero thickness,
+    // so the search returns the first sample off the axis and the number that
+    // comes out is an artifact of the sampling rather than a tuning thickness.
+    // There is no tuning thickness in that case, and none is reported.
+    const sameSign = Math.sign(R.rawR1) === Math.sign(R.rawR2);
+    curve.sameSign = sameSign;
+    if (sameSign || tunH < 1.5 * (S.maxh / NCURVE)) { tunH = 0; tunA = curve.amp[0]; }
     curve.tunH = tunH; curve.tunA = tunA;
 
     CACHE = Object.assign(CACHE, { field, nt, dt, tEnd, curve, wav, R, maxTWT, scale });
@@ -681,10 +704,14 @@
     });
     ctx.stroke(); ctx.restore();
 
-    ctx.save();
-    ctx.fillStyle = CRIMSON;
-    ctx.beginPath(); ctx.arc(xOf(curve.tunH), yA(Math.min(curve.tunA, ampMax)), 4, 0, 6.284); ctx.fill();
-    ctx.restore();
+    // No dot when there is no tuning thickness to mark: the same-sign case peaks
+    // at zero thickness, where a marker would sit on the axis and read as data.
+    if (curve.tunH > 0) {
+      ctx.save();
+      ctx.fillStyle = CRIMSON;
+      ctx.beginPath(); ctx.arc(xOf(curve.tunH), yA(Math.min(curve.tunA, ampMax)), 4, 0, 6.284); ctx.fill();
+      ctx.restore();
+    }
     SEIS.frame(ctx, rA);
     ctx.save();
     ctx.font = '11px "IBM Plex Sans", sans-serif'; ctx.fillStyle = SLATE;
@@ -851,7 +878,8 @@
     $('rQ').textContent = fmtL(lam / 4);
     $('rE').textContent = fmtL(lam / 8);
     $('rTune').textContent = curve.tunH > 0
-      ? fmtL(curve.tunH) + '  = λ/' + (lam / curve.tunH).toFixed(1) : '\u2014';
+      ? fmtL(curve.tunH) + '  = λ/' + (lam / curve.tunH).toFixed(1)
+      : (curve.sameSign ? 'none — same-sign coefficients, loudest as the bed vanishes' : '\u2014');
     $('rRc').textContent = (R.rawR1 > 0 ? '+' : '') + R.rawR1.toFixed(3) + '  /  ' +
                            (R.rawR2 > 0 ? '+' : '') + R.rawR2.toFixed(3) +
                            (Math.sign(R.rawR1) === Math.sign(R.rawR2) ? '  same sign' : '  opposite');
@@ -861,13 +889,19 @@
     $('rAmp').textContent = curve.amp[i].toFixed(2) + '\u00d7';
 
     const ratio = ph / lam;
+    const tun = curve.tunH;
     $('rVerdict').textContent = ph < 1e-6
-      ? 'Zero thickness — the two reflections have cancelled or merged completely'
-      : ratio >= 0.25
-        ? 'Above tuning — top and base resolve separately, and the picked thickness is real'
-        : ratio >= 0.125
-          ? 'Below tuning — one merged event; the reported thickness is the wavelet, not the rock'
-          : 'Near the detection limit — visible only as amplitude, if the data are clean';
+      ? 'Zero thickness — the two reflections have merged completely'
+      : curve.sameSign
+        ? (ratio >= 0.25
+            ? 'Thick enough that top and base are separate events'
+            : 'Same-sign coefficients — the two reflections reinforce as the bed thins rather than tuning')
+        : tun > 0 && ph >= tun
+          ? 'Above the measured tuning thickness — top and base resolve separately, and the picked ' +
+            'thickness is real'
+          : ratio >= 0.125
+            ? 'Below tuning — one merged event; the reported thickness is the wavelet, not the rock'
+            : 'Near the detection limit — visible only as amplitude, if the data are clean';
   }
 
   /* ---------------------------- interaction ---------------------------- */
@@ -906,8 +940,9 @@
 
   function syncLabels() {
     $('freqV').textContent = S.f + ' Hz';
-    $('f12V').textContent = S.f1 + ' \u2013 ' + S.f2 + ' Hz';
-    $('f34V').textContent = S.f3 + ' \u2013 ' + S.f4 + ' Hz';
+    const o = ormsbyCorners();
+    $('f12V').textContent = o.f1 + ' \u2013 ' + o.f2 + ' Hz';
+    $('f34V').textContent = o.f3 + ' \u2013 ' + o.f4 + ' Hz';
     $('maxhV').textContent = fmtL(S.maxh, 0);
     $('gainV').textContent = S.gain.toFixed(1) + '\u00d7';
     $('snrV').textContent = S.snr <= 0 ? 'clean' : S.snr.toFixed(1) + ' : 1';

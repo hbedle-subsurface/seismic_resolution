@@ -47,7 +47,7 @@
       <h3>Why this is the one that costs money</h3>
       <p style="margin-top:0;font-size:14.5px">A phase error becomes a <b>depth error</b>, in the same
         direction, on every horizon you pick, across the whole survey. It does not average out. At 30 Hz a
-        90° rotation puts your pick about 6 ms — eight or nine metres — off the rock.</p>
+        90° rotation puts your pick about 6 ms — eight or nine meters — off the rock.</p>
       <p style="font-size:14.5px">And nothing on the section warns you. There is no fuzziness and no
         artifact. The horizon looks clean and it is wrong.</p>
       <p style="font-size:14.5px;margin-bottom:0">Which is what a <b>well tie</b> is actually for. It is not
@@ -109,7 +109,7 @@
       <div id="tieBox" hidden>
         <p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 10px">
           The grey trace is the field seismic, recorded at a phase you cannot see. Rotate your wavelet until
-          the red line sits centred along the middle of the grey band. Use <b>Trace size</b> if the wiggles
+          the red line sits centerd along the middle of the grey band. Use <b>Trace size</b> if the wiggles
           are too small to judge.</p>
         <button class="btn small" id="newCase" type="button">New field trace</button>
         <button class="btn ghost small" id="reveal" type="button">How did I do?</button>
@@ -181,7 +181,11 @@
   </div>
 
   <!-- ============================== TEACHING ============================== -->
-  <div class="teach">
+  <div class="teach-head">
+    <button class="btn ghost small" id="popBtn" type="button">Open the exercises in a second window</button>
+    <span class="hint" id="popNote"></span>
+  </div>
+  <div class="teach" id="teach">
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
@@ -208,7 +212,7 @@
             event, and phase then moves that merged event off both boundaries. Working out where the sand
             really is from the seismic alone becomes impossible, which is precisely why thin reservoirs need
             well control.</span></li>
-        <li><b>Then tie a well properly.</b> <em>Why bother: this is the actual job, and the reveal tells you what your error would have cost in metres.</em> Turn on the matching game and rotate until the two traces sit on
+        <li><b>Then tie a well properly.</b> <em>Why bother: this is the actual job, and the reveal tells you what your error would have cost in meters.</em> Turn on the matching game and rotate until the two traces sit on
           top of each other.
           <span class="ans">This is what a well tie is: finding the rotation that makes the synthetic and the
             seismic agree. Get it right and every horizon you pick is in the right place. Get it wrong by 40°
@@ -252,7 +256,8 @@
     <ul>
       <li>White, R., and Simm, R., 2003, Tutorial: Good practice in well ties: <em>First Break</em>, 21, 75–83.</li>
       <li>Simm, R., and Bacon, M., 2014, <em>Seismic Amplitude: An Interpreter's Handbook</em>: Cambridge.</li>
-      <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.: AAPG/SEG.</li>
+      <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.:
+        AAPG Memoir 42 / SEG Investigations in Geophysics No. 9.</li>
       <li>For anything unfamiliar, the SEG Wiki hosts Sheriff's <em>Encyclopedic Dictionary of Applied
         Geophysics</em> free at <a href="https://wiki.seg.org/wiki/Dictionary">wiki.seg.org/wiki/Dictionary</a>.</li>
     </ul>
@@ -281,10 +286,11 @@
   <footer>
     <div class="foot-grid">
       <div style="flex:1 1 330px;max-width:46ch">
-        <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
-          <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
-        <p>To cite: H. Bedle, <i>What Can You REALLY See in Seismic?</i>, University of
-          Oklahoma. <span class="k">SSRN: [article link to follow]</span></p>
+        <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma,
+          with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+        <p>To cite: H. Bedle and A. Moreno-Ward, 2026, <i>What Can You REALLY See in Seismic? A Set of
+          Browser-Based Interactive Modules for Teaching Seismic Resolution</i>: SSRN working paper,
+          University of Oklahoma.</p>
       </div>
       <div style="flex:1 1 330px;max-width:52ch">
         <p>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Free to
@@ -292,7 +298,7 @@
           is released under the same license. If you use it in a course or a talk, a credit line and a
           link back are all that is asked.</p>
         <p>Nothing you do in this module leaves your browser. The only thing recorded is that
-          the page was opened, so that I can show the university these are being used &mdash; no cookie, no
+          the page was opened, so that the university can see these are being used &mdash; no cookie, no
           account, nothing about you.</p>
       </div>
     </div>
@@ -316,7 +322,7 @@
   const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670';
   const TTOP = 0.050, DT = 0.0002;
 
-  // impedance in 10^6 units, thickness in metres; the first and last layers are
+  // impedance in 10^6 units, thickness in meters; the first and last layers are
   // half-spaces, as in module 01
   const PRESETS = {
     simple: [
@@ -397,7 +403,7 @@
     const lob = lobesOf(wav);
     // how the pick drifts across the whole phase range
     const curve = [];
-    for (let d = -180; d <= 180; d += 5) {
+    for (let d = -175; d <= 175; d += 5) {
       const w = SEIS.phaseRotate(base, d);
       const l = lobesOf(w);
       curve.push({ d, pt: l.pt });
@@ -482,7 +488,7 @@
     for (let ix = 0; ix < NXs; ix++) fld.set(syn, ix * nt);
     SEIS.drawVarDensity(ctx, fld, NXs, nt, rect, { cmap: SEIS.COLORMAPS[S.cmap], clip: peak });
     // A crimson line on deep red measures about 1.1:1 against its background,
-    // which is no contrast at all. Washing the colour out leaves it as context
+    // which is no contrast at all. Washing the color out leaves it as context
     // instead of camouflage; harder while matching, when two traces have to be
     // told apart at once.
     if (S.fade) {
@@ -496,15 +502,15 @@
     const cx = rect.x + rect.w / 2;
     const amp = rect.w * 0.36 * clamp(S.tgain, 0.4, 3) / peak;
 
-    // Each trace is drawn twice: a white outline first, then the colour on top.
+    // Each trace is drawn twice: a white outline first, then the color on top.
     // A red line on a red background is invisible however thick it is, and the
-    // halo makes both legible whatever the colour map is doing underneath.
-    const wiggle = (data, colour, width) => {
+    // halo makes both legible whatever the color map is doing underneath.
+    const wiggle = (data, color, width) => {
       ctx.save();
       ctx.beginPath(); ctx.rect(rect.x, rect.y, rect.w, rect.h); ctx.clip();
       ctx.lineJoin = 'round'; ctx.lineCap = 'round';
       for (const pass of [0, 1]) {
-        ctx.strokeStyle = pass === 0 ? 'rgba(255,255,255,.92)' : colour;
+        ctx.strokeStyle = pass === 0 ? 'rgba(255,255,255,.92)' : color;
         ctx.lineWidth = pass === 0 ? width + 2.6 : width;
         ctx.beginPath();
         for (let i = 0; i < nt; i++) {
@@ -652,9 +658,16 @@
     const T = 1 / S.f;
     $('rPhase').textContent = (S.phase > 0 ? '+' : '') + S.phase + '\u00b0';
     $('rT').textContent = (T * 1000).toFixed(1) + ' ms';
-    $('rShift').textContent = (lob.pt * 1000).toFixed(1) + ' ms  = ' +
-      (Math.abs(lob.pt) / T).toFixed(2) + ' of a period';
-    $('rDepth').textContent = fmtL(Math.abs(lob.pt) * S.v / 2);
+    // Past about 170 degrees the largest positive lobe is a side lobe of a
+    // flipped wavelet, so quoting its position would describe a pick nobody
+    // would make. The trough is the event at that point.
+    const flipped = Math.abs(S.phase) > 170;
+    $('rShift').textContent = flipped
+      ? 'the event has flipped — the boundary is now the trough, ' +
+        (lob.tt * 1000).toFixed(1) + ' ms off'
+      : (lob.pt * 1000).toFixed(1) + ' ms  = ' +
+        (Math.abs(lob.pt) / T).toFixed(2) + ' of a period';
+    $('rDepth').textContent = fmtL(Math.abs(flipped ? lob.tt : lob.pt) * S.v / 2);
     const scale = Math.max(Math.abs(lob.pv), Math.abs(lob.tv), 1e-9);
     $('rAt0').textContent = (lob.at0 / scale).toFixed(2) + ' of the peak';
     $('rTrough').textContent = (lob.tt * 1000).toFixed(1) + ' ms';

@@ -1,7 +1,7 @@
 /* ===========================================================================
    seismic.js — shared math + plotting core
    "What Can You REALLY See in Seismic?"
-   Heather Bedle / AASPI / University of Oklahoma
+   Heather Bedle and April Moreno-Ward / AASPI / University of Oklahoma
    Vanilla JS, no dependencies, no build step.
    =========================================================================== */
 
@@ -384,8 +384,8 @@ const SEIS = (function () {
   /**
    * Sequential maps, for quantities that run from low to high rather than
    * negative to positive: thickness, amplitude magnitude, depth. Viridis and
-   * cividis are both perceptually uniform and safe for colour-vision
-   * deficiency; cividis is optimised for it specifically. Rainbow maps are
+   * cividis are both perceptually uniform and safe for color-vision
+   * deficiency; cividis is optimized for it specifically. Rainbow maps are
    * avoided because they invent boundaries where the data has none.
    */
   const SEQMAPS = {
@@ -398,7 +398,7 @@ const SEIS = (function () {
       [128,146,89],[165,166,76],[203,187,60],[243,209,39],[255,233,69],
     ]),
     // Shallow red through cream to deep blue-purple: the usual structure-map
-    // convention, and safe for colour-vision deficiency because the difficult
+    // convention, and safe for color-vision deficiency because the difficult
     // pair is red against green, not red against blue.
     structure: rampMapSeq([
       [124,24,10],[168,60,18],[205,112,35],[232,175,95],[243,222,175],
@@ -640,7 +640,7 @@ const SEIS = (function () {
    * Horizontal color bar, drawn in terms of REFLECTION COEFFICIENT rather than
    * displayed amplitude. That distinction matters: the color map itself never
    * changes, but polarity decides whether a positive RC is drawn as a peak or a
-   * trough, so labelling the bar by RC makes the bar itself flip when polarity
+   * trough, so labeling the bar by RC makes the bar itself flip when polarity
    * is switched. Pass pol = -1 for reverse polarity.
    */
   function drawColorbar(ctx, rect, cmap, opts) {
@@ -718,6 +718,58 @@ const SEIS = (function () {
     });
   }
 
+  /**
+   * Open the teaching blocks in a second window, so the exercises stay readable
+   * while the sliders are worked in the first. The block is cloned into the new
+   * window with the same stylesheet, so it needs no network and works from a
+   * local copy. Answers are plain text in this set, not click-to-reveal, so
+   * nothing has to be rewired on the other side.
+   *
+   * Returns false if the browser blocked the window, which the caller reports
+   * on the page rather than letting the click do nothing.
+   */
+  function popOutTeaching(src, title) {
+    if (!src) return false;
+    let href = '';
+    const link = document.querySelector('link[rel="stylesheet"][href$="style.css"]');
+    if (link) href = link.href;
+    let w;
+    try {
+      w = window.open('', '', 'width=620,height=820,scrollbars=yes,resizable=yes');
+    } catch (e) { return false; }
+    if (!w) return false;
+    w.document.open();
+    w.document.write(
+      '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+      '<title>' + (title || document.title) + '</title>' +
+      (href ? '<link rel="stylesheet" href="' + href + '">' : '') +
+      '<style>body{margin:0;background:#fff}.wrap{padding:20px 22px 40px}' +
+      '.teach{display:block;padding:0}.tryit,.takeaway{margin-bottom:20px}</style>' +
+      '</head><body><div class="wrap">' + src.innerHTML + '</div></body></html>'
+    );
+    w.document.close();
+    try { w.focus(); } catch (e) { /* focus refused, window is still open */ }
+    return true;
+  }
+
+  // Every module marks its teaching block with id="teach" and carries a
+  // #popBtn beside it, so the wiring lives here instead of in nine copies.
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('DOMContentLoaded', function () {
+      const btn = document.getElementById('popBtn');
+      const box = document.getElementById('teach');
+      if (!btn || !box) return;
+      btn.addEventListener('click', function () {
+        const note = document.getElementById('popNote');
+        const ok = popOutTeaching(box, document.title);
+        if (note) {
+          note.textContent = ok ? '' : 'Your browser blocked the window — the exercises are below.';
+        }
+      });
+    });
+  }
+
   function savePNG(canvas, name) {
     const a = document.createElement('a');
     a.download = name + '.png';
@@ -767,6 +819,6 @@ const SEIS = (function () {
     mulberry32, gaussRand, bandLimitedNoise, fft, fkSpectrum, phaseRotate,
     COLORMAPS, SEQMAPS, fitCanvas, drawVarDensity, drawWiggle,
     niceTicks, frame, axisBottom, axisLeft, dashedLine, tag, drawColorbar,
-    UNITS, readState, writeState, copyLink, savePNG,
+    UNITS, readState, writeState, copyLink, savePNG, popOutTeaching,
   };
 })();

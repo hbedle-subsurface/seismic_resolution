@@ -26,7 +26,7 @@
     <h1>How the earth changes as you go down</h1>
     <p class="sub">If you are new to seismic, start here. Before any question about what you can and cannot
       see makes sense, you need a feel for the earth the sound is travelling through. Build a column below,
-      from the sea surface down to five kilometres, and three things happen at once — all of which shape
+      from the sea surface down to five kilometers, and three things happen at once — all of which shape
       everything you will interpret later.</p>
   </div>
 
@@ -40,7 +40,7 @@
         of the earth obeys it.</p>
       <p style="font-size:14.5px"><b>Time is not depth.</b> Seismic arrives in two-way time. Because velocity
         keeps rising, a second of time near the surface covers far less rock than a second of time at four
-        kilometres. Every thickness you read off a section in milliseconds has to be converted with a
+        kilometers. Every thickness you read off a section in milliseconds has to be converted with a
         velocity that is itself changing.</p>
       <p style="font-size:14.5px;margin-bottom:0"><b>The earth absorbs energy.</b> It takes the high
         frequencies first, so the pulse that started sharp arrives at depth long and smooth. This is
@@ -55,11 +55,13 @@
         <em>bigger</em> and the frequency underneath it gets <em>smaller</em>. Both push the wavelength up,
         and a longer wavelength means less detail.</p>
       <p style="font-size:14.5px">So the thinnest bed you can resolve grows steadily with depth — often from
-        ten metres near the surface to fifty or more at four kilometres. That is not a failure of processing
+        ten meters near the surface to fifty or more at four kilometers. That is not a failure of processing
         or of the interpreter. It is the earth.</p>
       <p style="font-size:14.5px;margin-bottom:0">Drag the depth marker down and watch the last panel. It is
         the most useful plot on this page: it tells you the thinnest bed you could hope to see, at any depth,
-        for the data you have. Keep that number in mind and every other module will make more sense.</p>
+        for the data you have. The λ/4 it uses is the standard rule of thumb; module 02 measures the number
+        directly for a specific wavelet and gets something closer to λ/5. The trend with depth is the same
+        either way.</p>
     </div>
   </div>
 
@@ -135,6 +137,7 @@
         A high Q means the rock absorbs little. Hard rock is 200 and up; soft, gassy, shallow sediment can be
         under 50.</p>
       <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="pngBtn" type="button">Save the resolution panel as PNG</button>
       <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
     </div>
   </section>
@@ -187,12 +190,12 @@
       </div>
       <div class="panel-col">
         <p class="sublabel"><b>7</b> The pulse itself
-          <span class="note">at the surface, and at your marker</span></p>
+          <span class="note">at the surface and at your marker, both scaled to the same height</span></p>
         <canvas id="pulseCanvas" aria-label="The wavelet at the surface and at depth"></canvas>
       </div>
       <div class="panel-col">
         <p class="sublabel"><b>8</b> Thinnest bed you can resolve
-          <span class="note">λ/4</span></p>
+          <span class="note">λ/4, the rule of thumb</span></p>
         <canvas id="resCanvas" aria-label="Quarter wavelength against depth"></canvas>
       </div>
     </div>
@@ -213,7 +216,11 @@
   </div>
 
   <!-- ============================== TEACHING ============================== -->
-  <div class="teach">
+  <div class="teach-head">
+    <button class="btn ghost small" id="popBtn" type="button">Open the exercises in a second window</button>
+    <span class="hint" id="popNote"></span>
+  </div>
+  <div class="teach" id="teach">
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
@@ -294,8 +301,9 @@
     <ul>
       <li>Gardner, G.H.F., Gardner, L.W., and Gregory, A.R., 1974, Formation velocity and density:
         <em>Geophysics</em>, 39, 770–780.</li>
-      <li>Castagna, J.P., Batzle, M.L., and Eastwood, R.L., 1985, Relationships between compressional and
-        shear-wave velocities: <em>Geophysics</em>, 50, 571–581.</li>
+      <li>Castagna, J.P., Batzle, M.L., and Eastwood, R.L., 1985, Relationships between
+        compressional-wave and shear-wave velocities in clastic silicate rocks:
+        <em>Geophysics</em>, 50, 571–581.</li>
       <li>Dutta, N.C., 2002, Geopressure prediction using seismic data: <em>Geophysics</em>, 67, 2012–2041.</li>
       <li>Sheriff, R.E., and Geldart, L.P., 1995, <em>Exploration Seismology</em>, 2nd ed.: Cambridge.</li>
       <li>For definitions of anything unfamiliar, the SEG Wiki hosts Sheriff's
@@ -322,10 +330,11 @@
   <footer>
     <div class="foot-grid">
       <div style="flex:1 1 330px;max-width:46ch">
-        <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
-          <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
-        <p>To cite: H. Bedle, <i>What Can You REALLY See in Seismic?</i>, University of
-          Oklahoma. <span class="k">SSRN: [article link to follow]</span></p>
+        <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma,
+          with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+        <p>To cite: H. Bedle and A. Moreno-Ward, 2026, <i>What Can You REALLY See in Seismic? A Set of
+          Browser-Based Interactive Modules for Teaching Seismic Resolution</i>: SSRN working paper,
+          University of Oklahoma.</p>
       </div>
       <div style="flex:1 1 330px;max-width:52ch">
         <p>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Free to
@@ -333,7 +342,7 @@
           is released under the same license. If you use it in a course or a talk, a credit line and a
           link back are all that is asked.</p>
         <p>Nothing you do in this module leaves your browser. The only thing recorded is that
-          the page was opened, so that I can show the university these are being used &mdash; no cookie, no
+          the page was opened, so that the university can see these are being used &mdash; no cookie, no
           account, nothing about you.</p>
       </div>
     </div>
@@ -411,7 +420,10 @@
       } else {
         vp = (S.v0 + S.grad * (z - S.water)) * (1 - (S.opAmp / 100) * opFactor(z));
         vp = Math.max(1400, vp);
-        vs = Math.max(0, (vp - 1360) / 1.16);
+        // The mudrock line runs out below about 1600 m/s, where it returns a Vs
+        // small enough to give an impossible Vp/Vs. Held to 5 so the readout
+        // stays in the range very shallow, water-saturated sediment occupies.
+        vs = Math.max(0, Math.min((vp - 1360) / 1.16, vp / 5));
         rho = 0.31 * Math.pow(vp, 0.25);
       }
       if (i > 0) {
@@ -750,6 +762,7 @@
     Object.assign(S, p);
     pushToInputs(); bump();
   });
+  $('pngBtn').addEventListener('click', () => SEIS.savePNG($('resCanvas'), 'resolution-with-depth'));
   $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
   $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
 

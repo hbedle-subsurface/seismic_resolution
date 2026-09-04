@@ -17,8 +17,14 @@ docs/                   this file
 
 Each module is a standalone page that pulls in `assets/seismic.js`. Adding one
 means copying an existing module and rewriting the model and the two teaching
-blocks at the bottom — the wavelets, convolution, colour maps, axes, unit
+blocks at the bottom — the wavelets, convolution, color maps, axes, unit
 handling and URL state are all already there.
+
+The exercise pop-out wires itself. A module needs only `id="teach"` on the
+teaching block and a `#popBtn` button beside it, both of which come along when
+an existing module is copied; `seismic.js` finds them on DOMContentLoaded. A
+browser that blocks the window is reported in `#popNote` rather than leaving the
+click to do nothing.
 
 There is no build step, no bundler and no dependency to install. Everything is
 vanilla JavaScript and one stylesheet.
@@ -52,10 +58,12 @@ Noise is band-limited — random reflectivity convolved with the same wavelet �
 and laterally correlated, so it looks like seismic noise rather than static, and
 so it is not trivially distinguishable from real structure.
 
-Deliberately omitted, each deserving its own module: non-zero wavelet phase,
-offset and NMO stretch, anything genuinely 3D, transmission loss and internal
-multiples, lateral velocity variation, fault-plane reflections and tip
-diffractions, and migration artefacts.
+Deliberately omitted, each deserving its own module: offset and NMO stretch,
+anything genuinely 3D, transmission loss and internal multiples, lateral velocity
+variation, fault-plane reflections and tip diffractions, and migration artifacts.
+Wavelet bandwidth and spatial aliasing were drafted as modules 01 and 06 of a
+longer sequence and are not part of this release; the numbering here runs 00 to
+08 without them.
 
 ## Page-view counting
 
@@ -67,7 +75,7 @@ each page removes it entirely.
 
 The footers on every page were brought into line with the other sites using
 `tools/retrofit-footer.py` in the `single-trace` repository. If footers change
-again, change them there and re-run it rather than editing twelve files by hand.
+again, change them there and re-run it rather than editing ten files by hand.
 
 The footer carries the CC BY-SA 4.0 statement and the citation line, and both
 have to match `LICENSE` at the repository root and the license section of

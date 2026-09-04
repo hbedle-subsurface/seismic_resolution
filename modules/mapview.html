@@ -124,6 +124,7 @@
         <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
       </div>
       <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="pngBtn" type="button">Save the amplitude map as PNG</button>
       <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
     </div>
   </section>
@@ -181,7 +182,11 @@
   </div>
 
   <!-- ============================== TEACHING ============================== -->
-  <div class="teach">
+  <div class="teach-head">
+    <button class="btn ghost small" id="popBtn" type="button">Open the exercises in a second window</button>
+    <span class="hint" id="popNote"></span>
+  </div>
+  <div class="teach" id="teach">
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
@@ -254,15 +259,16 @@
     <p>Left out, and every one of them makes the real problem harder: amplitude variation with offset, which
       is the attribute that actually resolves this question in practice; lateral change in the sand and in the
       overburden; velocity pull-up beneath the dome; imaging problems on a steep salt flank, which are severe;
-      residual gas, which brightens almost as well as commercial gas; and any noise at all. The colour maps
-      are perceptually uniform and safe for colour-vision deficiency, deliberately, because rainbow scales
+      residual gas, which brightens almost as well as commercial gas; and any noise at all. The color maps
+      are perceptually uniform and safe for color-vision deficiency, deliberately, because rainbow scales
       invent edges in amplitude maps that the data does not contain.</p>
     <ul>
-      <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.: AAPG/SEG.</li>
+      <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.:
+        AAPG Memoir 42 / SEG Investigations in Geophysics No. 9.</li>
       <li>Widess, M.B., 1973, How thin is a thin bed?: <em>Geophysics</em>, 38, 1176–1180.</li>
       <li>Simm, R., and Bacon, M., 2014, <em>Seismic Amplitude: An Interpreter's Handbook</em>: Cambridge.</li>
-      <li>Rowan, M.G., Jackson, M.P.A., and Trudgill, B.D., 1999, Salt-related fault families:
-        <em>AAPG Bulletin</em>, 83, 1454–1484.</li>
+      <li>Rowan, M.G., Jackson, M.P.A., and Trudgill, B.D., 1999, Salt-related fault families and fault
+        welds in the northern Gulf of Mexico: <em>AAPG Bulletin</em>, 83, 1454–1484.</li>
       <li>For anything unfamiliar, the SEG Wiki hosts Sheriff's <em>Encyclopedic Dictionary of Applied
         Geophysics</em> free at <a href="https://wiki.seg.org/wiki/Dictionary">wiki.seg.org/wiki/Dictionary</a>.</li>
     </ul>
@@ -286,10 +292,11 @@
   <footer>
     <div class="foot-grid">
       <div style="flex:1 1 330px;max-width:46ch">
-        <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
-          <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
-        <p>To cite: H. Bedle, <i>What Can You REALLY See in Seismic?</i>, University of
-          Oklahoma. <span class="k">SSRN: [article link to follow]</span></p>
+        <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma,
+          with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+        <p>To cite: H. Bedle and A. Moreno-Ward, 2026, <i>What Can You REALLY See in Seismic? A Set of
+          Browser-Based Interactive Modules for Teaching Seismic Resolution</i>: SSRN working paper,
+          University of Oklahoma.</p>
       </div>
       <div style="flex:1 1 330px;max-width:52ch">
         <p>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Free to
@@ -297,7 +304,7 @@
           is released under the same license. If you use it in a course or a talk, a credit line and a
           link back are all that is asked.</p>
         <p>Nothing you do in this module leaves your browser. The only thing recorded is that
-          the page was opened, so that I can show the university these are being used &mdash; no cookie, no
+          the page was opened, so that the university can see these are being used &mdash; no cookie, no
           account, nothing about you.</p>
       </div>
     </div>
@@ -322,10 +329,10 @@
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670', OCHRE = '#8A6D1F';
 
-  const XD = 7000, YD = 4600;          // map extent, metres
+  const XD = 7000, YD = 4600;          // map extent, meters
   const XC = 2500, YC = YD / 2;        // where the salt sits
   const RD = 1500;                     // how wide the dome's uplift is
-  const ZREF = 2600;                   // regional depth at the dome centre
+  const ZREF = 2600;                   // regional depth at the dome center
   const NXM = 190, NYM = 125, NLUT = 400;
 
   // shale over sand. Brine sand is a little softer than the shale; gas sand is a
@@ -339,7 +346,7 @@
   const uL = (m) => m * U().len;
   const fmtL = (m, d) => uL(m).toFixed(d === undefined ? 0 : d) + ' ' + U().lab;
 
-  // The colour ramps are defined here rather than pulled from the shared file.
+  // The color ramps are defined here rather than pulled from the shared file.
   // If this module is updated on its own and the shared file is not, importing
   // them would leave every ramp undefined and every panel blank, with nothing
   // on screen to say why. Keeping them local means the module always draws.
@@ -359,7 +366,7 @@
     [58,166,140],[24,124,120],[12,80,90],
   ]);
   // shallow red through cream to deep blue-purple, the structure-map
-  // convention, and safe for colour-vision deficiency because the awkward pair
+  // convention, and safe for color-vision deficiency because the awkward pair
   // is red against green rather than red against blue
   const STRUCT_MAP = ramp([
     [124,24,10],[168,60,18],[205,112,35],[232,175,95],[243,222,175],
@@ -793,7 +800,7 @@
     $('rTune').textContent = fmtL(tunH, 1);
     $('rRing').textContent = ringR === null
       ? 'nowhere — the sand never reaches tuning thickness'
-      : fmtL(ringR) + ' from the dome centre';
+      : fmtL(ringR) + ' from the dome center';
 
     const x = S.px * XD, y = S.py * YD;
     const h = thicknessAt(x, y), z = depthAt(x, y), g = isGas(x, y);
@@ -888,6 +895,7 @@
   $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
   $('showTune').addEventListener('change', () => { S.tune = $('showTune').checked; render(); });
   $('showCon').addEventListener('change', () => { S.con = $('showCon').checked; render(); });
+  $('pngBtn').addEventListener('click', () => SEIS.savePNG($('ampCanvas'), 'tuning-in-map-view'));
   $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
   $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
 

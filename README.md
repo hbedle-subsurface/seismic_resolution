@@ -6,7 +6,7 @@ change it.
 
 **[Open the modules →](https://hbedle-subsurface.github.io/seismic_resolution/)**
 
-Heather Bedle, School of Geosciences, University of Oklahoma, with the
+Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma, with the
 [AASPI](https://www.ou.edu/mcee/labs/aaspi) consortium.
 
 ---
@@ -22,7 +22,7 @@ Most people meet that as a rule: λ/4, quarter of a wavelength, resolution limit
 A rule that has been read is fragile. It gets applied where it is remembered and
 forgotten everywhere else. What is much harder to forget is having *watched* a
 bed thin until it disappeared while the seismic went on confidently reporting a
-thickness that stopped being real thirty metres ago.
+thickness that stopped being real thirty meters ago.
 
 These are experiments, not lectures. Move a slider and watch something break.
 
@@ -67,7 +67,7 @@ written out — and a short *what to carry away*. The questions can be assigned
 directly as homework.
 
 **Save as PNG** exports the current panel for slides and reports. **Units**
-toggle between metres and feet throughout.
+toggle between meters and feet throughout.
 
 ## One number worth knowing
 
@@ -101,7 +101,8 @@ provided the source is credited and any adaptation is released under the same
 license. If you use it in a course or a talk, a credit line and a link back are
 all that is asked. The full legal text is in `LICENSE` at the repository root.
 
-> Bedle, H. (2026). *What Can You REALLY See in Seismic?* University of Oklahoma.
+> Bedle, H., and Moreno-Ward, A. (2026). *What Can You REALLY See in Seismic? A Set
+> of Browser-Based Interactive Modules for Teaching Seismic Resolution.* SSRN
+> working paper, University of Oklahoma.
 > https://hbedle-subsurface.github.io/seismic_resolution/
-> SSRN: [article link to follow]
 

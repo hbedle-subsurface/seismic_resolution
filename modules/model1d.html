@@ -26,7 +26,7 @@
     <h1>Where a seismic trace comes from</h1>
     <p class="sub">One column of rock, and the trace it produces. Type a thickness, a velocity and a
       density into the table, and follow them left to right through five panels until a seismic wiggle comes
-      out the other end. Nothing is hidden and nothing is approximated. Change any number and watch which
+      out the other end. Every step is on the screen. Change any number and watch which
       panels move — and, just as usefully, which ones do not.</p>
   </div>
 
@@ -196,7 +196,11 @@
   </div>
 
   <!-- ============================== TEACHING ============================== -->
-  <div class="teach">
+  <div class="teach-head">
+    <button class="btn ghost small" id="popBtn" type="button">Open the exercises in a second window</button>
+    <span class="hint" id="popNote"></span>
+  </div>
+  <div class="teach" id="teach">
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
@@ -308,10 +312,11 @@
   <footer>
     <div class="foot-grid">
       <div style="flex:1 1 330px;max-width:46ch">
-        <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
-          <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
-        <p>To cite: H. Bedle, <i>What Can You REALLY See in Seismic?</i>, University of
-          Oklahoma. <span class="k">SSRN: [article link to follow]</span></p>
+        <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma,
+          with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+        <p>To cite: H. Bedle and A. Moreno-Ward, 2026, <i>What Can You REALLY See in Seismic? A Set of
+          Browser-Based Interactive Modules for Teaching Seismic Resolution</i>: SSRN working paper,
+          University of Oklahoma.</p>
       </div>
       <div style="flex:1 1 330px;max-width:52ch">
         <p>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Free to
@@ -319,7 +324,7 @@
           is released under the same license. If you use it in a course or a talk, a credit line and a
           link back are all that is asked.</p>
         <p>Nothing you do in this module leaves your browser. The only thing recorded is that
-          the page was opened, so that I can show the university these are being used &mdash; no cookie, no
+          the page was opened, so that the university can see these are being used &mdash; no cookie, no
           account, nothing about you.</p>
       </div>
     </div>
@@ -427,13 +432,20 @@
     return { ai, iface, tEnd };
   }
 
-  function wavelet() {
-    if (S.wav !== 'ormsby') return SEIS.makeWavelet({ type: 'ricker', f: S.f });
+  // The four corners have to stay in order, so a slider that would cross its
+  // neighbour is pushed past it. The labels read from here too, otherwise the
+  // numbers on screen can differ from the wavelet being drawn.
+  function ormsbyCorners() {
     const f1 = S.f1;
     const f2 = Math.max(S.f2, f1 + 2);
     const f3 = Math.max(S.f3, f2 + 2);
     const f4 = Math.max(S.f4, f3 + 2);
-    return SEIS.makeWavelet({ type: 'ormsby', f1, f2, f3, f4 });
+    return { f1, f2, f3, f4 };
+  }
+
+  function wavelet() {
+    if (S.wav !== 'ormsby') return SEIS.makeWavelet({ type: 'ricker', f: S.f });
+    return SEIS.makeWavelet(Object.assign({ type: 'ormsby' }, ormsbyCorners()));
   }
 
   let CACHE = {};
@@ -643,7 +655,7 @@
       ctx.strokeStyle = 'rgba(92,102,112,.25)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
 
-      // the wavelet, centred on this interface
+      // the wavelet, centerd on this interface
       ctx.strokeStyle = col; ctx.lineWidth = 1.8;
       ctx.beginPath();
       for (let k = 0; k <= 180; k++) {
@@ -944,8 +956,9 @@
 
   function syncLabels() {
     $('freqV').textContent = S.f + ' Hz';
-    $('f12V').textContent = S.f1 + ' \u2013 ' + S.f2 + ' Hz';
-    $('f34V').textContent = S.f3 + ' \u2013 ' + S.f4 + ' Hz';
+    const o = ormsbyCorners();
+    $('f12V').textContent = o.f1 + ' \u2013 ' + o.f2 + ' Hz';
+    $('f34V').textContent = o.f3 + ' \u2013 ' + o.f4 + ' Hz';
     $('gainV').textContent = S.gain.toFixed(1) + '\u00d7';
     $('noiseV').textContent = S.noise <= 0 ? 'clean' : S.noise.toFixed(1) + ' : 1';
     $('rickerCtl').hidden = S.wav !== 'ricker';

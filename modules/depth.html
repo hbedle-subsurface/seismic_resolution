@@ -45,8 +45,8 @@
     <div class="takeaway">
       <h3>Why this one is worth your time</h3>
       <p style="margin-top:0;font-size:14.5px">Multiply those two together and the thinnest bed you can
-        resolve typically grows <b>five-fold</b> between the shallow section and four kilometres down. Ten
-        metres becomes fifty.</p>
+        resolve typically grows <b>five-fold</b> between the shallow section and four kilometers down. Ten
+        meters becomes fifty.</p>
       <p style="font-size:14.5px">That is not a processing failure and it is not the interpreter being
         careless. It is the earth, and no amount of reprocessing fully undoes it.</p>
       <p style="font-size:14.5px;margin-bottom:0">It also means a rule of thumb picked up on a shallow field
@@ -154,7 +154,7 @@
     <p class="hint-line" style="margin-top:-6px">The thickness slider sets the <b>two marked beds only</b> —
       one at the reference depth, one at your probe depth. Everything else in panel 4 is random background
       between 15 and 70 m, there so you can watch the whole column lose character, not just the test bed.
-      Panel 4 is drawn in time like the seismic beside it, so the same thickness in metres looks thinner the
+      Panel 4 is drawn in time like the seismic beside it, so the same thickness in meters looks thinner the
       deeper it sits: 60 m is 54 ms at the reference and 26 ms at 3 s.</p>
 
     <div class="sec-row" id="pulseRow">
@@ -205,7 +205,11 @@
   </div>
 
   <!-- ============================== TEACHING ============================== -->
-  <div class="teach">
+  <div class="teach-head">
+    <button class="btn ghost small" id="popBtn" type="button">Open the exercises in a second window</button>
+    <span class="hint" id="popNote"></span>
+  </div>
+  <div class="teach" id="teach">
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
@@ -330,10 +334,11 @@
   <footer>
     <div class="foot-grid">
       <div style="flex:1 1 330px;max-width:46ch">
-        <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
-          <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
-        <p>To cite: H. Bedle, <i>What Can You REALLY See in Seismic?</i>, University of
-          Oklahoma. <span class="k">SSRN: [article link to follow]</span></p>
+        <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma,
+          with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+        <p>To cite: H. Bedle and A. Moreno-Ward, 2026, <i>What Can You REALLY See in Seismic? A Set of
+          Browser-Based Interactive Modules for Teaching Seismic Resolution</i>: SSRN working paper,
+          University of Oklahoma.</p>
       </div>
       <div style="flex:1 1 330px;max-width:52ch">
         <p>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Free to
@@ -341,7 +346,7 @@
           is released under the same license. If you use it in a course or a talk, a credit line and a
           link back are all that is asked.</p>
         <p>Nothing you do in this module leaves your browser. The only thing recorded is that
-          the page was opened, so that I can show the university these are being used &mdash; no cookie, no
+          the page was opened, so that the university can see these are being used &mdash; no cookie, no
           account, nothing about you.</p>
       </div>
     </div>
@@ -845,7 +850,7 @@
         for (let s = 0; s < sp.length; s++) v += sp[s].r * wav.fn(tt - sp[s].t);
         vals[i] = v; peak = Math.max(peak, Math.abs(v));
       }
-      // centred, and never wider than the panel: the old version put the zero
+      // centerd, and never wider than the panel: the old version put the zero
       // line a third of the way across but allowed a wider swing than that,
       // so troughs ran off the left-hand edge
       const cx = rr.x + rr.w * 0.5;

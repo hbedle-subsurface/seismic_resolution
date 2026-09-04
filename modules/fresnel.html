@@ -115,17 +115,19 @@
     <div class="ctl-col">
       <h2>Display</h2>
       <div class="ctl">
-        <label for="ap">Survey width the migration can use <span class="val" id="apV">3000 m</span></label>
+        <label for="ap">Migration aperture, either side <span class="val" id="apV">3000 m</span></label>
         <input type="range" id="ap" min="200" max="8000" step="100" value="3000">
       </div>
       <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px">
-        Migration gathers energy from traces either side. The less of the survey it has to work with, the
-        softer the focus.</p>
+        Migration gathers energy from traces on either side of the target, so this is the half-width of the
+        recorded aperture rather than the full survey. The less of it there is to work with, the softer the
+        focus.</p>
       <div class="ctl">
         <label for="units">Units</label>
         <select id="units"><option value="m">Meters</option><option value="ft">Feet</option></select>
       </div>
       <button class="btn ghost small" id="copyBtn" type="button">Copy link to this setup</button>
+      <button class="btn ghost small" id="pngBtn" type="button">Save the map panel as PNG</button>
       <button class="btn ghost small" id="resetBtn" type="button">Reset</button>
     </div>
   </section>
@@ -195,7 +197,11 @@
   </div>
 
   <!-- ============================== TEACHING ============================== -->
-  <div class="teach">
+  <div class="teach-head">
+    <button class="btn ghost small" id="popBtn" type="button">Open the exercises in a second window</button>
+    <span class="hint" id="popNote"></span>
+  </div>
+  <div class="teach" id="teach">
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
@@ -212,7 +218,7 @@
           is actually for.</em> Back on <em>Unmigrated</em>, separate the two features by 300 m and try to
           convince yourself there are two.
           <span class="ans">You cannot. They sit inside the same Fresnel patch and no amount of staring, or
-            gain, or colour will separate them. Migration is not a tidying-up step at the end. It is the step
+            gain, or color will separate them. Migration is not a tidying-up step at the end. It is the step
             that makes lateral interpretation possible at all.</span></li>
         <li><b>Go deeper.</b> <em>Why bother: feature sizes are not comparable between a shallow field and a deep one.</em> Take the horizon from 1.2 s down to 3 s.
           <span class="ans">The unfocused patch grows and the focused limit worsens too, though more slowly.
@@ -256,7 +262,8 @@
       migration has arcs to collapse.</p>
     <p>The focused panels are not a full migration. They are the band-limited response that a successful
       migration produces: each feature images as a spot whose two-feature resolving distance is
-      <span class="k">λ/(4 sin θ)</span>, with <span class="k">θ = arctan(survey width / depth)</span>. This
+      <span class="k">λ/(4 sin θ)</span>, with <span class="k">θ = arctan(aperture / depth)</span> measured
+      from the vertical at the target, so the aperture here is the distance to one side. This
       is the standard resolution result. It is used here in preference to running a real migration operator
       because a real one brings its own artifacts, which would distract from the point. The trade-off is that
       these panels show what migration is trying to achieve rather than the ways it can fail.</p>
@@ -273,7 +280,8 @@
       <li>Sheriff, R.E., 1980, Nomogram for Fresnel-zone calculation: <em>Geophysics</em>, 45, 968–972.</li>
       <li>Chen, J., and Schuster, G.T., 1999, Resolution limits of migrated images:
         <em>Geophysics</em>, 64, 1046–1053.</li>
-      <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.: AAPG/SEG.</li>
+      <li>Brown, A.R., 2011, <em>Interpretation of Three-Dimensional Seismic Data</em>, 7th ed.:
+        AAPG Memoir 42 / SEG Investigations in Geophysics No. 9.</li>
       <li>For anything unfamiliar, the SEG Wiki hosts Sheriff's <em>Encyclopedic Dictionary of Applied
         Geophysics</em> free at <a href="https://wiki.seg.org/wiki/Dictionary">wiki.seg.org/wiki/Dictionary</a>.</li>
     </ul>
@@ -297,10 +305,11 @@
   <footer>
     <div class="foot-grid">
       <div style="flex:1 1 330px;max-width:46ch">
-        <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
-          <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
-        <p>To cite: H. Bedle, <i>What Can You REALLY See in Seismic?</i>, University of
-          Oklahoma. <span class="k">SSRN: [article link to follow]</span></p>
+        <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma,
+          with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+        <p>To cite: H. Bedle and A. Moreno-Ward, 2026, <i>What Can You REALLY See in Seismic? A Set of
+          Browser-Based Interactive Modules for Teaching Seismic Resolution</i>: SSRN working paper,
+          University of Oklahoma.</p>
       </div>
       <div style="flex:1 1 330px;max-width:52ch">
         <p>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Free to
@@ -308,7 +317,7 @@
           is released under the same license. If you use it in a course or a talk, a credit line and a
           link back are all that is asked.</p>
         <p>Nothing you do in this module leaves your browser. The only thing recorded is that
-          the page was opened, so that I can show the university these are being used &mdash; no cookie, no
+          the page was opened, so that the university can see these are being used &mdash; no cookie, no
           account, nothing about you.</p>
       </div>
     </div>
@@ -330,7 +339,7 @@
   const $ = (id) => document.getElementById(id);
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const CRIMSON = '#841617', TEAL = '#0B7285', SLATE = '#5C6670', OCHRE = '#8A6D1F';
-  const FIELD_LEN = 91.44, FIELD_WID = 48.8;   // an American football field, in metres
+  const FIELD_LEN = 91.44, FIELD_WID = 48.8;   // an American football field, in meters
 
   const U = () => SEIS.UNITS[S.units];
   const uL = (m) => m * U().len;
@@ -636,7 +645,7 @@
       for (let i = 0; i < fld.length; i++) peak = Math.max(peak, Math.abs(fld[i]));
       SEIS.drawVarDensity(ctx, fld, NXs, nt, rr, { cmap: SEIS.COLORMAPS.bwr, clip: peak });
       // The seismic underneath runs from deep blue to deep red, so a marker in
-      // any single colour disappears against one end of it. A white ring with a
+      // any single color disappears against one end of it. A white ring with a
       // dark ring inside reads against both.
       xs.forEach((x0) => {
         const x = rr.x + ((x0 + XW / 2) / XW) * rr.w;
@@ -731,6 +740,7 @@
 
   $('units').addEventListener('change', () => { S.units = $('units').value; bump(); });
   $('showField').addEventListener('change', () => { S.field = $('showField').checked; render(); });
+  $('pngBtn').addEventListener('click', () => SEIS.savePNG($('mapCanvas'), 'horizontal-resolution'));
   $('resetBtn').addEventListener('click', () => { S = Object.assign({}, DEF); pushToInputs(); bump(); });
   $('copyBtn').addEventListener('click', (e) => SEIS.copyLink(e.currentTarget));
 
