@@ -3,291 +3,682 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>How AVO Actually Works</title>
-<meta name="description" content="Interactive modules on rock physics, fluid substitution and AVO: build a rock, follow it to a seismic trace, and find out how many different rocks could have produced the same amplitude. Built for teaching by AASPI at the University of Oklahoma.">
+<title>What Can You REALLY See in Seismic?</title>
+<meta name="description" content="Hands-on browser experiments in seismic resolution: tuning, wedge models, fault visibility. No install, no math prerequisite. University of Oklahoma / AASPI.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
-<style>
-  /* the difficulty note on each card. Kept here rather than in the shared
-     stylesheet, which is copied from the companion sites and stays untouched. */
-  .card-no .lvl { display:block; margin-top:3px; font:400 10.5px/1.35 "IBM Plex Sans",sans-serif;
-                  letter-spacing:0; text-transform:none; color:#5C6670; }
-  .card.planned .card-no .lvl { color:#8A9299; }
-</style>
 </head>
 <body>
 
 <div class="wrap">
   <header class="masthead">
-    <a class="brand" href="index.html"><span class="dot"></span>How AVO <b>actually</b> works</a>
+    <a class="brand" href="index.html"><span class="dot"></span>University of Oklahoma &nbsp;·&nbsp; <b>AASPI</b></a>
     <nav>
       <a href="#modules">Modules</a>
-      <a href="#about">About</a>
-      <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a>
+      <a href="#who">Start with the basics</a>
+      <a href="modules/wedge.html">Start</a>
     </nav>
   </header>
 
-  <!-- ================================ HERO ================================ -->
+  <!-- =============================== HERO =============================== -->
   <section class="hero">
-   <div class="hero-grid">
-    <div class="hero-copy">
-      <p class="eyebrow">AASPI &nbsp;·&nbsp; University of Oklahoma</p>
-      <h1 class="title">A seismic amplitude is <em>evidence</em>, not an answer.</h1>
-      <p class="lede">Several things have to happen between a rock and a seismic amplitude. Grains and pores
-        set a stiffness. The fluid changes it. Stiffness and density are multiplied together into one
-        impedance. Two impedances are reduced to one contrast. A wavelet blurs the contrast in time, and
-        noise puts an error bar around what is left. <strong>Every one of those steps throws information
-        away</strong>, so working back from a bright spot to the rock does not have one answer.</p>
-      <p class="lede">These modules build that calculation in front of you, one step at a time, and then
-        go looking for the rocks that share an amplitude. Adding offset is what wins some of that information
-        back — not all of it. Nothing to install, and nothing leaves your machine.</p>
-      <div class="hero-cta">
-        <a class="btn" href="modules/start-here.html">Start here — no equations →</a>
-        <a class="btn ghost" href="#modules">See all modules</a>
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">Seismic interpretation, from the ground up</p>
+        <h1 class="title">What can you <em>really</em> see in seismic?</h1>
+        <p class="lede">Seismic data does not show you the earth. It shows you the earth
+          <strong>convolved with a wavelet</strong> — and that wavelet is key in determining which subsurface features you get to
+          resolve, which faults you get to map, and which bright spots are rock rather than arithmetic.</p>
+        <p class="lede">These are experiments, not lectures. Move a slider, watch a rock layer or a fault disappear,
+          and find out where your data stops telling the truth and starts to trick you!</p>
+        <p>
+          <a class="btn" href="modules/wedge.html">Open the wedge model</a>
+          <a class="btn ghost" href="modules/faults.html" style="margin-left:8px">Can you see the fault?</a>
+        </p>
+      </div>
+
+      <div class="hero-panel">
+        <canvas id="heroCanvas" aria-label="Animated wedge model: two reflections merging as frequency drops"></canvas>
+        <div class="hero-cap">
+          <span>One bed thinning to zero, drawn over and over</span>
+          <span>peak frequency <b id="heroF">40 Hz</b> &nbsp;·&nbsp; thinnest resolvable bed <b id="heroR">16 m</b></span>
+        </div>
       </div>
     </div>
-    <div class="hero-panel"><div class="thumb" style="border:0"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><line x1="16" y1="52" x2="184" y2="52" stroke="#C7C9C0" stroke-width="1.4"/><path d="M16 82.6 L20.2 82.6 L24.4 82.6 L28.6 82.7 L32.8 82.8 L37 82.9 L41.2 83 L45.4 83.1 L49.6 83.3 L53.8 83.5 L58 83.7 L62.2 83.9 L66.4 84.2 L70.6 84.4 L74.8 84.7 L79 85.1 L83.2 85.4 L87.4 85.8 L91.6 86.1 L95.8 86.5 L100 87 L104.2 87.4 L108.4 87.9 L112.6 88.4 L116.8 88.9 L121 89.4 L125.2 90 L129.4 90.6 L133.6 91.2 L137.8 91.8 L142 92.4 L146.2 93.1 L150.4 93.8 L154.6 94.5 L158.8 95.3 L163 96 L167.2 96.8 L171.4 97.6 L175.6 98.5 L179.8 99.3 L184 100.2" fill="none" stroke="#841617" stroke-width="2.1" stroke-linecap="round"/><path d="M16 52.6 L20.2 52.7 L24.4 52.7 L28.6 52.8 L32.8 53 L37 53.1 L41.2 53.4 L45.4 53.6 L49.6 53.9 L53.8 54.2 L58 54.6 L62.2 55 L66.4 55.5 L70.6 56 L74.8 56.5 L79 57 L83.2 57.6 L87.4 58.3 L91.6 58.9 L95.8 59.6 L100 60.3 L104.2 61.1 L108.4 61.9 L112.6 62.7 L116.8 63.6 L121 64.5 L125.2 65.4 L129.4 66.4 L133.6 67.3 L137.8 68.4 L142 69.4 L146.2 70.5 L150.4 71.5 L154.6 72.6 L158.8 73.8 L163 74.9 L167.2 76.1 L171.4 77.3 L175.6 78.5 L179.8 79.8 L184 81" fill="none" stroke="#B5451B" stroke-width="2.1" stroke-linecap="round"/><path d="M16 53.7 L20.2 53.7 L24.4 53.7 L28.6 53.8 L32.8 53.8 L37 53.9 L41.2 54 L45.4 54.1 L49.6 54.2 L53.8 54.4 L58 54.5 L62.2 54.7 L66.4 54.9 L70.6 55.1 L74.8 55.3 L79 55.6 L83.2 55.8 L87.4 56.1 L91.6 56.4 L95.8 56.7 L100 57 L104.2 57.3 L108.4 57.6 L112.6 58 L116.8 58.3 L121 58.7 L125.2 59.1 L129.4 59.5 L133.6 59.9 L137.8 60.3 L142 60.7 L146.2 61.1 L150.4 61.6 L154.6 62 L158.8 62.5 L163 62.9 L167.2 63.4 L171.4 63.9 L175.6 64.4 L179.8 64.9 L184 65.3" fill="none" stroke="#0B7285" stroke-width="2.1" stroke-linecap="round"/><path d="M16 62.2 L20.2 62.2 L24.4 62.2 L28.6 62.2 L32.8 62.3 L37 62.3 L41.2 62.4 L45.4 62.4 L49.6 62.5 L53.8 62.6 L58 62.7 L62.2 62.8 L66.4 63 L70.6 63.1 L74.8 63.2 L79 63.4 L83.2 63.6 L87.4 63.7 L91.6 63.9 L95.8 64.1 L100 64.3 L104.2 64.6 L108.4 64.8 L112.6 65 L116.8 65.3 L121 65.6 L125.2 65.8 L129.4 66.1 L133.6 66.4 L137.8 66.7 L142 67 L146.2 67.4 L150.4 67.7 L154.6 68 L158.8 68.4 L163 68.8 L167.2 69.2 L171.4 69.6 L175.6 70 L179.8 70.4 L184 70.8" fill="none" stroke="#2A7B9B" stroke-width="2.1" stroke-linecap="round"/><path d="M16 62.2 L20.2 62.2 L24.4 62.2 L28.6 62.3 L32.8 62.4 L37 62.5 L41.2 62.6 L45.4 62.7 L49.6 62.9 L53.8 63 L58 63.2 L62.2 63.4 L66.4 63.7 L70.6 63.9 L74.8 64.2 L79 64.5 L83.2 64.8 L87.4 65.1 L91.6 65.5 L95.8 65.9 L100 66.2 L104.2 66.6 L108.4 67.1 L112.6 67.5 L116.8 68 L121 68.5 L125.2 69 L129.4 69.5 L133.6 70 L137.8 70.6 L142 71.1 L146.2 71.7 L150.4 72.3 L154.6 72.9 L158.8 73.6 L163 74.2 L167.2 74.9 L171.4 75.6 L175.6 76.3 L179.8 77 L184 77.8" fill="none" stroke="#6B7A2E" stroke-width="2.1" stroke-linecap="round"/><text x="100" y="103" font-family="monospace" font-size="8" fill="#16191C" text-anchor="middle">five reservoirs, one gather</text></svg></div>
-      <div class="hero-cap"><span>five different reservoirs</span><b>computed, not drawn</b></div></div>
-   </div>
   </section>
 
-  <!-- ============================== THE PREMISE ============================ -->
-  <section class="primer">
-   <div class="primer-grid">
-    <div>
-      <h3>It only works in one direction</h3>
-      <p>A rock model predicts an amplitude exactly. An amplitude does not predict a rock at all, because
-        several rocks arrive at the same number and nothing downstream can separate them.</p>
+  <!-- ============================== PRIMER ============================== -->
+  <section class="primer" id="who">
+    <div class="primer-grid">
+      <div>
+        <h3>The only equation you need</h3>
+        <span class="eq">λ = V / f</span>
+        <p>Wavelength equals velocity over frequency. A 3000 m/s layer imaged at 30 Hz gives a 100 m wavelength.
+          Nearly every limit on this site is some fraction of that one number.</p>
+      </div>
+      <div>
+        <h3>The rule of thumb</h3>
+        <span class="eq">λ / 4</span>
+        <p>Beds thinner than about a quarter of a wavelength stop showing you a separate top and base.
+          Twenty-five meters, in that example. The modules show you how optimistic even this is.</p>
+      </div>
+      <div>
+        <h3>The thing people miss</h3>
+        <span class="eq">detect ≠ resolve</span>
+        <p>You can often tell that a thin bed is <em>there</em> long after you have lost the ability to say how
+          thick it really is. Confusing the two is how thickness maps can often go wrong.</p>
+      </div>
     </div>
-    <div>
-      <h3>The rules are shortcuts</h3>
-      <p>Bright spot means gas. Class III means gas. Low impedance means hydrocarbons. Each is sometimes
-        true, and each has a set of counterexamples you can build here in about thirty seconds.</p>
-    </div>
-    <div>
-      <h3>AVO narrows, it does not solve</h3>
-      <p>Offset adds a second measurement, so some ties get broken. Others do not. Knowing which ties break and which do not is the part that takes judgment.</p>
-    </div>
-   </div>
   </section>
 
-  <!-- =============================== MODULES ============================== -->
-  <section id="modules" class="modules">
-    <div class="sec-head">
-      <h2>The modules</h2>
-      <p>In the order they build on each other. Each one adds a step, or takes one apart.
-        Seven now, counting the foundation module. Each card says what it assumes.</p>
-    </div>
-
-    <div class="primer" style="margin:0 0 26px">
-     <div class="primer-grid">
-      <div>
-        <h3>New to this</h3>
-        <p>Read <b>00</b> first — it has no equations and assumes nothing. Then <b>01</b>, <b>02</b> and
-          <b>03</b>, and stop there. That is a complete and useful course on its own.</p>
-      </div>
-      <div>
-        <h3>You have used AVO before</h3>
-        <p>Start at <b>01</b> and go straight through. Module 00 is still worth ten minutes if only to see
-          which simplifications the rest of the set is going to come back for.</p>
-      </div>
-      <div>
-        <h3>You do this for a living</h3>
-        <p><b>05</b> and <b>06</b> are the ones with something new in them: the size of the error bars,
-          and a count of what the gradient actually buys you.</p>
-      </div>
-     </div>
-    </div>
-
+  <!-- ============================= MODULES ============================== -->
+  <section class="modules" id="modules">
+    <p class="eyebrow">The modules — in the order they build on each other</p>
     <div class="card-grid">
 
-      <a class="card" href="modules/beyond-normal-incidence.html">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><rect x="10" y="6" width="96" height="32.9" fill="#E4E0D6"/><rect x="10" y="38.9" width="96" height="23.1" fill="rgba(181,69,27,0.25)"/><rect x="10" y="61.9" width="96" height="36.1" fill="#E4E0D6"/><line x1="10" y1="38.9" x2="106" y2="38.9" stroke="#16191C" stroke-width="1.6"/><line x1="10" y1="61.9" x2="106" y2="61.9" stroke="#16191C" stroke-width="1.6"/><line x1="140" y1="6" x2="140" y2="98" stroke="#C7C9C0" stroke-width="1"/><polyline points="140,6 140,7 140,7.9 140,8.9 140,9.8 140,10.8 140,11.8 140,12.7 140,13.7 140,14.6 140,15.6 140,16.5 140,17.5 140.1,18.5 140.1,19.4 140.3,20.4 140.5,21.3 140.9,22.3 141.5,23.3 142.3,24.2 143.4,25.2 144.9,26.1 146.6,27.1 148.3,28 149.8,29 150.7,30 150.6,30.9 148.9,31.9 145.7,32.8 140.8,33.8 134.8,34.8 128.3,35.7 122.4,36.7 118,37.6 115.9,38.6 116.5,39.5 119.6,40.5 124.7,41.5 130.9,42.4 137.2,43.4 142.6,44.3 146.4,45.3 148.4,46.3 148.5,47.2 147.1,48.2 144.4,49.1 141.1,50.1 137.6,51 134.5,52 132.2,53 131.3,53.9 132.1,54.9 134.8,55.8 139.3,56.8 145.1,57.8 151.4,58.7 157.4,59.7 161.8,60.6 164.1,61.6 163.6,62.5 160.6,63.5 155.5,64.5 149.3,65.4 142.9,66.4 137.2,67.3 132.9,68.3 130.3,69.3 129.2,70.2 129.5,71.2 130.7,72.1 132.3,73.1 134.1,74 135.7,75 137,76 138.1,76.9 138.8,77.9 139.3,78.8 139.6,79.8 139.8,80.8 139.9,81.7 139.9,82.7 140,83.6 140,84.6 140,85.5 140,86.5 140,87.5 140,88.4 140,89.4 140,90.3 140,91.3 140,92.3 140,93.2 140,94.2 140,95.1 140,96.1 140,97 140,98" fill="none" stroke="#841617" stroke-width="2.4" stroke-linejoin="round"/><text x="58" y="103" font-family="monospace" font-size="8" fill="#16191C" text-anchor="middle">two rocks</text><text x="150" y="103" font-family="monospace" font-size="8" fill="#841617">the echo</text></svg></div>
+      <a class="card" href="modules/depthtrends.html">
+        <canvas class="thumb-canvas" data-thumb="depth0"></canvas>
         <div class="card-body">
-          <div class="card-no">00<span class="lvl">assumes the seismic resolution modules</span></div>
-          <h3>Beyond normal incidence</h3>
-          <p>A recap of what the resolution modules established, the assumption every one of them shared, and the observation this set begins from: a reflection coefficient is not one number.</p>
-          <div class="q">What does this set assume I already know?</div>
+          <div class="card-no">00</div>
+          <h3>How the earth changes with depth</h3>
+          <p>Build a column from the sea surface down to five kilometers. Compaction, an overpressured zone,
+            depth into time, and what attenuation does to your bandwidth.</p>
+          <div class="q">Why does deep data always look softer?</div>
         </div>
         <span class="flag next">Start here</span>
       </a>
 
-      <div class="card planned">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><line x1="60" y1="4" x2="60" y2="100" stroke="#C7C9C0" stroke-width="1"/><line x1="140" y1="4" x2="140" y2="100" stroke="#C7C9C0" stroke-width="1"/><polyline points="60,4 60,5 60,6 60,7 60,8 60,9 60,10 60,11 60,12 60,13 60,14 60,15 60,16 60,17 60,18 60.1,19 60.1,20 60.2,21 60.2,22 60.3,23 60.4,24 60.5,25 60.6,26 60.7,27 60.7,28 60.6,29 60.5,30 60.2,31 59.9,32 59.5,33 59.1,34 58.7,35 58.4,36 58.3,37 58.2,38 58.3,39 58.5,40 58.8,41 59.1,42 59.4,43 59.7,44 59.9,45 60.2,46 60.4,47 60.7,48 61,49 61.3,50 61.5,51 61.7,52 61.8,53 61.7,54 61.5,55 61.2,56 60.8,57 60.4,58 60,59 59.7,60 59.5,61 59.3,62 59.3,63 59.3,64 59.4,65 59.5,66 59.6,67 59.7,68 59.8,69 59.9,70 59.9,71 59.9,72 60,73 60,74 60,75 60,76 60,77 60,78 60,79 60,80 60,81 60,82 60,83 60,84 60,85 60,86 60,87 60,88 60,89 60,90 60,91 60,92 60,93 60,94 60,95 60,96 60,97 60,98 60,99 60,100" fill="none" stroke="#16191C" stroke-width="2" stroke-linejoin="round"/><polyline points="140,4 140,5 140,6 140,7 140,8 140,9 140,10 140,11 140,12 140,13 140.1,14 140.1,15 140.2,16 140.4,17 140.6,18 141.1,19 141.7,20 142.5,21 143.6,22 145,23 146.6,24 148.2,25 149.7,26 150.6,27 150.7,28 149.7,29 147.3,30 143.4,31 138.3,32 132.4,33 126.4,34 121.1,35 117.2,36 115.3,37 115.6,38 118,39 121.8,40 126.6,41 131.3,42 135.3,43 138.1,44 139.7,45 140.1,46 140,47 139.9,48 140.4,49 142.1,50 145.1,51 149.2,52 154,53 158.6,54 162.4,55 164.5,56 164.6,57 162.4,58 158.4,59 152.9,60 146.9,61 141.1,62 136.1,63 132.4,64 130.1,65 129.2,66 129.5,67 130.5,68 132,69 133.6,70 135.2,71 136.5,72 137.6,73 138.4,74 139,75 139.4,76 139.6,77 139.8,78 139.9,79 139.9,80 140,81 140,82 140,83 140,84 140,85 140,86 140,87 140,88 140,89 140,90 140,91 140,92 140,93 140,94 140,95 140,96 140,97 140,98 140,99 140,100" fill="none" stroke="#841617" stroke-width="2.4" stroke-linejoin="round"/><text x="60" y="100" font-family="monospace" font-size="9" fill="#16191C" text-anchor="middle">brine</text><text x="140" y="100" font-family="monospace" font-size="9" fill="#841617" text-anchor="middle">gas</text></svg></div>
+      <a class="card" href="modules/model1d.html">
+        <canvas class="thumb-canvas" data-thumb="model1d"></canvas>
         <div class="card-body">
-          <div class="card-no">01<span class="lvl">assumes module 00</span></div>
-          <h3>Rocks, pores and stiffness</h3>
-          <p>Grains and pore space, where bulk density comes from, and the two separate ways a rock resists deformation — against compression, and against shearing.</p>
-          <div class="q">What makes one rock faster than another?</div>
+          <div class="card-no">01</div>
+          <h3>Where a seismic trace comes from</h3>
+          <p>One column of rock. Set thickness, velocity and density, and follow it through impedance and
+            reflection coefficients to a synthetic trace, with nothing hidden in between.</p>
+          <div class="q">Why does that formation top have no reflector?</div>
         </div>
-        <span class="flag">To build</span>
-      </div>
-
-      <div class="card planned">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><path d="M14 20.5 L15.9 23.3 L17.8 25.9 L19.7 28.5 L21.6 31.1 L23.6 33.6 L25.5 36 L27.4 38.4 L29.3 40.8 L31.2 43 L33.1 45.3 L35 47.5 L36.9 49.7 L38.8 51.8 L40.8 53.9 L42.7 55.9 L44.6 57.9 L46.5 59.9 L48.4 61.8 L50.3 63.7 L52.2 65.6 L54.1 67.4 L56 69.2 L58 71 L59.9 72.7 L61.8 74.4 L63.7 76.1 L65.6 77.7 L67.5 79.3 L69.4 80.9 L71.3 82.5 L73.2 84 L75.2 85.5 L77.1 87 L79 88.5 L80.9 89.9 L82.8 91.3 L84.7 92.7" fill="none" stroke="#841617" stroke-width="2.4"/><circle cx="59.9" cy="72.7" r="4" fill="#841617"/><circle cx="65.6" cy="77.7" r="4" fill="#841617"/><line x1="14" y1="94" x2="186" y2="94" stroke="#C7C9C0" stroke-width="1.4"/><line x1="14" y1="12" x2="14" y2="94" stroke="#C7C9C0" stroke-width="1.4"/><text x="100" y="103" font-family="monospace" font-size="8" fill="#16191C" text-anchor="middle">one impedance, many rocks</text></svg></div>
-        <div class="card-body">
-          <div class="card-no">02<span class="lvl">assumes module 00</span></div>
-          <h3>Fluid in the pores</h3>
-          <p>Why a pore fluid stiffens a rock against compression and not against shear, what that does to Vp, Vs and density, and where gas saturation stops mattering.</p>
-          <div class="q">What does replacing brine with gas actually change?</div>
-        </div>
-        <span class="flag">To build</span>
-      </div>
-
-      <a class="card" href="modules/rock-to-trace.html">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><line x1="60" y1="4" x2="60" y2="100" stroke="#C7C9C0" stroke-width="1"/><line x1="140" y1="4" x2="140" y2="100" stroke="#C7C9C0" stroke-width="1"/><polyline points="60,4 60,5 60,6 60,7 60,8 60,9 60,10 60,11 60,12 60,13 60,14 60,15 60,16 60,17 60,18 60.1,19 60.1,20 60.2,21 60.2,22 60.3,23 60.4,24 60.5,25 60.6,26 60.7,27 60.7,28 60.6,29 60.5,30 60.2,31 59.9,32 59.5,33 59.1,34 58.7,35 58.4,36 58.3,37 58.2,38 58.3,39 58.5,40 58.8,41 59.1,42 59.4,43 59.7,44 59.9,45 60.2,46 60.4,47 60.7,48 61,49 61.3,50 61.5,51 61.7,52 61.8,53 61.7,54 61.5,55 61.2,56 60.8,57 60.4,58 60,59 59.7,60 59.5,61 59.3,62 59.3,63 59.3,64 59.4,65 59.5,66 59.6,67 59.7,68 59.8,69 59.9,70 59.9,71 59.9,72 60,73 60,74 60,75 60,76 60,77 60,78 60,79 60,80 60,81 60,82 60,83 60,84 60,85 60,86 60,87 60,88 60,89 60,90 60,91 60,92 60,93 60,94 60,95 60,96 60,97 60,98 60,99 60,100" fill="none" stroke="#16191C" stroke-width="2" stroke-linejoin="round"/><polyline points="140,4 140,5 140,6 140,7 140,8 140,9 140,10 140,11 140,12 140,13 140.1,14 140.1,15 140.2,16 140.4,17 140.6,18 141.1,19 141.7,20 142.5,21 143.6,22 145,23 146.6,24 148.2,25 149.7,26 150.6,27 150.7,28 149.7,29 147.3,30 143.4,31 138.3,32 132.4,33 126.4,34 121.1,35 117.2,36 115.3,37 115.6,38 118,39 121.8,40 126.6,41 131.3,42 135.3,43 138.1,44 139.7,45 140.1,46 140,47 139.9,48 140.4,49 142.1,50 145.1,51 149.2,52 154,53 158.6,54 162.4,55 164.5,56 164.6,57 162.4,58 158.4,59 152.9,60 146.9,61 141.1,62 136.1,63 132.4,64 130.1,65 129.2,66 129.5,67 130.5,68 132,69 133.6,70 135.2,71 136.5,72 137.6,73 138.4,74 139,75 139.4,76 139.6,77 139.8,78 139.9,79 139.9,80 140,81 140,82 140,83 140,84 140,85 140,86 140,87 140,88 140,89 140,90 140,91 140,92 140,93 140,94 140,95 140,96 140,97 140,98 140,99 140,100" fill="none" stroke="#841617" stroke-width="2.4" stroke-linejoin="round"/><text x="60" y="100" font-family="monospace" font-size="9" fill="#16191C" text-anchor="middle">brine</text><text x="140" y="100" font-family="monospace" font-size="9" fill="#841617" text-anchor="middle">gas</text></svg></div>
-        <div class="card-body">
-          <div class="card-no">03<span class="lvl">written before the re-leveling · pitched higher</span></div>
-          <h3>From a rock to a trace</h3>
-          <p>Porosity, clay and pore fluid to a dry frame, Gassmann to a saturated rock, impedance, reflectivity, a wavelet, and noise. Every step from the rock to the trace, on one page.</p>
-          <div class="q">How does a change in the rock reach the seismic trace?</div>
-        </div>
-        <span class="flag next">Being re-leveled</span>
       </a>
 
-      <div class="card planned">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><line x1="16" y1="52" x2="184" y2="52" stroke="#C7C9C0" stroke-width="1.4"/><path d="M16 77.8 L20.2 77.8 L24.4 77.9 L28.6 77.9 L32.8 78 L37 78.1 L41.2 78.3 L45.4 78.4 L49.6 78.6 L53.8 78.8 L58 79.1 L62.2 79.3 L66.4 79.6 L70.6 79.9 L74.8 80.2 L79 80.6 L83.2 81 L87.4 81.4 L91.6 81.8 L95.8 82.3 L100 82.7 L104.2 83.2 L108.4 83.7 L112.6 84.3 L116.8 84.9 L121 85.4 L125.2 86.1 L129.4 86.7 L133.6 87.4 L137.8 88 L142 88.8 L146.2 89.5 L150.4 90.2 L154.6 91 L158.8 91.8 L163 92.7 L167.2 93.5 L171.4 94.4 L175.6 95.3 L179.8 96.2 L184 97.2" fill="none" stroke="#841617" stroke-width="2.4" stroke-linecap="round"/><path d="M16 53.7 L20.2 53.7 L24.4 53.7 L28.6 53.8 L32.8 53.8 L37 53.9 L41.2 54 L45.4 54.1 L49.6 54.2 L53.8 54.4 L58 54.5 L62.2 54.7 L66.4 54.9 L70.6 55.1 L74.8 55.3 L79 55.6 L83.2 55.8 L87.4 56.1 L91.6 56.4 L95.8 56.7 L100 57 L104.2 57.3 L108.4 57.6 L112.6 58 L116.8 58.3 L121 58.7 L125.2 59.1 L129.4 59.5 L133.6 59.9 L137.8 60.3 L142 60.7 L146.2 61.1 L150.4 61.6 L154.6 62 L158.8 62.5 L163 62.9 L167.2 63.4 L171.4 63.9 L175.6 64.4 L179.8 64.9 L184 65.3" fill="none" stroke="#0B7285" stroke-width="2.4" stroke-linecap="round"/><text x="100" y="103" font-family="monospace" font-size="8" fill="#16191C" text-anchor="middle">0°　→　40°</text></svg></div>
+      <a class="card" href="modules/wedge.html">
+        <canvas class="thumb-canvas" data-thumb="wedge"></canvas>
         <div class="card-body">
-          <div class="card-no">04<span class="lvl">assumes modules 00–03</span></div>
-          <h3>Offset, angle and the gather</h3>
-          <p>Where offset comes from, why offset is not the same thing as angle, moveout, the gather, and what stacking keeps and discards.</p>
-          <div class="q">What is a gather?</div>
+          <div class="card-no">02</div>
+          <h3>The wedge model &amp; tuning</h3>
+          <p>Thin a bed to nothing and watch the reflections merge, brighten, then fade — while the seismic
+            tricks you into thinking your bed is thicker.</p>
+          <div class="q">Why is the thin edge of my channel the brightest part?</div>
         </div>
-        <span class="flag">To build</span>
-      </div>
-
-      <a class="card" href="modules/add-offset.html">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><line x1="16" y1="52" x2="184" y2="52" stroke="#C7C9C0" stroke-width="1.4"/><path d="M16 77.8 L20.2 77.8 L24.4 77.9 L28.6 77.9 L32.8 78 L37 78.1 L41.2 78.3 L45.4 78.4 L49.6 78.6 L53.8 78.8 L58 79.1 L62.2 79.3 L66.4 79.6 L70.6 79.9 L74.8 80.2 L79 80.6 L83.2 81 L87.4 81.4 L91.6 81.8 L95.8 82.3 L100 82.7 L104.2 83.2 L108.4 83.7 L112.6 84.3 L116.8 84.9 L121 85.4 L125.2 86.1 L129.4 86.7 L133.6 87.4 L137.8 88 L142 88.8 L146.2 89.5 L150.4 90.2 L154.6 91 L158.8 91.8 L163 92.7 L167.2 93.5 L171.4 94.4 L175.6 95.3 L179.8 96.2 L184 97.2" fill="none" stroke="#841617" stroke-width="2.4" stroke-linecap="round"/><path d="M16 53.7 L20.2 53.7 L24.4 53.7 L28.6 53.8 L32.8 53.8 L37 53.9 L41.2 54 L45.4 54.1 L49.6 54.2 L53.8 54.4 L58 54.5 L62.2 54.7 L66.4 54.9 L70.6 55.1 L74.8 55.3 L79 55.6 L83.2 55.8 L87.4 56.1 L91.6 56.4 L95.8 56.7 L100 57 L104.2 57.3 L108.4 57.6 L112.6 58 L116.8 58.3 L121 58.7 L125.2 59.1 L129.4 59.5 L133.6 59.9 L137.8 60.3 L142 60.7 L146.2 61.1 L150.4 61.6 L154.6 62 L158.8 62.5 L163 62.9 L167.2 63.4 L171.4 63.9 L175.6 64.4 L179.8 64.9 L184 65.3" fill="none" stroke="#0B7285" stroke-width="2.4" stroke-linecap="round"/><text x="100" y="103" font-family="monospace" font-size="8" fill="#16191C" text-anchor="middle">0°　→　40°</text></svg></div>
-        <div class="card-body">
-          <div class="card-no">05<span class="lvl">written before the re-leveling · pitched higher</span></div>
-          <h3>Amplitude against angle</h3>
-          <p>The ray stops arriving straight down, shear velocity becomes visible, and one measurement becomes a curve.</p>
-          <div class="q">Why does the amplitude change with angle at all?</div>
-        </div>
-        <span class="flag next">Being re-leveled</span>
       </a>
 
-      <a class="card" href="modules/intercept-gradient.html">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><line x1="10" y1="54" x2="190" y2="54" stroke="#C7C9C0" stroke-width="1.4"/><line x1="100" y1="6" x2="100" y2="98" stroke="#C7C9C0" stroke-width="1.4"/><line x1="26" y1="98" x2="174" y2="6" stroke="#C7C9C0" stroke-width="1.6" stroke-dasharray="5 4"/><circle cx="36.2" cy="84.9" r="4" fill="#841617"/><circle cx="9.9" cy="21.5" r="4" fill="#0B7285"/><circle cx="48.8" cy="45.4" r="4" fill="#0B7285"/><circle cx="76.5" cy="66.1" r="4" fill="#0B7285"/><text x="186" y="50" font-family="monospace" font-size="8" fill="#16191C" text-anchor="end">G</text><text x="104" y="14" font-family="monospace" font-size="8" fill="#16191C">R0</text></svg></div>
+      <a class="card" href="modules/faults.html">
+        <canvas class="thumb-canvas" data-thumb="fault"></canvas>
         <div class="card-body">
-          <div class="card-no">06<span class="lvl">written before the re-leveling · pitched higher</span></div>
-          <h3>Intercept, gradient and the classes</h3>
-          <p>Two numbers instead of a curve, the crossplot they live in, the wet trend that makes an anomaly anomalous, and why Classes I to IV are regions somebody drew.</p>
-          <div class="q">What is a Class III response actually telling me?</div>
+          <div class="card-no">03</div>
+          <h3>Can you see the fault?</h3>
+          <p>Test out throw, frequency, and noise against your own eyes. Includes a quiz mode that hides the answer —
+            and sometimes hides no fault at all.</p>
+          <div class="q">How small a fault am I missing?</div>
         </div>
-        <span class="flag next">Being re-leveled</span>
       </a>
 
-      <a class="card" href="modules/same-amplitude.html">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><path d="M14 20.5 L15.9 23.3 L17.8 25.9 L19.7 28.5 L21.6 31.1 L23.6 33.6 L25.5 36 L27.4 38.4 L29.3 40.8 L31.2 43 L33.1 45.3 L35 47.5 L36.9 49.7 L38.8 51.8 L40.8 53.9 L42.7 55.9 L44.6 57.9 L46.5 59.9 L48.4 61.8 L50.3 63.7 L52.2 65.6 L54.1 67.4 L56 69.2 L58 71 L59.9 72.7 L61.8 74.4 L63.7 76.1 L65.6 77.7 L67.5 79.3 L69.4 80.9 L71.3 82.5 L73.2 84 L75.2 85.5 L77.1 87 L79 88.5 L80.9 89.9 L82.8 91.3 L84.7 92.7" fill="none" stroke="#841617" stroke-width="2.4"/><circle cx="59.9" cy="72.7" r="4" fill="#841617"/><circle cx="65.6" cy="77.7" r="4" fill="#841617"/><line x1="14" y1="94" x2="186" y2="94" stroke="#C7C9C0" stroke-width="1.4"/><line x1="14" y1="12" x2="14" y2="94" stroke="#C7C9C0" stroke-width="1.4"/><text x="100" y="103" font-family="monospace" font-size="8" fill="#16191C" text-anchor="middle">one impedance, many rocks</text></svg></div>
+      <a class="card" href="modules/fresnel.html">
+        <canvas class="thumb-canvas" data-thumb="fresnel"></canvas>
         <div class="card-body">
-          <div class="card-no">07<span class="lvl">written before the re-leveling · pitched higher</span></div>
-          <h3>Several rocks, one amplitude</h3>
-          <p>Fix the amplitude and search for every rock that could have produced it. Porosity against saturation, the shale nobody measured, tuning, and a full count of what survives.</p>
-          <div class="q">How many rocks fit the amplitude I measured?</div>
+          <div class="card-no">04</div>
+          <h3>Horizontal resolution</h3>
+          <p>One trace does not see one point — it sees a patch the size of several football fields.
+            Migration is the focus ring. Watch two features merge as they close.</p>
+          <div class="q">How small a feature can I map in plan view?</div>
         </div>
-        <span class="flag next">Being re-leveled</span>
       </a>
 
-      <a class="card" href="modules/reading-a-gather.html">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><line x1="16" y1="52" x2="184" y2="52" stroke="#C7C9C0" stroke-width="1.4"/><path d="M16 82.6 L20.2 82.6 L24.4 82.6 L28.6 82.7 L32.8 82.8 L37 82.9 L41.2 83 L45.4 83.1 L49.6 83.3 L53.8 83.5 L58 83.7 L62.2 83.9 L66.4 84.2 L70.6 84.4 L74.8 84.7 L79 85.1 L83.2 85.4 L87.4 85.8 L91.6 86.1 L95.8 86.5 L100 87 L104.2 87.4 L108.4 87.9 L112.6 88.4 L116.8 88.9 L121 89.4 L125.2 90 L129.4 90.6 L133.6 91.2 L137.8 91.8 L142 92.4 L146.2 93.1 L150.4 93.8 L154.6 94.5 L158.8 95.3 L163 96 L167.2 96.8 L171.4 97.6 L175.6 98.5 L179.8 99.3 L184 100.2" fill="none" stroke="#841617" stroke-width="2.1" stroke-linecap="round"/><path d="M16 52.6 L20.2 52.7 L24.4 52.7 L28.6 52.8 L32.8 53 L37 53.1 L41.2 53.4 L45.4 53.6 L49.6 53.9 L53.8 54.2 L58 54.6 L62.2 55 L66.4 55.5 L70.6 56 L74.8 56.5 L79 57 L83.2 57.6 L87.4 58.3 L91.6 58.9 L95.8 59.6 L100 60.3 L104.2 61.1 L108.4 61.9 L112.6 62.7 L116.8 63.6 L121 64.5 L125.2 65.4 L129.4 66.4 L133.6 67.3 L137.8 68.4 L142 69.4 L146.2 70.5 L150.4 71.5 L154.6 72.6 L158.8 73.8 L163 74.9 L167.2 76.1 L171.4 77.3 L175.6 78.5 L179.8 79.8 L184 81" fill="none" stroke="#B5451B" stroke-width="2.1" stroke-linecap="round"/><path d="M16 53.7 L20.2 53.7 L24.4 53.7 L28.6 53.8 L32.8 53.8 L37 53.9 L41.2 54 L45.4 54.1 L49.6 54.2 L53.8 54.4 L58 54.5 L62.2 54.7 L66.4 54.9 L70.6 55.1 L74.8 55.3 L79 55.6 L83.2 55.8 L87.4 56.1 L91.6 56.4 L95.8 56.7 L100 57 L104.2 57.3 L108.4 57.6 L112.6 58 L116.8 58.3 L121 58.7 L125.2 59.1 L129.4 59.5 L133.6 59.9 L137.8 60.3 L142 60.7 L146.2 61.1 L150.4 61.6 L154.6 62 L158.8 62.5 L163 62.9 L167.2 63.4 L171.4 63.9 L175.6 64.4 L179.8 64.9 L184 65.3" fill="none" stroke="#0B7285" stroke-width="2.1" stroke-linecap="round"/><path d="M16 62.2 L20.2 62.2 L24.4 62.2 L28.6 62.2 L32.8 62.3 L37 62.3 L41.2 62.4 L45.4 62.4 L49.6 62.5 L53.8 62.6 L58 62.7 L62.2 62.8 L66.4 63 L70.6 63.1 L74.8 63.2 L79 63.4 L83.2 63.6 L87.4 63.7 L91.6 63.9 L95.8 64.1 L100 64.3 L104.2 64.6 L108.4 64.8 L112.6 65 L116.8 65.3 L121 65.6 L125.2 65.8 L129.4 66.1 L133.6 66.4 L137.8 66.7 L142 67 L146.2 67.4 L150.4 67.7 L154.6 68 L158.8 68.4 L163 68.8 L167.2 69.2 L171.4 69.6 L175.6 70 L179.8 70.4 L184 70.8" fill="none" stroke="#2A7B9B" stroke-width="2.1" stroke-linecap="round"/><path d="M16 62.2 L20.2 62.2 L24.4 62.2 L28.6 62.3 L32.8 62.4 L37 62.5 L41.2 62.6 L45.4 62.7 L49.6 62.9 L53.8 63 L58 63.2 L62.2 63.4 L66.4 63.7 L70.6 63.9 L74.8 64.2 L79 64.5 L83.2 64.8 L87.4 65.1 L91.6 65.5 L95.8 65.9 L100 66.2 L104.2 66.6 L108.4 67.1 L112.6 67.5 L116.8 68 L121 68.5 L125.2 69 L129.4 69.5 L133.6 70 L137.8 70.6 L142 71.1 L146.2 71.7 L150.4 72.3 L154.6 72.9 L158.8 73.6 L163 74.2 L167.2 74.9 L171.4 75.6 L175.6 76.3 L179.8 77 L184 77.8" fill="none" stroke="#6B7A2E" stroke-width="2.1" stroke-linecap="round"/><text x="100" y="103" font-family="monospace" font-size="8" fill="#16191C" text-anchor="middle">five reservoirs, one gather</text></svg></div>
+      <a class="card" href="modules/depth.html">
+        <canvas class="thumb-canvas" data-thumb="depth"></canvas>
         <div class="card-body">
-          <div class="card-no">08<span class="lvl">written before the re-leveling · pitched higher</span></div>
-          <h3>Noise, error bars and what you can conclude</h3>
-          <p>Noise, a limited angle range, and a gradient much less certain than the intercept. Where the error bars come from, how big they are, and what a defensible statement looks like.</p>
-          <div class="q">How much do I trust this gradient?</div>
+          <div class="card-no">05</div>
+          <h3>Resolution with depth</h3>
+          <p>Velocity climbs, the earth attenuates your high frequencies, and λ/4 in meters grows the deeper you dive into the subsurface.</p>
+          <div class="q">Why does my deep interpretation feel so much vaguer?</div>
         </div>
-        <span class="flag next">Being re-leveled</span>
       </a>
 
-      <a class="card" href="modules/what-survives.html">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><line x1="16" y1="52" x2="184" y2="52" stroke="#C7C9C0" stroke-width="1.4"/><path d="M16 77.8 L20.2 77.8 L24.4 77.9 L28.6 77.9 L32.8 78 L37 78.1 L41.2 78.3 L45.4 78.4 L49.6 78.6 L53.8 78.8 L58 79.1 L62.2 79.3 L66.4 79.6 L70.6 79.9 L74.8 80.2 L79 80.6 L83.2 81 L87.4 81.4 L91.6 81.8 L95.8 82.3 L100 82.7 L104.2 83.2 L108.4 83.7 L112.6 84.3 L116.8 84.9 L121 85.4 L125.2 86.1 L129.4 86.7 L133.6 87.4 L137.8 88 L142 88.8 L146.2 89.5 L150.4 90.2 L154.6 91 L158.8 91.8 L163 92.7 L167.2 93.5 L171.4 94.4 L175.6 95.3 L179.8 96.2 L184 97.2" fill="none" stroke="#C7C9C0" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/><circle cx="24.4" cy="76.9" r="3.4" fill="#841617"/><circle cx="39.1" cy="78" r="3.4" fill="#841617"/><circle cx="53.8" cy="73.9" r="3.4" fill="#841617"/><circle cx="68.5" cy="77.4" r="3.4" fill="#841617"/><circle cx="83.2" cy="77.9" r="3.4" fill="#841617"/><circle cx="97.9" cy="80.2" r="3.4" fill="#841617"/><circle cx="112.6" cy="84" r="3.4" fill="#841617"/><circle cx="127.3" cy="90.6" r="3.4" fill="#841617"/><circle cx="142" cy="94.2" r="3.4" fill="#841617"/><circle cx="156.7" cy="94.7" r="3.4" fill="#841617"/><circle cx="171.4" cy="96.9" r="3.4" fill="#841617"/><text x="100" y="103" font-family="monospace" font-size="8" fill="#16191C" text-anchor="middle">what would you fit through this?</text></svg></div>
+      <a class="card" href="modules/mapres.html">
+        <canvas class="thumb-canvas" data-thumb="mapres"></canvas>
         <div class="card-body">
-          <div class="card-no">08<span class="lvl">written before the re-leveling · pitched higher</span></div>
-          <h3>What survives</h3>
-          <p>Every loss added up, a count of what the second measurement removes, four rules of thumb with computed counterexamples. Being merged with the module above.</p>
-          <div class="q">What can I actually say from this?</div>
+          <div class="card-no">06</div>
+          <h3>Resolution in map view</h3>
+          <p>A channel that narrows and splits in two. Watch where it appears to end, and where the two
+            distributaries stop looking like one.</p>
+          <div class="q">Where does my channel really end?</div>
         </div>
-        <span class="flag next">To merge into 08</span>
       </a>
 
-      <a class="card" href="modules/start-here.html">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><rect x="10" y="6" width="96" height="32.9" fill="#E4E0D6"/><rect x="10" y="38.9" width="96" height="23.1" fill="rgba(181,69,27,0.25)"/><rect x="10" y="61.9" width="96" height="36.1" fill="#E4E0D6"/><line x1="10" y1="38.9" x2="106" y2="38.9" stroke="#16191C" stroke-width="1.6"/><line x1="10" y1="61.9" x2="106" y2="61.9" stroke="#16191C" stroke-width="1.6"/><line x1="140" y1="6" x2="140" y2="98" stroke="#C7C9C0" stroke-width="1"/><polyline points="140,6 140,7 140,7.9 140,8.9 140,9.8 140,10.8 140,11.8 140,12.7 140,13.7 140,14.6 140,15.6 140,16.5 140,17.5 140.1,18.5 140.1,19.4 140.3,20.4 140.5,21.3 140.9,22.3 141.5,23.3 142.3,24.2 143.4,25.2 144.9,26.1 146.6,27.1 148.3,28 149.8,29 150.7,30 150.6,30.9 148.9,31.9 145.7,32.8 140.8,33.8 134.8,34.8 128.3,35.7 122.4,36.7 118,37.6 115.9,38.6 116.5,39.5 119.6,40.5 124.7,41.5 130.9,42.4 137.2,43.4 142.6,44.3 146.4,45.3 148.4,46.3 148.5,47.2 147.1,48.2 144.4,49.1 141.1,50.1 137.6,51 134.5,52 132.2,53 131.3,53.9 132.1,54.9 134.8,55.8 139.3,56.8 145.1,57.8 151.4,58.7 157.4,59.7 161.8,60.6 164.1,61.6 163.6,62.5 160.6,63.5 155.5,64.5 149.3,65.4 142.9,66.4 137.2,67.3 132.9,68.3 130.3,69.3 129.2,70.2 129.5,71.2 130.7,72.1 132.3,73.1 134.1,74 135.7,75 137,76 138.1,76.9 138.8,77.9 139.3,78.8 139.6,79.8 139.8,80.8 139.9,81.7 139.9,82.7 140,83.6 140,84.6 140,85.5 140,86.5 140,87.5 140,88.4 140,89.4 140,90.3 140,91.3 140,92.3 140,93.2 140,94.2 140,95.1 140,96.1 140,97 140,98" fill="none" stroke="#841617" stroke-width="2.4" stroke-linejoin="round"/><text x="58" y="103" font-family="monospace" font-size="8" fill="#16191C" text-anchor="middle">two rocks</text><text x="150" y="103" font-family="monospace" font-size="8" fill="#841617">the echo</text></svg></div>
+      <a class="card" href="modules/mapview.html">
+        <canvas class="thumb-canvas" data-thumb="mapview"></canvas>
         <div class="card-body">
-          <div class="card-no">—<span class="lvl">written before the re-leveling · pitched higher</span></div>
-          <h3>What all of this is for (the old module 00)</h3>
-          <p>The original single foundation module. Its material is covered by the resolution modules and by the new module 00. Kept while the rebuild is in progress.</p>
-          <div class="q">Where do I start?</div>
+          <div class="card-no">07</div>
+          <h3>Tuning in map view</h3>
+          <p>A sand thinning updip onto a salt dome, turned into an amplitude extraction. A bright rim
+            appears around the flank — and there is no hydrocarbon anywhere in the model.</p>
+          <div class="q">Is that bright rim gas, or is it tuning?</div>
         </div>
-        <span class="flag next">Superseded</span>
       </a>
 
-      <a class="card" href="modules/the-echo.html">
-        <div class="thumb"><svg viewBox="0 0 200 104" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet"><rect width="200" height="104" fill="#F6F4EE"/><rect x="10" y="6" width="96" height="32.9" fill="#E4E0D6"/><rect x="10" y="38.9" width="96" height="23.1" fill="rgba(181,69,27,0.25)"/><rect x="10" y="61.9" width="96" height="36.1" fill="#E4E0D6"/><line x1="10" y1="38.9" x2="106" y2="38.9" stroke="#16191C" stroke-width="1.6"/><line x1="10" y1="61.9" x2="106" y2="61.9" stroke="#16191C" stroke-width="1.6"/><line x1="140" y1="6" x2="140" y2="98" stroke="#C7C9C0" stroke-width="1"/><polyline points="140,6 140,7 140,7.9 140,8.9 140,9.8 140,10.8 140,11.8 140,12.7 140,13.7 140,14.6 140,15.6 140,16.5 140,17.5 140.1,18.5 140.1,19.4 140.3,20.4 140.5,21.3 140.9,22.3 141.5,23.3 142.3,24.2 143.4,25.2 144.9,26.1 146.6,27.1 148.3,28 149.8,29 150.7,30 150.6,30.9 148.9,31.9 145.7,32.8 140.8,33.8 134.8,34.8 128.3,35.7 122.4,36.7 118,37.6 115.9,38.6 116.5,39.5 119.6,40.5 124.7,41.5 130.9,42.4 137.2,43.4 142.6,44.3 146.4,45.3 148.4,46.3 148.5,47.2 147.1,48.2 144.4,49.1 141.1,50.1 137.6,51 134.5,52 132.2,53 131.3,53.9 132.1,54.9 134.8,55.8 139.3,56.8 145.1,57.8 151.4,58.7 157.4,59.7 161.8,60.6 164.1,61.6 163.6,62.5 160.6,63.5 155.5,64.5 149.3,65.4 142.9,66.4 137.2,67.3 132.9,68.3 130.3,69.3 129.2,70.2 129.5,71.2 130.7,72.1 132.3,73.1 134.1,74 135.7,75 137,76 138.1,76.9 138.8,77.9 139.3,78.8 139.6,79.8 139.8,80.8 139.9,81.7 139.9,82.7 140,83.6 140,84.6 140,85.5 140,86.5 140,87.5 140,88.4 140,89.4 140,90.3 140,91.3 140,92.3 140,93.2 140,94.2 140,95.1 140,96.1 140,97 140,98" fill="none" stroke="#841617" stroke-width="2.4" stroke-linejoin="round"/><text x="58" y="103" font-family="monospace" font-size="8" fill="#16191C" text-anchor="middle">two rocks</text><text x="150" y="103" font-family="monospace" font-size="8" fill="#841617">the echo</text></svg></div>
+      <a class="card" href="modules/phase.html">
+        <canvas class="thumb-canvas" data-thumb="phase"></canvas>
         <div class="card-body">
-          <div class="card-no">—<span class="lvl">written before the re-leveling · pitched higher</span></div>
-          <h3>A pulse, a boundary, an echo</h3>
-          <p>Written before the resolution modules were taken as a prerequisite, and largely duplicated by them. Its two original pieces are being folded into the resolution set.</p>
-          <div class="q">What is a seismic trace a record of?</div>
+          <div class="card-no">08</div>
+          <h3>Phase, polarity &amp; well ties</h3>
+          <p>Rotate the wavelet and watch the apparent bed boundary move. Demonstrates why well ties and
+            picked horizons often disagree.</p>
+          <div class="q">Am I picking the top of the sand, or near it?</div>
         </div>
-        <span class="flag next">Moving out</span>
       </a>
 
     </div>
   </section>
 
-  <!-- ================================ ABOUT =============================== -->
-  <section id="about" class="about">
-    <h2>About these modules</h2>
-    <p>They are built for students meeting seismic interpretation for the first time, and for anyone who
-      arrived in an interpretation role from an adjacent discipline and is expected to be productive in
-      weeks. <b>Module 00 assumes nothing at all</b> — not rock physics, not mathematics, not even that you
-      know what impedance means. Modules 01 to 04 assume module 00. Modules 05 and 06 assume the four
-      before them and are comfortable with standard deviations and correlation; they are written for
-      people who already use these methods.</p>
-    <p>The title is a promise about the later modules rather than the early ones. "Actually" means that
-      each rule of thumb gets tested until it breaks, and that where it breaks is measured rather than
-      asserted. If you have never met the rules, module 00 teaches them straight, in the confident form
-      you would hear them at work, before anything comes back to qualify them.</p>
-    <p>Everything runs in the browser. No installation and no account. Nothing you do inside a module —
-      no slider, no click, no trace you generate — is transmitted anywhere, and the modules make no
-      network requests at all. Each one works from a local copy with the network switched off, and the
-      state of every control is written into the address bar, so a specific configuration can be handed
-      out as a link.</p>
-    <p>The one thing recorded is that a page was opened. No cookie, no account, nothing about you. I keep
-      that count for two reasons: so the modules people actually use are the ones that get improved, and
-      so I can show my university that you all are using these — which is how they keep getting built.</p>
-
-    <p>Every panel is <b>computed</b> from the parameters on screen. There are no stored images and no
-      curves drawn to look plausible, which means the tool can be wrong — and during construction it
-      repeatedly was. A drawing cannot disagree with theory; a calculation can, and the disagreements are
-      where the corrections came from. Every module carries a Method tab listing what has been left out and
-      where the implementation departs from production software, and every number quoted in the exercises
-      is read off the running page rather than estimated.</p>
-    <p>A companion set on <a href="https://hbedle-subsurface.github.io/geometric-attributes/">geometric
-      attributes</a> covers dip, coherence and curvature, and one on
-      <a href="https://hbedle-subsurface.github.io/seismic_resolution/">seismic resolution</a> covers what
-      you can and cannot separate in time.</p>
+  <section class="disclaimer">
+    <h4>What this is, and what it is not</h4>
+    <p>These modules are <b>teaching models, built to make ideas visible</b>. Every one of them is a
+      deliberate simplification: they leave out noise, dip, anisotropy, multiples, velocity error and most of
+      what a processing sequence actually does, and each module says in its own notes which of those it has
+      set aside and why.</p>
+    <p>They are not processing or interpretation software, and the numbers they produce describe the model on
+      the screen rather than any real survey. Use them to build intuition and to see why a limit exists —
+      then check your own data, with your own velocities, before you act on anything.</p>
   </section>
 
   <footer>
     <div class="foot-grid">
-      <p>Built for teaching by Heather Bedle, School of Geosciences, University of Oklahoma, with the
-        <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
-      <p class="lic">Free to use for teaching, demonstration, and non-commercial study, provided the source
-        is credited. Please do not republish or redistribute it, modified or otherwise, without permission.
-        If you use it in a course or a talk, a credit line and a link back are all that is asked.</p>
-      <p class="lic">Nothing you do in these modules leaves your browser. The only thing recorded is that
-        a page was opened, so that I can show the university these are being used — no cookie, no account,
-        nothing about you.</p>
-      <p class="lic">To cite: H. Bedle, <i>How AVO Actually Works</i>, University of
-        Oklahoma. <span class="k">SSRN: [article link to follow]</span></p>
+      <div style="flex:1 1 330px;max-width:46ch">
+        <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma,
+          with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a> consortium.</p>
+        <p>To cite: H. Bedle and A. Moreno-Ward, 2026, <i>What Can You REALLY See in Seismic? A Set of
+          Browser-Based Interactive Modules for Teaching Seismic Resolution</i>: SSRN working paper,
+          University of Oklahoma.</p>
+      </div>
+      <div style="flex:1 1 330px;max-width:52ch">
+        <p>Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Free to
+          use, adapt and share, including in teaching, provided the source is credited and any adaptation
+          is released under the same license. If you use it in a course or a talk, a credit line and a
+          link back are all that is asked.</p>
+        <p>Every module has a <em>Copy link to this setup</em> button, so you can hand students a link
+          that opens on an exact configuration.</p>
+        <p>Nothing you do in a module leaves your browser. The only thing recorded is that a
+          page was opened &mdash; no cookie, no account, nothing about you.</p>
+      </div>
     </div>
   </footer>
 </div>
 
 <script src="assets/count.js"></script>
+<script src="assets/seismic.js"></script>
+<script>
+(function () {
+  'use strict';
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ------------------------- animated hero wedge ------------------------- */
+  const hero = document.getElementById('heroCanvas');
+  const NX = 150, V = 2600, MAXH = 55, TTOP = 0.045;
+
+  function wedgeField(f, nt, dt) {
+    const wav = SEIS.makeWavelet({ type: 'ricker', f });
+    const out = new Float32Array(NX * nt);
+    for (let ix = 0; ix < NX; ix++) {
+      const h = (ix / (NX - 1)) * MAXH;
+      const sp = [{ t: TTOP, r: 0.14 }, { t: TTOP + 2 * h / V, r: -0.14 }];
+      for (let it = 0; it < nt; it++) out[ix * nt + it] = SEIS.traceValue(sp, it * dt, wav.fn);
+    }
+    return out;
+  }
+
+  let f = 40, dir = -1;
+  function drawHero() {
+    const w = hero.parentElement.clientWidth - 30;
+    const h = Math.max(190, Math.min(260, w * 0.56));
+    const ctx = SEIS.fitCanvas(hero, w, h);
+    const dt = 0.0004;
+    const tEnd = TTOP + 2 * MAXH / V + 0.055;
+    const nt = Math.round(tEnd / dt);
+    const rect = { x: 0, y: 0, w: w, h: h };
+    const field = wedgeField(f, nt, dt);
+    SEIS.drawVarDensity(ctx, field, NX, nt, rect, { cmap: SEIS.COLORMAPS.bwr, clip: 0.21 });
+
+    // the quarter-wavelength marker, sliding as frequency changes
+    const q = (V / f) / 4;
+    if (q <= MAXH) {
+      const x = (q / MAXH) * w;
+      SEIS.dashedLine(ctx, x, 0, x, h, '#0B7285', [3, 3], 1.6);
+      SEIS.tag(ctx, x + 4, 12, 'λ/4', '#0B7285');
+    }
+    SEIS.dashedLine(ctx, 0, (TTOP / tEnd) * h, w, (TTOP / tEnd) * h, 'rgba(22,25,28,.55)', [5,4], 1.2);
+    SEIS.dashedLine(ctx, 0, (TTOP / tEnd) * h, w, ((TTOP + 2*MAXH/V) / tEnd) * h, 'rgba(22,25,28,.55)', [5,4], 1.2);
+
+    document.getElementById('heroF').textContent = f.toFixed(0) + ' Hz';
+    document.getElementById('heroR').textContent = (V / f / 4).toFixed(0) + ' m';
+  }
+
+  let last = 0;
+  function tick(ts) {
+    if (ts - last > 55) {
+      last = ts;
+      f += dir * 0.55;
+      if (f <= 14) { f = 14; dir = 1; }
+      if (f >= 55) { f = 55; dir = -1; }
+      drawHero();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  drawHero();
+  if (!reduce) requestAnimationFrame(tick);
+
+  /* --------------------------- card thumbnails --------------------------- */
+  function thumbWedge(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    const dt = 0.0004, tEnd = TTOP + 2 * MAXH / V + 0.05;
+    const nt = Math.round(tEnd / dt);
+    const wav = SEIS.makeWavelet({ type: 'ricker', f: 38 });
+    const fld = new Float32Array(NX * nt);
+    for (let ix = 0; ix < NX; ix++) {
+      const hh = (ix / (NX - 1)) * MAXH;
+      const sp = [{ t: TTOP, r: 0.14 }, { t: TTOP + 2 * hh / V, r: -0.14 }];
+      for (let it = 0; it < nt; it++) fld[ix * nt + it] = SEIS.traceValue(sp, it * dt, wav.fn);
+    }
+    SEIS.drawVarDensity(ctx, fld, NX, nt, { x:0, y:0, w:w, h:h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.21 });
+  }
+
+  function thumbFault(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    const nx = 160, dx = 12.5, t0 = 0.06, tE = 0.30, dt = 0.0006;
+    const nt = Math.round((tE - t0) / dt);
+    const wav = SEIS.makeWavelet({ type: 'ricker', f: 34 });
+    const layers = [
+      { t:0.095, r:0.12 }, { t:0.130, r:-0.09 }, { t:0.163, r:0.13 },
+      { t:0.205, r:-0.11 }, { t:0.248, r:0.10 },
+    ];
+    const thr = 0.019, vel = 2800, tanD = Math.tan(64 * Math.PI / 180);
+    const fld = new Float32Array(nx * nt);
+    for (let ix = 0; ix < nx; ix++) {
+      const x = (ix + 0.5) * dx;
+      const sp = layers.map((L) => {
+        const fx = 0.52 * nx * dx + (vel * (L.t - 0.18) / 2) / tanD;
+        return { t: x > fx ? L.t + thr : L.t, r: L.r };
+      });
+      for (let it = 0; it < nt; it++) fld[ix * nt + it] = SEIS.traceValue(sp, t0 + it * dt, wav.fn);
+    }
+    SEIS.drawVarDensity(ctx, fld, nx, nt, { x:0, y:0, w:w, h:h }, { cmap: SEIS.COLORMAPS.bwr, clip: 0.15 });
+  }
+
+  function thumbDepth(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    // one column of rock, imaged with a wavelet that lengthens as it goes down:
+    // crisp banding at the top, merged mush at the bottom
+    const T0 = 0.04, TEND = 3.2, NT = 300, v0 = 2000, vmax = 4800, f0 = 40, Q = 80;
+    const velAt = (t) => v0 * Math.pow(vmax / v0, t / TEND);
+    const effF = (t) => {
+      const a = 2 / (f0 * f0), b = Math.PI * t / Q;
+      return (-b + Math.sqrt(b * b + 8 * a)) / (2 * a);
+    };
+    const rnd = SEIS.mulberry32(5);
+    const spikes = [];
+    let t = T0 + 0.05, sign = 1;
+    while (t < TEND - 0.05 && spikes.length < 170) {
+      spikes.push({ t, r: sign * (0.05 + rnd() * 0.09) });
+      sign = rnd() < 0.75 ? -sign : sign;
+      t += 2 * (18 + rnd() * 45) / velAt(t);
+    }
+    const dt = (TEND - T0) / NT;
+    const trace = new Float32Array(NT);
+    for (let i = 0; i < NT; i++) {
+      const tt = T0 + i * dt;
+      const wav = SEIS.makeWavelet({ type: 'ricker', f: effF(tt) });
+      let v = 0;
+      for (let k = 0; k < spikes.length; k++) {
+        const d = tt - spikes[k].t;
+        if (Math.abs(d) < wav.halfLength) v += spikes[k].r * wav.fn(d);
+      }
+      trace[i] = v;
+    }
+    const nx = 44, fld = new Float32Array(nx * NT);
+    for (let ix = 0; ix < nx; ix++) fld.set(trace, ix * NT);
+    SEIS.drawVarDensity(ctx, fld, nx, NT, { x: 0, y: 0, w: w, h: h },
+      { cmap: SEIS.COLORMAPS.bwr, clip: 0.17 });
+  }
+
+  function thumb1d(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const layers = [
+      { v: 2450, d: 2.38 }, { v: 2750, d: 2.30 }, { v: 2500, d: 2.40 },
+      { v: 2800, d: 2.32 }, { v: 2550, d: 2.42 },
+    ];
+    const thick = [0, 45, 30, 22, 0];
+    const ai = layers.map((l) => l.v * l.d * 1000 / 1e6);
+    let t = 0.05; const ifc = [];
+    for (let i = 0; i < layers.length - 1; i++) {
+      if (i > 0) t += 2 * thick[i] / layers[i].v;
+      ifc.push({ t, rc: (ai[i + 1] - ai[i]) / (ai[i + 1] + ai[i]) });
+    }
+    const tEnd = 0.2;
+    const EARTH = [[238,227,197],[212,189,145],[172,149,113],[126,109,88],[78,68,58]];
+    const lo = Math.min.apply(null, ai), hi = Math.max.apply(null, ai);
+    const shade = (i) => {
+      const u = (ai[i] - lo) / ((hi - lo) || 1) * (EARTH.length - 1);
+      const k = Math.min(EARTH.length - 2, Math.floor(u)), f = u - k;
+      const a = EARTH[k], b = EARTH[k + 1];
+      return 'rgb(' + Math.round(a[0]+(b[0]-a[0])*f) + ',' + Math.round(a[1]+(b[1]-a[1])*f) +
+             ',' + Math.round(a[2]+(b[2]-a[2])*f) + ')';
+    };
+    const colW = w * 0.42, synX = w * 0.52, synW = w - synX;
+    const yOf = (tt) => (tt / tEnd) * h;
+    for (let i = 0; i < layers.length; i++) {
+      const y0 = i === 0 ? 0 : yOf(ifc[i - 1].t);
+      const y1 = i < ifc.length ? yOf(ifc[i].t) : h;
+      ctx.fillStyle = shade(i);
+      ctx.fillRect(0, y0, colW, y1 - y0);
+    }
+    const wav = SEIS.makeWavelet({ type: 'ricker', f: 32 });
+    const dt = 0.0004, nt = Math.round(tEnd / dt);
+    const tr = SEIS.traceFromSpikes(ifc.map((f) => ({ t: f.t, r: f.rc })), 0, dt, nt, wav);
+    const nx = 26, fld = new Float32Array(nx * nt);
+    for (let ix = 0; ix < nx; ix++) fld.set(tr, ix * nt);
+    SEIS.drawVarDensity(ctx, fld, nx, nt, { x: synX, y: 0, w: synW, h: h },
+      { cmap: SEIS.COLORMAPS.bwr, clip: 0.055 });
+    ctx.save();
+    ctx.strokeStyle = 'rgba(132,22,23,.85)'; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    const cx = colW + (synX - colW) / 2;
+    ifc.forEach((f) => {
+      const y = yOf(f.t);
+      ctx.moveTo(cx, y); ctx.lineTo(cx + (f.rc / 0.05) * ((synX - colW) / 2) * 0.8, y);
+    });
+    ctx.stroke(); ctx.restore();
+  }
+
+  function thumbFresnel(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const V = 2500, t0 = 0.42, f = 32, sep = 150;
+    const wav = SEIS.makeWavelet({ type: 'ricker', f });
+    const XW = 1400, NX = 150, dx = XW / NX;
+    const tStart = 0.30, tEnd = 0.78, nt = 150, dt = (tEnd - tStart) / nt;
+    const fld = new Float32Array(NX * nt);
+    for (let ix = 0; ix < NX; ix++) {
+      const x = -XW / 2 + (ix + 0.5) * dx;
+      [-sep / 2, sep / 2].forEach((x0) => {
+        const tau = Math.sqrt(t0 * t0 + Math.pow(2 * (x - x0) / V, 2));
+        const hl = wav.halfLength;
+        const i0 = Math.max(0, Math.ceil((tau - hl - tStart) / dt));
+        const i1 = Math.min(nt - 1, Math.floor((tau + hl - tStart) / dt));
+        for (let i = i0; i <= i1; i++) fld[ix * nt + i] += (t0 / tau) * wav.fn(tStart + i * dt - tau);
+      });
+    }
+    SEIS.drawVarDensity(ctx, fld, NX, nt, { x: 0, y: 0, w: w, h: h },
+      { cmap: SEIS.COLORMAPS.bwr, clip: 0.85 });
+  }
+
+  function thumbMapRes(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    // the branching channel as the seismic images it, with the true outline
+    // over the top so the early fade-out is the thing you notice
+    const NXn = 256, NYn = 128, FS = 0.34, KC = 0.708, FX0 = 0.17, EDGE = 0.075;
+    const w0 = 900, wend = 0, div = 700, res = 84;
+    const XD = 4500, YD = XD * NYn / NXn;
+    const ramp = (fx) => fx <= 0 ? 0 : fx >= EDGE ? 1 : 0.5 - 0.5 * Math.cos(Math.PI * fx / EDGE);
+    const shape = (fx) => {
+      if (fx < 0 || fx > 0.985) return null;
+      const yc = YD / 2 + 0.085 * YD * Math.sin(2 * Math.PI * fx * 1.25);
+      const wS = Math.max(wend * 2.4, w0 * 0.62);
+      if (fx < FS) return [{ y: yc, w: w0 + (wS - w0) * (fx / FS) }];
+      const t = (fx - FS) / (0.985 - FS);
+      const wb = wS * 0.5 + (wend - wS * 0.5) * t;
+      if (wb <= 0.5) return null;
+      const off = (wS * 0.5 + div * Math.pow(t, 1.25)) / 2;
+      return [{ y: yc - off, w: wb }, { y: yc + off, w: wb }];
+    };
+    const re = new Float64Array(NXn * NYn), im = new Float64Array(NXn * NYn);
+    for (let iy = 0; iy < NYn; iy++) for (let ix = 0; ix < NXn; ix++) {
+      const fx = (ix + 0.5) / NXn, ls = shape(fx); if (!ls) continue;
+      const y = ((iy + 0.5) / NYn) * YD;
+      for (const L of ls) if (Math.abs(y - L.y) <= L.w / 2) { re[iy * NXn + ix] = ramp(fx); break; }
+    }
+    const rr = new Float64Array(NXn), ri = new Float64Array(NXn);
+    const cr = new Float64Array(NYn), ci = new Float64Array(NYn);
+    const rows = (inv) => { for (let iy = 0; iy < NYn; iy++) {
+      for (let ix = 0; ix < NXn; ix++) { rr[ix] = re[iy * NXn + ix]; ri[ix] = im[iy * NXn + ix]; }
+      SEIS.fft(rr, ri, inv);
+      for (let ix = 0; ix < NXn; ix++) { re[iy * NXn + ix] = rr[ix]; im[iy * NXn + ix] = ri[ix]; } } };
+    const cols = (inv) => { for (let ix = 0; ix < NXn; ix++) {
+      for (let iy = 0; iy < NYn; iy++) { cr[iy] = re[iy * NXn + ix]; ci[iy] = im[iy * NXn + ix]; }
+      SEIS.fft(cr, ci, inv);
+      for (let iy = 0; iy < NYn; iy++) { re[iy * NXn + ix] = cr[iy]; im[iy * NXn + ix] = ci[iy]; } } };
+    rows(false); cols(false);
+    const dx = XD / NXn, dy = YD / NYn, kc = KC / res;
+    for (let iy = 0; iy < NYn; iy++) {
+      const ky = Math.abs((iy <= NYn / 2 ? iy : iy - NYn) / (NYn * dy));
+      for (let ix = 0; ix < NXn; ix++) {
+        const kx = Math.abs((ix <= NXn / 2 ? ix : ix - NXn) / (NXn * dx));
+        const q = Math.hypot(kx / kc, ky / kc);
+        const wt = q <= 1 ? 1 : q >= 1.15 ? 0 : 0.5 + 0.5 * Math.cos(Math.PI * (q - 1) / 0.15);
+        re[iy * NXn + ix] *= wt; im[iy * NXn + ix] *= wt;
+      }
+    }
+    cols(true); rows(true);
+    const stops = [[252,251,248],[226,236,238],[170,208,216],[96,168,188],[38,116,146],[16,58,84]];
+    const ix0 = Math.round(FX0 * NXn), NXD = NXn - ix0;
+    const off = document.createElement('canvas');
+    off.width = NXD; off.height = NYn;
+    const octx = off.getContext('2d');
+    const img = octx.createImageData(NXD, NYn);
+    let mx = 1e-9;
+    for (let i = 0; i < re.length; i++) mx = Math.max(mx, re[i]);
+    for (let iy = 0; iy < NYn; iy++) for (let ix = 0; ix < NXD; ix++) {
+      const u = Math.max(0, Math.min(1, re[iy * NXn + ix + ix0] / mx)) * (stops.length - 1);
+      const k = Math.min(stops.length - 2, Math.floor(u)), f = u - k;
+      const a = stops[k], b = stops[k + 1], q = iy * NXD + ix;
+      img.data[q * 4] = a[0] + (b[0] - a[0]) * f;
+      img.data[q * 4 + 1] = a[1] + (b[1] - a[1]) * f;
+      img.data[q * 4 + 2] = a[2] + (b[2] - a[2]) * f;
+      img.data[q * 4 + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, 0, 0, w, h);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(22,25,28,.65)'; ctx.lineWidth = 1.1;
+    ctx.setLineDash([4, 3]);
+    [-1, 1].forEach((side) => [0, 1].forEach((br) => {
+      ctx.beginPath();
+      let pen = false;
+      for (let i = ix0; i < NXn; i++) {
+        const fx = (i + 0.5) / NXn, ls = shape(fx);
+        if (!ls) { if (pen) { ctx.stroke(); pen = false; } continue; }
+        const Lb = ls[Math.min(br, ls.length - 1)];
+        const x = ((fx - FX0) / (1 - FX0)) * w, y = ((Lb.y + side * Lb.w / 2) / YD) * h;
+        pen ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        pen = true;
+      }
+      if (pen) ctx.stroke();
+    }));
+    ctx.restore();
+  }
+
+  function thumbPhase(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    // the same reflection at three rotations: the event slides off the boundary
+    const base = SEIS.makeWavelet({ type: 'ricker', f: 30 });
+    const phases = [0, 90, 180];
+    const span = 0.055, NT = 160, colW = w / phases.length;
+    phases.forEach((d, k) => {
+      const wv = SEIS.phaseRotate(base, d);
+      const col = new Float32Array(NT);
+      let mx = 1e-6;
+      for (let i = 0; i < NT; i++) {
+        const t = -span + (2 * span * i) / (NT - 1);
+        col[i] = wv.fn(t);
+        mx = Math.max(mx, Math.abs(col[i]));
+      }
+      const nx = 24, fld = new Float32Array(nx * NT);
+      for (let ix = 0; ix < nx; ix++) fld.set(col, ix * NT);
+      SEIS.drawVarDensity(ctx, fld, nx, NT,
+        { x: k * colW, y: 0, w: colW - 2, h: h },
+        { cmap: SEIS.COLORMAPS.bwr, clip: mx * 1.05 });
+    });
+    ctx.save();
+    ctx.strokeStyle = '#0B7285'; ctx.lineWidth = 2;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  function thumbDepth0(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    const water = 1500, zmax = 6000, v0 = 1700, k = 0.55;
+    const opTop = 3400, opThick = 900, opAmp = 0.18;
+    const opF = (z) => (z <= opTop || z >= opTop + opThick) ? 0
+      : 0.5 - 0.5 * Math.cos(2 * Math.PI * (z - opTop) / opThick);
+    const vOf = (z) => z < water ? 1500
+      : Math.max(1400, (v0 + k * (z - water)) * (1 - opAmp * opF(z)));
+    const vmax = vOf(zmax) * 1.06;
+    // water band
+    ctx.fillStyle = 'rgba(127,179,204,.55)';
+    ctx.fillRect(0, 0, w, (water / zmax) * h);
+    ctx.save();
+    ctx.fillStyle = 'rgba(132,22,23,.14)';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    for (let i = 0; i <= 160; i++) {
+      const z = (i / 160) * zmax;
+      ctx.lineTo((vOf(z) / vmax) * w, (z / zmax) * h);
+    }
+    ctx.lineTo(0, h); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#841617'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i <= 160; i++) {
+      const z = (i / 160) * zmax;
+      const x = (vOf(z) / vmax) * w, y = (z / zmax) * h;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(138,109,31,.9)'; ctx.lineWidth = 1.2;
+    ctx.setLineDash([4, 3]);
+    [opTop, opTop + opThick].forEach((z) => {
+      ctx.beginPath(); ctx.moveTo(0, (z / zmax) * h); ctx.lineTo(w, (z / zmax) * h); ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  function thumbMapView(canvas) {
+    const w = canvas.parentElement.clientWidth, h = 118;
+    const ctx = SEIS.fitCanvas(canvas, w, h);
+    ctx.clearRect(0, 0, w, h);
+    // a sand lapping onto a salt dome: the bright ring is tuning, not fluid
+    const XD = 7000, YD = 4600, XC = 2500, YC = YD / 2, RD = 1500, ZREF = 2600;
+    const hmax = 55, taper = 1800, pinch = 1100, relief = 600, dip = 34, contact = 2660;
+    const V = 2700, f = 25;
+    const wav = SEIS.makeWavelet({ type: 'ricker', f });
+    const rad = (x, y) => Math.hypot(x - XC, y - YC);
+    const thk = (x, y) => {
+      const r = rad(x, y);
+      return r <= pinch ? 0 : hmax * Math.min(1, (r - pinch) / taper);
+    };
+    const dep = (x, y) => ZREF + (dip / 1000) * (x - XC)
+      - relief * Math.exp(-(rad(x, y) * rad(x, y)) / (RD * RD));
+    // tabulate amplitude against thickness once per fluid, rather than
+    // convolving at every one of fifteen thousand map cells
+    const NL = 80, hTop = hmax * 1.05, lut = {};
+    [['brine', -0.055, 0.055], ['gas', -0.20, 0.20]].forEach(([k, r1, r2]) => {
+      const arr = new Float32Array(NL + 1);
+      for (let i = 0; i <= NL; i++) {
+        const gap = 2 * ((i / NL) * hTop) / V;
+        let best = 0;
+        for (let t = -wav.halfLength; t <= gap + wav.halfLength; t += 0.0006) {
+          const v = r1 * wav.fn(t) + r2 * wav.fn(t - gap);
+          if (Math.sign(v) === Math.sign(r1) && Math.abs(v) > Math.abs(best)) best = v;
+        }
+        arr[i] = Math.abs(best);
+      }
+      lut[k] = arr;
+    });
+    const amp = (hh, gas) => {
+      const q = Math.max(0, Math.min(1, hh / hTop)) * NL;
+      const i = Math.min(NL - 1, Math.floor(q)), fr = q - i;
+      const a = lut[gas ? 'gas' : 'brine'];
+      return a[i] + (a[i + 1] - a[i]) * fr;
+    };
+    const stops = [[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],
+                   [31,158,137],[53,183,121],[109,205,89],[180,222,44],[253,231,37]];
+    const NXm = 150, NYm = 98;
+    const vals = new Float32Array(NXm * NYm);
+    let mx = 1e-9;
+    for (let iy = 0; iy < NYm; iy++) for (let ix = 0; ix < NXm; ix++) {
+      const x = ((ix + 0.5) / NXm) * XD, y = ((iy + 0.5) / NYm) * YD;
+      const hh = thk(x, y);
+      if (hh <= 0.5) { vals[iy * NXm + ix] = -1; continue; }
+      const gas = dep(x, y) < contact;
+      const a = amp(hh, gas);
+      vals[iy * NXm + ix] = a; mx = Math.max(mx, a);
+    }
+    const off = document.createElement('canvas');
+    off.width = NXm; off.height = NYm;
+    const octx = off.getContext('2d');
+    const img = octx.createImageData(NXm, NYm);
+    for (let i = 0; i < NXm * NYm; i++) {
+      if (vals[i] < 0) {
+        img.data[i * 4] = 238; img.data[i * 4 + 1] = 238; img.data[i * 4 + 2] = 235;
+      } else {
+        const u = Math.max(0, Math.min(1, vals[i] / mx)) * (stops.length - 1);
+        const k = Math.min(stops.length - 2, Math.floor(u)), f2 = u - k;
+        const a = stops[k], b = stops[k + 1];
+        img.data[i * 4] = a[0] + (b[0] - a[0]) * f2;
+        img.data[i * 4 + 1] = a[1] + (b[1] - a[1]) * f2;
+        img.data[i * 4 + 2] = a[2] + (b[2] - a[2]) * f2;
+      }
+      img.data[i * 4 + 3] = 255;
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(off, 0, 0, w, h);
+  }
+
+  function drawThumbs() {
+    document.querySelectorAll('.thumb-canvas').forEach((c) => {
+      if (c.dataset.thumb === 'wedge') thumbWedge(c);
+      else if (c.dataset.thumb === 'fault') thumbFault(c);
+      else if (c.dataset.thumb === 'model1d') thumb1d(c);
+      else if (c.dataset.thumb === 'fresnel') thumbFresnel(c);
+      else if (c.dataset.thumb === 'mapres') thumbMapRes(c);
+      else if (c.dataset.thumb === 'phase') thumbPhase(c);
+      else if (c.dataset.thumb === 'depth0') thumbDepth0(c);
+      else if (c.dataset.thumb === 'mapview') thumbMapView(c);
+      else if (c.dataset.thumb === 'depth') thumbDepth(c);
+    });
+  }
+  drawThumbs();
+
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => { drawHero(); drawThumbs(); }, 140);
+  });
+})();
+</script>
 </body>
 </html>
