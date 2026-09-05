@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beyond normal incidence | How AVO Actually Works</title>
+<meta name="description" content="Module 00: a recap of what the seismic resolution modules established, the assumption they all shared, and the observation that begins this set — a reflection coefficient is not the same number at every angle.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="masthead">
+    <a class="brand" href="../index.html"><span class="dot"></span>How AVO <b>actually</b> works</a>
+    <nav>
+      <a href="../index.html">All modules</a>
+      <a href="#pe">Exercises</a>
+      <a href="#pm">Method &amp; references</a>
+    </nav>
+  </header>
+
+  <div class="mod-head">
+    <p class="eyebrow">Module 00 &nbsp;·&nbsp; Recap and bridge</p>
+    <h1>Beyond normal incidence</h1>
+    <p class="sub">This set assumes the
+      <a href="https://hbedle-subsurface.github.io/seismic_resolution/">seismic resolution modules</a>,
+      where impedance, the reflection coefficient, the wavelet and tuning are built from scratch. This
+      module restates those four results in one place, names the assumption every one of them shared, and
+      shows the measurement that assumption was hiding. It introduces nothing new about rocks. It is here
+      so that module 01 can start from a specific question rather than from the beginning.</p>
+  </div>
+
+  <div class="labhead">
+    <div class="labgrid">
+      <div>
+        <p class="cap">The interface, and the trace it makes at normal incidence
+          <span>&mdash; the chain from the resolution modules</span></p>
+        <canvas id="cHead" aria-label="Two rocks and their impedances beside the normal-incidence trace they produce"></canvas>
+      </div>
+      <div>
+        <p class="cap">Six controls <span>&mdash; the first four drive steps 1 and 2</span></p>
+        <div class="controls" id="mainControls">
+          <div class="ctl-col">
+            <h2>The rock above</h2>
+            <div class="ctl">
+              <label for="vp1">P-wave velocity <span class="val" id="vp1V">2700 m/s</span></label>
+              <input type="range" data-key="vp1" id="vp1" min="1800" max="3600" step="50" value="2700">
+            </div>
+            <div class="ctl">
+              <label for="rho1">Density <span class="val" id="rho1V">2.23 g/cm³</span></label>
+              <input type="range" data-key="rho1" id="rho1" min="190" max="265" step="1" value="223">
+            </div>
+
+            <h2>The rock below</h2>
+            <div class="ctl">
+              <label for="vp2">P-wave velocity <span class="val" id="vp2V">2280 m/s</span></label>
+              <input type="range" data-key="vp2" id="vp2" min="1800" max="4200" step="50" value="2280">
+            </div>
+            <div class="ctl">
+              <label for="rho2">Density <span class="val" id="rho2V">1.91 g/cm³</span></label>
+              <input type="range" data-key="rho2" id="rho2" min="180" max="265" step="1" value="191">
+            </div>
+
+            <h2>Step 3 only</h2>
+            <div class="ctl">
+              <label for="phi">Porosity of the sand <span class="val" id="phiV">30%</span></label>
+              <input type="range" data-key="phi" id="phi" min="18" max="35" step="1" value="30">
+            </div>
+            <div class="ctl">
+              <label for="ang">Incidence angle <span class="val" id="angV">30°</span></label>
+              <input type="range" data-key="ang" id="ang" min="0" max="40" step="1" value="30">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="tabhint">Three short steps. Nothing here needs a rock property that the resolution modules
+    did not already use, until the last panel, which is the point of the module.</p>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Module steps">
+    <button role="tab" data-tab="p1" aria-selected="false">1 · The chain</button>
+    <button role="tab" data-tab="p2" aria-selected="false">2 · Straight down</button>
+    <button role="tab" data-tab="p3" aria-selected="false">3 · Not at every angle</button>
+    <button role="tab" data-tab="pw" aria-selected="false">Why it matters</button>
+    <span class="gap"></span>
+    <button role="tab" data-tab="pe" aria-selected="false">Exercises</button>
+    <button role="tab" data-tab="pk" aria-selected="false">Key points</button>
+    <button role="tab" data-tab="pm" aria-selected="false">Method</button>
+  </nav>
+
+  <!-- =============================== STEP 1 =============================== -->
+  <section class="tabpane" id="p1" role="tabpanel" hidden>
+    <div class="plot-head">
+      <h3><span class="stepno">1</span>Four results, restated</h3>
+      <span class="hint">Everything this set takes as already established</span>
+    </div>
+    <p class="lede">The resolution modules built a chain from a column of rock to a seismic wiggle. Four
+      of its results are used constantly from here on, and they are restated below so that the settings
+      used later have a starting point.</p>
+    <p class="lede"><b>Impedance is velocity times density.</b> One number per layer, and at normal
+      incidence it is the only rock property a reflection responds to.</p>
+    <p class="lede"><b>A reflection measures a contrast.</b> The reflection coefficient is the difference
+      in impedance across the boundary divided by the sum. Equal impedances give no reflection, whatever
+      else is different about the two rocks.</p>
+    <p class="lede"><b>The sign is the polarity.</b> Going into a higher impedance gives one sign, into a
+      lower impedance the other, and which one appears as a peak on a display is a convention rather
+      than a fact about the rock.</p>
+    <p class="lede"><b>The trace is a sum.</b> Each boundary returns a copy of the wavelet, and what is
+      interpreted is the total. When two boundaries are close together their wavelets overlap and the
+      amplitude that gets measured belongs to neither of them alone.</p>
+
+    <div class="sec-row" id="row1">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Velocity × density, for both rocks
+          <span class="note">and the contrast between them</span></p>
+        <canvas id="c1imp" aria-label="Bar chart of velocity, density and impedance for the rock above and the rock below"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The reflection, wearing the wavelet
+          <span class="note">at normal incidence</span></p>
+        <canvas id="c1trace" aria-label="The normal-incidence trace produced by this interface"></canvas>
+      </div>
+    </div>
+
+    <div class="stats" style="margin-top:14px">
+      <div class="stat"><span>Impedance above</span><b id="s1a">—</b></div>
+      <div class="stat"><span>Impedance below</span><b id="s1b">—</b></div>
+      <div class="stat"><span>Contrast across the boundary</span><b id="s1c">—</b></div>
+      <div class="stat key"><span>Reflection coefficient</span><b id="s1d">—</b></div>
+      <div class="stat"><span>Polarity</span><b id="s1e">—</b></div>
+      <div class="stat wide"><span>What this number is a property of</span><b id="s1f">—</b></div>
+    </div>
+    <div class="legend prose">
+      <span>These are the resolution modules' results and they are not re-derived here. The module that
+        builds them is <a href="https://hbedle-subsurface.github.io/seismic_resolution/modules/model1d.html">Where
+        a seismic trace comes from</a>.</span>
+    </div>
+  </section>
+
+  <!-- =============================== STEP 2 =============================== -->
+  <section class="tabpane" id="p2" role="tabpanel" hidden>
+    <div class="plot-head">
+      <h3><span class="stepno">2</span>One assumption ran through all of it</h3>
+      <span class="hint">The sound went straight down and straight back</span>
+    </div>
+    <p class="lede">Every trace in the resolution modules was built for a wave arriving perpendicular to
+      the boundary. That case has a name: <b>normal incidence</b>. It is the simplest one, the arithmetic
+      is a single fraction, and it is where the impedance result comes from.</p>
+    <p class="lede">A real survey does not record that case, or rather it records it only once. A source
+      is fired at one point and a line of receivers stretches away from it, so most of the energy that
+      returns took a slanted path down and a slanted path back. The angle at which the wave meets the
+      boundary is the <b>incidence angle</b>, and across a single recording it takes a range of values
+      rather than one.</p>
+    <p class="lede">The resolution modules state this exclusion rather than hide it. Their trace module
+      says it is normal incidence only, with no offset, no AVO and no mode conversion. The wedge module
+      lists offset among the things left out because each deserves separate treatment. This set is that
+      separate treatment.</p>
+    <p class="lede">Where the angles come from, how they relate to the distance between source and
+      receiver, and how the traces are organized is the subject of module 04. What matters here is only
+      that a range of angles exists and that the resolution modules covered one end of it.</p>
+
+    <div class="sec-row" id="row2">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> The case that has been covered
+          <span class="note">perpendicular to the boundary</span></p>
+        <canvas id="c2normal" aria-label="A cartoon of a wave arriving perpendicular to a boundary and reflecting straight back"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The cases a survey actually records
+          <span class="note">a fan of angles from one shot</span></p>
+        <canvas id="c2fan" aria-label="A cartoon of one source and several receivers, with rays meeting the boundary at a range of angles"></canvas>
+      </div>
+    </div>
+
+    <div class="stats" style="margin-top:14px">
+      <div class="stat"><span>Angle assumed by every earlier module</span><b id="s2a">—</b></div>
+      <div class="stat key"><span>Angle selected here</span><b id="s2b">—</b></div>
+      <div class="stat"><span>Rays drawn in the right-hand panel</span><b id="s2c">—</b></div>
+      <div class="stat"><span>Angle range they span</span><b id="s2d">—</b></div>
+      <div class="stat"><span>Reflection coefficient at 0°</span><b id="s2e">—</b></div>
+      <div class="stat wide"><span>What the impedance result covers</span><b id="s2f">—</b></div>
+    </div>
+    <div class="legend prose">
+      <span>The rays here are drawn straight for clarity. Velocity generally increases with depth, which
+        bends them, and the difference between the drawn angle and the real one grows with distance.
+        Module 04 works that out.</span>
+    </div>
+  </section>
+
+  <!-- =============================== STEP 3 =============================== -->
+  <section class="tabpane" id="p3" role="tabpanel" hidden>
+    <div class="plot-head">
+      <h3><span class="stepno">3</span>The reflection coefficient is not one number</h3>
+      <span class="hint">The observation this set is about</span>
+    </div>
+    <p class="lede">Once the angle is allowed to vary, the reflection coefficient varies with it. The
+      left-hand panel shows that for two rocks: a shale over a sand filled with brine, and the same shale
+      over the same sand filled with gas. Both curves are computed from the full reflection equations
+      rather than from the impedance fraction.</p>
+    <p class="lede">Two features of the picture are worth separating. The curves start at different
+      heights, which is the impedance contrast from step 1 and is already familiar. They also have
+      different <em>shapes</em>, and that is new: the gas curve falls away from its starting value much
+      faster than the brine curve does.</p>
+    <p class="lede">The right-hand panel plots the gap between the two curves. It widens with angle. A
+      measurement made only at normal incidence sees the difference at the left-hand edge of that plot; a
+      measurement that uses the whole range sees the difference grow. That is the observation the rest of
+      this set examines.</p>
+    <p class="lede">Producing those curves required a property of the rock that has not appeared in any
+      module so far. Impedance describes how a rock responds to being compressed. A wave arriving at an
+      angle also shears the rock, and how a rock resists shearing is a separate property that impedance
+      does not carry. Where it comes from, and what controls it, is module 01.</p>
+
+    <div class="sec-row" id="row3">
+      <div class="panel-col">
+        <p class="sublabel"><b>1</b> Reflection coefficient against angle
+          <span class="note">the same sand, two pore fluids</span></p>
+        <canvas id="c3curve" aria-label="Reflection coefficient plotted against incidence angle for a brine sand and a gas sand beneath shale"></canvas>
+      </div>
+      <div class="panel-col">
+        <p class="sublabel"><b>2</b> The gap between the two curves
+          <span class="note">how much the fluid changes the reflection</span></p>
+        <canvas id="c3gap" aria-label="The difference between the gas and brine reflection coefficients, plotted against angle"></canvas>
+      </div>
+    </div>
+
+    <div class="stats" style="margin-top:14px">
+      <div class="stat"><span>Brine sand at 0°</span><b id="s3a">—</b></div>
+      <div class="stat"><span>Gas sand at 0°</span><b id="s3b">—</b></div>
+      <div class="stat"><span>Brine sand at the selected angle</span><b id="s3c">—</b></div>
+      <div class="stat"><span>Gas sand at the selected angle</span><b id="s3d">—</b></div>
+      <div class="stat key"><span>Gap between them, 0° to selected</span><b id="s3e">—</b></div>
+      <div class="stat wide"><span>What the extra angles added</span><b id="s3f">—</b></div>
+    </div>
+    <div class="legend prose">
+      <span>The two rocks in this step are computed from a rock physics model rather than set by the
+        sliders, because their behavior with angle depends on a property the sliders do not carry.
+        Building that model is what modules 01 and 02 do.</span>
+    </div>
+  </section>
+
+  <!-- ============================ WHY IT MATTERS ========================== -->
+  <section class="tabpane" id="pw" role="tabpanel" hidden>
+    <div class="plot-head">
+      <h3><span class="stepno ref">W</span>Why it matters</h3>
+      <span class="hint">What the extra angles are used for</span>
+    </div>
+    <p class="lede"><b>Two measurements instead of one.</b> A normal-incidence amplitude is a single
+      number, and a single number cannot separate two unknowns. The variation with angle supplies a
+      second number from the same recording, which is the basis of everything this set covers.</p>
+    <p class="lede"><b>Fluid discrimination.</b> The main practical use is distinguishing a sand filled
+      with gas from the same sand filled with brine. The panels in step 3 show why that is possible in
+      principle. How reliable it is in practice is what modules 05 through 08 examine.</p>
+    <p class="lede"><b>What stacking costs.</b> The image most interpreters work from is a stack, which
+      averages the angle range into one trace. It is a cleaner picture and it discards the variation
+      shown here. Both statements are true at once, and module 04 covers the trade.</p>
+    <p class="lede"><b>The resolution limits still apply.</b> Nothing in this set repeals tuning. An
+      amplitude measured on a bed thinner than the resolution limit belongs to two merged reflections,
+      and that is as true at 30° as at 0°.</p>
+  </section>
+
+  <!-- ============================== EXERCISES ============================= -->
+  <section class="tabpane" id="pe" role="tabpanel" hidden>
+    <div class="tryit" style="max-width:none">
+      <h3>Exercises</h3>
+      <p class="lede" style="margin-top:-4px">Each answer is a number read off this page at the settings
+        described. <button type="button" class="btn ghost small" id="popEx">Open these in a separate
+        window</button></p>
+      <ol id="exList">
+        <li><b>Confirm that the impedance result still holds.</b> Set the rock below to 2280 m/s and
+          1.91 g/cm³ with the rock above at 2700 m/s and 2.23 g/cm³, then find a different pair of
+          numbers for the rock below that gives the same reflection coefficient.
+          <details class="reveal"><summary>Answer</summary><span class="ans">Any pair with the same
+            product works, because the coefficient depends on velocity and density only through
+            impedance. Roughly 2600 m/s at 1.67 g/cm³, or 1950 m/s at 2.23 g/cm³, land in the same place.
+            This is the ambiguity the resolution modules already established, and it is the starting
+            condition for this set rather than something this set fixes.</span></details></li>
+
+        <li><b>Make the reflection disappear, then check what step 3 does.</b> Match the impedances
+          across the boundary so the trace goes flat, and note that step 3 is unaffected.
+          <details class="reveal"><summary>Answer</summary><span class="ans">Steps 1 and 2 use the four
+            sliders; step 3 uses a modeled sand and shale instead. They are deliberately not connected.
+            The sliders carry velocity and density, which is enough for a normal-incidence reflection and
+            not enough for a reflection at an angle, and separating them is the cleanest way to show
+            that.</span></details></li>
+
+        <li><b>Read the two curves at their left-hand edge.</b> With porosity at 30%, compare the brine
+          and gas values at 0°.
+          <details class="reveal"><summary>Answer</summary><span class="ans">About −0.011 for brine and
+            −0.162 for gas, a gap of roughly 0.151. At normal incidence the gas sand is a strong negative
+            reflection and the brine sand is close to invisible. This much is impedance and would have
+            been predictable from the resolution modules alone.</span></details></li>
+
+        <li><b>Read them again at 40°.</b> Move the angle slider to its maximum and compare the same two
+          values.
+          <details class="reveal"><summary>Answer</summary><span class="ans">About −0.083 for brine and
+            −0.282 for gas, a gap of roughly 0.199. Both became more negative, but the gas curve moved
+            further, so the gap grew by about a third across the angle range. The extra angles did not
+            just repeat the normal-incidence measurement more times; they carried information the normal
+            incidence measurement did not have.</span></details></li>
+
+        <li><b>Reduce the porosity and watch both curves.</b> Take porosity from 35% down to 18% and
+          follow the gap panel, then look at where the two curves start.
+          <details class="reveal"><summary>Answer</summary><span class="ans">The gap shrinks at every
+            angle: at normal incidence from about 0.172 to 0.100, and at 40° from about 0.212 to 0.176.
+            A tight sand has little pore space, so its fluid has little influence on the rock as a whole.
+            Something else changes at the same time — the brine sand's reflection coefficient at 0°
+            crosses zero just below 30% porosity, because a tighter sand becomes harder
+            than the shale above it rather than softer. The reflection has not stopped responding to the
+            fluid; it has changed sign for a reason that has nothing to do with the
+            fluid.</span></details></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================== KEY POINTS ============================ -->
+  <section class="tabpane" id="pk" role="tabpanel" hidden>
+    <div class="takeaway" style="max-width:none">
+      <h3>Key points</h3>
+      <ul>
+        <li><b>This set assumes the resolution modules.</b> Impedance, the reflection coefficient,
+          polarity, the wavelet and tuning are established there and used here without
+          re-derivation.</li>
+        <li><b>Every one of those results assumed normal incidence</b> — a wave meeting the boundary
+          perpendicularly. It is the simplest case and the only one they covered.</li>
+        <li><b>A survey records a range of incidence angles</b>, because the receivers are spread out
+          from the source and most returning energy took a slanted path.</li>
+        <li><b>The reflection coefficient changes with angle</b>, and two interfaces with different pore
+          fluids change differently. That is the observation this set examines.</li>
+        <li><b>The variation supplies a second measurement</b> from the same recording, which is what
+          makes separating two unknowns possible in principle.</li>
+        <li><b>Describing the variation needs a property impedance does not carry</b> — how the rock
+          resists shearing rather than compression. Module 01 introduces it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================================ METHOD ============================== -->
+  <section class="tabpane" id="pm" role="tabpanel" hidden>
+    <div class="plot-head">
+      <h3><span class="stepno ref">M</span>Method, simplifications and references</h3>
+      <span class="hint">What is computed, and what is deferred</span>
+    </div>
+
+    <p class="lede"><b>Steps 1 and 2 use the four sliders directly.</b> Impedance is velocity times
+      density, the reflection coefficient is the impedance difference over the sum, and the trace places
+      a 30 Hz Ricker wavelet at the reflection. Nothing there needs a shear velocity, which is why the
+      sliders do not carry one.</p>
+
+    <p class="lede"><b>Step 3 does not use the sliders</b>, apart from porosity. Its two rocks are a
+      shale from Castagna's mudrock line and a sand built from a Hertz-Mindlin dry frame with the pore
+      fluid inserted by Gassmann's relation, at 23 MPa and 64 °C, with brine and then with gas. The
+      curves are the exact Zoeppritz P-wave reflection coefficients for those two rock pairs. Using the
+      slider values there instead would require inventing a shear velocity for them, and the usual way of
+      doing that is a shale trend that does not apply to sands.</p>
+
+    <p class="lede"><b>Deferred rather than simplified:</b></p>
+    <ul class="lede" style="padding-left:20px">
+      <li><b>Where the angles come from.</b> The rays in step 2 are drawn straight and the angle is set
+        directly. Real ray paths bend as velocity increases with depth, and the relationship between
+        source-receiver distance and incidence angle is module 04.</li>
+      <li><b>Why the curves have the shape they do.</b> Step 3 shows that they differ without explaining
+        it. The explanation needs the shear response, which is modules 01 and 02, and the reflection
+        equations themselves, which are module 05.</li>
+      <li><b>How well any of this survives real data.</b> These curves are exact and noise-free. What
+        happens to them once noise, a limited angle range and an unknown background are involved is
+        modules 07 and 08.</li>
+      <li><b>Mode conversion, multiples, attenuation and anisotropy</b> are all absent.</li>
+    </ul>
+
+    <p class="lede"><b>The porosity slider stops at 18%.</b> The dry frame here is a soft-sand
+      Hertz-Mindlin model, which describes a grain pack held together by contact stiffness and is not
+      intended for well-cemented rock. Run below roughly 18% and it keeps returning numbers, but they
+      describe a grain pack that no longer resembles the tight sand being asked about, and the difference
+      between the two fluid cases at wide angle stops behaving monotonically for that reason rather than
+      a physical one. A cemented-sand or constant-cement model would be the appropriate choice there.</p>
+
+    <p class="lede">The angle range stops at 40°, which is a common practical limit for usable angles on
+      a marine gather at reservoir depth. Beyond roughly that angle the reflection coefficient starts to
+      change rapidly, the approximations most people use stop holding, and the processing that flattened
+      the gather is less reliable.</p>
+
+    <details class="reveal" style="margin-top:8px">
+      <summary>References</summary>
+      <ul style="padding-left:18px;margin-top:8px">
+        <li>Bedle, H., and Moreno-Ward, A., 2026, <em>What Can You REALLY See in Seismic?</em>:
+          University of Oklahoma. — the prerequisite modules for this set.</li>
+        <li>Zoeppritz, K., 1919, Erdbebenwellen VIIIB: <em>Göttinger Nachrichten</em>, I, 66–84. — the
+          exact reflection coefficients used in step 3.</li>
+        <li>Castagna, J. P., Batzle, M. L., and Eastwood, R. L., 1985, Relationships between
+          compressional-wave and shear-wave velocities in clastic silicate rocks: <em>Geophysics</em>,
+          50, 571–581.</li>
+        <li>Mavko, G., Mukerji, T., and Dvorkin, J., 2020, <em>The Rock Physics Handbook</em>, 3rd ed.:
+          Cambridge University Press.</li>
+        <li>Simm, R., and Bacon, M., 2014, <em>Seismic Amplitude: An Interpreter's Handbook</em>:
+          Cambridge University Press.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="nextup" id="nextup" hidden>
+    <p class="eyebrow">Next up</p>
+    <h3>01 · Rocks, pores and stiffness</h3>
+    <p>Step 3 needed a property that impedance does not carry. Module 01 builds it: grains and pore
+      space, where a rock's density comes from, and the two separate ways a rock resists being
+      deformed.</p>
+    <a class="btn ghost" href="../index.html">All modules</a>
+  </section>
+
+  <div class="pager" id="pager" hidden>
+    <a class="btn ghost" href="../index.html">← All modules</a>
+  </div>
+
+  <footer>
+    <div class="foot-grid">
+      <p>Built for teaching by Dr. Heather Bedle and Dr. April Moreno-Ward, School of Geosciences,
+        University of Oklahoma, with the <a href="https://www.ou.edu/mcee/labs/aaspi">AASPI</a>
+        consortium.</p>
+      <p class="lic">Licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+        Free to use, adapt and redistribute, including in teaching, provided the source is credited and
+        anything derived from it carries the same license.</p>
+      <p class="lic">Nothing you do in this module leaves your browser. The only thing recorded is that
+        the page was opened — no cookie, no account, nothing about you.</p>
+      <p class="lic">To cite: H. Bedle and A. Moreno-Ward, <i>How AVO Actually Works</i>, University of
+        Oklahoma. <span class="k">SSRN: [article link to follow]</span></p>
+    </div>
+  </footer>
+</div>
+
+<script src="../assets/count.js"></script>
+<script src="../assets/seismic.js"></script>
+<script src="../assets/rockphysics.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const missing = [];
+  if (typeof SEIS === 'undefined') missing.push('assets/seismic.js');
+  if (typeof ROCK === 'undefined') missing.push('assets/rockphysics.js');
+  if (missing.length) {
+    const el = document.createElement('div');
+    el.setAttribute('style', 'background:#841617;color:#fff;padding:14px 18px;margin:16px 0;' +
+      'font:13px/1.6 ui-monospace,Menlo,monospace');
+    el.textContent = 'This module could not load ' + missing.join(' and ') +
+      '. It expects them one directory up, at ../assets/, and file names are ' +
+      'case-sensitive on GitHub Pages.';
+    const w = document.querySelector('.wrap');
+    (w || document.body).insertBefore(el, w ? w.firstChild : null);
+    return;
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const visible = (id) => { const el = $(id); return el && !el.hidden; };
+  const CRIM = '#841617', TEAL = '#0B7285', SLATE = '#5C6670', INK = '#16191C';
+  const OLIVE = '#6B7A2E', ORANGE = '#B5451B';
+  const DEG = Math.PI / 180;
+
+  // rho sliders carry hundredths of g/cm3; phi carries whole percent
+  const DEF = { vp1: 2700, rho1: 223, vp2: 2280, rho2: 191, phi: 30, ang: 30, tab: 'p1' };
+  const S = SEIS.readState(DEF);
+  (function sanitize() {
+    const num = (k, lo, hi, step) => {
+      let v = Number(S[k]);
+      if (!isFinite(v)) v = DEF[k];
+      v = Math.min(hi, Math.max(lo, v));
+      S[k] = step ? Math.round(v / step) * step : v;
+    };
+    num('vp1', 1800, 3600, 50); num('rho1', 190, 265, 1);
+    num('vp2', 1800, 4200, 50); num('rho2', 180, 265, 1);
+    num('phi', 18, 35, 1); num('ang', 0, 40, 1);
+  })();
+  const saveState = () => SEIS.writeState(S, DEF);
+
+  /* =====================================================================
+     THE MODEL
+
+     Steps 1 and 2 are normal incidence, so velocity and density are enough
+     and the sliders carry exactly those. Step 3 needs a shear response,
+     which the sliders do not carry, so it uses a modeled sand and shale
+     instead. Keeping the two apart is the module's argument, not an
+     implementation convenience.
+     ===================================================================== */
+
+  const FREQ = 30;
+  const TR0 = 0, DT = 0.002, NT = 501;      // 0 to 1.000 s
+  const T_REF = 0.40;                       // where the single reflection sits
+  const ANGMAX = 40;
+  const NANG = 81;
+  const WAV = SEIS.makeWavelet({ f: FREQ });
+
+  const D = {};
+
+  function recompute() {
+    const r1 = S.rho1 / 100, r2 = S.rho2 / 100;
+    D.i1 = S.vp1 * r1;
+    D.i2 = S.vp2 * r2;
+    D.rc = (D.i2 - D.i1) / (D.i2 + D.i1);
+    D.trace = SEIS.traceFromSpikes([{ t: T_REF, r: D.rc }], TR0, DT, NT, WAV);
+
+    // step 3: the same sand with two pore fluids, beneath the same shale
+    const phi = S.phi / 100;
+    D.shale = ROCK.mudrock(2700);
+    D.brine = ROCK.rockModel({ vClay: 0, phi: phi, fluid: 'brine', sHc: 0, P: 23, T: 64 });
+    D.gas = ROCK.rockModel({ vClay: 0, phi: phi, fluid: 'gas', sHc: 1, P: 23, T: 64 });
+    D.ang = [];
+    D.rB = [];
+    D.rG = [];
+    D.gap = [];
+    for (let i = 0; i < NANG; i++) {
+      const th = (i / (NANG - 1)) * ANGMAX;
+      const b = ROCK.zoeppritz(D.shale, D.brine, th);
+      const g = ROCK.zoeppritz(D.shale, D.gas, th);
+      D.ang.push(th); D.rB.push(b); D.rG.push(g);
+      D.gap.push(Math.abs(g - b));
+    }
+    D.bAt0 = ROCK.zoeppritz(D.shale, D.brine, 0);
+    D.gAt0 = ROCK.zoeppritz(D.shale, D.gas, 0);
+    D.bAtA = ROCK.zoeppritz(D.shale, D.brine, S.ang);
+    D.gAtA = ROCK.zoeppritz(D.shale, D.gas, S.ang);
+    D.gap0 = Math.abs(D.gAt0 - D.bAt0);
+    D.gapA = Math.abs(D.gAtA - D.bAtA);
+  }
+
+  /* =====================================================================
+     DRAWING
+     ===================================================================== */
+
+  const M = { l: 62, r: 16, t: 14, b: 40 };
+
+  function pw(el) {
+    const par = el && el.parentElement;
+    if (!par) return 900;
+    const cs = (typeof window.getComputedStyle === 'function')
+      ? window.getComputedStyle(par) : { paddingLeft: '0', paddingRight: '0' };
+    const inner = par.clientWidth
+      - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
+    return Math.max(200, Math.floor(inner || 900));
+  }
+  function rowWidth(rowId, n) {
+    const row = $(rowId);
+    const total = row ? pw(row.firstElementChild || row) : 800;
+    const narrow = (window.innerWidth || 1200) <= 700;
+    const w = narrow ? Math.max(240, total)
+                     : Math.max(150, Math.floor((total - 10 * (n - 1)) / n));
+    if (row) {
+      row.querySelectorAll(':scope > .panel-col').forEach((el) => {
+        el.style.width = w + 'px'; el.style.maxWidth = w + 'px';
+      });
+    }
+    return w;
+  }
+
+  const yTime = (t, R) => R.y + ((t - TR0) / ((NT - 1) * DT)) * R.h;
+
+  const LEG_FONT = '11px "IBM Plex Sans", sans-serif';
+  function legendLines(ctx, items, maxW) {
+    ctx.save(); ctx.font = LEG_FONT;
+    let lines = 1, x = 0;
+    for (const [, t] of items) {
+      const iw = 23 + ctx.measureText(t).width + 18;
+      if (x > 0 && x + iw > maxW) { lines++; x = 0; }
+      x += iw;
+    }
+    ctx.restore();
+    return lines;
+  }
+  function panel(id, W, plotH, items) {
+    const el = $(id);
+    let ctx = SEIS.fitCanvas(el, W, M.t + plotH + M.b);
+    const lines = items && items.length ? legendLines(ctx, items, W - M.l - M.r) : 0;
+    const H = M.t + plotH + M.b + (lines ? 12 + lines * 16 : 0);
+    ctx = SEIS.fitCanvas(el, W, H);
+    ctx.clearRect(0, 0, W, H);
+    return { ctx, R: { x: M.l, y: M.t, w: W - M.l - M.r, h: plotH } };
+  }
+  function legendRow(ctx, R, items) {
+    ctx.save();
+    ctx.font = LEG_FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    let x = R.x, y = R.y + R.h + 46;
+    for (const [c, t, kind] of items) {
+      const iw = 23 + ctx.measureText(t).width + 18;
+      if (x > R.x && x + iw > R.x + R.w) { x = R.x; y += 16; }
+      if (kind === 'dot') {
+        ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x + 9, y, 4, 0, 7); ctx.fill();
+      } else {
+        ctx.strokeStyle = c; ctx.lineWidth = 2;
+        ctx.setLineDash(kind === 'dash' ? [5, 4] : []);
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 18, y); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.fillStyle = SLATE; ctx.fillText(t, x + 23, y);
+      x += iw;
+    }
+    ctx.restore();
+  }
+
+  function curve(ctx, R, xs, ys, xr, yr, color, width, dash) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(R.x, R.y, R.w, R.h); ctx.clip();
+    if (dash) ctx.setLineDash(dash);
+    ctx.strokeStyle = color; ctx.lineWidth = width || 2;
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i < xs.length; i++) {
+      if (!isFinite(ys[i]) || !isFinite(xs[i])) { started = false; continue; }
+      const x = R.x + ((xs[i] - xr[0]) / (xr[1] - xr[0])) * R.w;
+      const y = R.y + R.h - ((ys[i] - yr[0]) / (yr[1] - yr[0])) * R.h;
+      started ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      started = true;
+    }
+    ctx.stroke(); ctx.restore();
+  }
+
+  function wiggle(ctx, R, tr, opts) {
+    const o = opts || {};
+    const x0 = R.x + R.w / 2, amp = 0.35;
+    const X = (a) => x0 + (a / amp) * (R.w / 2) * 0.9;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(R.x, R.y, R.w, R.h); ctx.clip();
+    ctx.strokeStyle = 'rgba(22,25,28,0.25)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x0, R.y); ctx.lineTo(x0, R.y + R.h); ctx.stroke();
+    ctx.fillStyle = o.fillColor || 'rgba(22,25,28,0.72)';
+    ctx.beginPath(); ctx.moveTo(x0, R.y);
+    for (let i = 0; i < NT; i++) ctx.lineTo(Math.max(x0, X(tr[i])), yTime(TR0 + i * DT, R));
+    ctx.lineTo(x0, R.y + R.h); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    for (let i = 0; i < NT; i++) {
+      const x = X(tr[i]), y = yTime(TR0 + i * DT, R);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.restore();
+  }
+
+  /* two rocks stacked, shaded by impedance */
+  function drawInterface(ctx, R) {
+    const yMid = R.y + R.h * 0.45;
+    const shade = (imp) => {
+      const f = Math.max(0, Math.min(1, (imp - 3500) / 6000));
+      const g = Math.round(232 - f * 92);
+      return 'rgb(' + g + ',' + (g - 6) + ',' + (g - 20) + ')';
+    };
+    ctx.save();
+    ctx.fillStyle = shade(D.i1); ctx.fillRect(R.x, R.y, R.w, yMid - R.y);
+    ctx.fillStyle = shade(D.i2); ctx.fillRect(R.x, yMid, R.w, R.y + R.h - yMid);
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(R.x, yMid); ctx.lineTo(R.x + R.w, yMid); ctx.stroke();
+    ctx.restore();
+    SEIS.frame(ctx, R);
+    return yMid;
+  }
+
+  /* --------------------------------- header --------------------------- */
+  function drawHeader() {
+    const el = $('cHead'); if (!el) return;
+    const W = pw(el), PH = 206, H = M.t + PH + M.b;
+    const ctx = SEIS.fitCanvas(el, W, H);
+    ctx.clearRect(0, 0, W, H);
+    const gap = 26;
+    const halfW = Math.max(90, Math.floor((W - M.l - M.r - gap) / 2));
+    const RA = { x: M.l, y: M.t, w: halfW, h: PH };
+    const RB = { x: M.l + halfW + gap, y: M.t, w: halfW, h: PH };
+
+    const yMid = drawInterface(ctx, RA);
+    if (halfW > 96) {
+      SEIS.tag(ctx, RA.x + 6, yMid - 10, 'I = ' + Math.round(D.i1), SLATE);
+      SEIS.tag(ctx, RA.x + 6, yMid + 11, 'I = ' + Math.round(D.i2), SLATE);
+    }
+
+    wiggle(ctx, RB, D.trace);
+    SEIS.frame(ctx, RB);
+    SEIS.axisLeft(ctx, RB, 0, (NT - 1) * DT, 'two-way time (s)', (v) => v.toFixed(1));
+    SEIS.dashedLine(ctx, RB.x, yTime(T_REF, RB), RB.x + RB.w, yTime(T_REF, RB),
+      CRIM, [4, 4], 1.1);
+    /* The captions sit under half-width panels, so they have to shorten rather
+       than run past the canvas edge on a narrow viewport. */
+    ctx.save();
+    ctx.font = '10px "IBM Plex Sans", sans-serif';
+    ctx.fillStyle = SLATE; ctx.textAlign = 'center';
+    const fits = (t) => ctx.measureText(t).width <= halfW - 4;
+    const capA = ['two rocks, shaded by impedance', 'shaded by impedance', 'impedance']
+      .find(fits) || 'impedance';
+    const capB = ['R = ' + D.rc.toFixed(3) + ', at normal incidence',
+      'R = ' + D.rc.toFixed(3) + ' at 0\u00b0', 'R = ' + D.rc.toFixed(3)]
+      .find(fits) || D.rc.toFixed(3);
+    ctx.fillText(capA, RA.x + RA.w / 2, RA.y + RA.h + 30);
+    ctx.fillText(capB, RB.x + RB.w / 2, RB.y + RB.h + 30);
+    ctx.restore();
+  }
+
+  /* --------------------------------- step 1 --------------------------- */
+  function drawStep1() {
+    const W = rowWidth('row1', 2);
+
+    const LEG1 = [[TEAL, 'the rock above', 'dot'], [ORANGE, 'the rock below', 'dot']];
+    const P1 = panel('c1imp', W, 246, LEG1);
+    const ctx = P1.ctx, R = P1.R;
+    const maxI = Math.max(D.i1, D.i2) * 1.25;
+    SEIS.axisLeft(ctx, R, 0, maxI, 'impedance (m/s · g/cm³)',
+      (v) => String(Math.round(v)), { flip: true, grid: true });
+    const bw = R.w / 5;
+    const bar = (k, v, c, lab) => {
+      const x = R.x + bw * (0.6 + k * 1.9);
+      const h = (v / maxI) * R.h;
+      ctx.save(); ctx.fillStyle = c;
+      ctx.fillRect(x, R.y + R.h - h, bw, h); ctx.restore();
+      SEIS.tag(ctx, x + bw / 2 - 18, R.y + R.h - h - 10, lab, c);
+    };
+    bar(0, D.i1, TEAL, String(Math.round(D.i1)));
+    bar(1, D.i2, ORANGE, String(Math.round(D.i2)));
+    SEIS.frame(ctx, R);
+    legendRow(ctx, R, LEG1);
+
+    const LEG1b = [[CRIM, 'the reflection', 'dash']];
+    const P1b = panel('c1trace', W, 246, LEG1b);
+    const ctx2 = P1b.ctx, R2 = P1b.R;
+    wiggle(ctx2, R2, D.trace);
+    SEIS.frame(ctx2, R2);
+    SEIS.axisLeft(ctx2, R2, 0, (NT - 1) * DT, 'two-way time (s)', (v) => v.toFixed(1));
+    SEIS.dashedLine(ctx2, R2.x, yTime(T_REF, R2), R2.x + R2.w, yTime(T_REF, R2),
+      CRIM, [4, 4], 1.2);
+    legendRow(ctx2, R2, LEG1b);
+
+    set('s1a', Math.round(D.i1) + ' m/s · g/cm³');
+    set('s1b', Math.round(D.i2) + ' m/s · g/cm³');
+    set('s1c', (D.i2 - D.i1).toFixed(0) + ' m/s · g/cm³');
+    set('s1d', D.rc.toFixed(4));
+    set('s1e', Math.abs(D.rc) < 0.002 ? 'no reflection to have one'
+      : (D.rc > 0 ? 'positive — into a higher impedance'
+                  : 'negative — into a lower impedance'));
+    set('s1f', 'the boundary between the two rocks, not either rock on its own');
+  }
+
+  /* --------------------------------- step 2 --------------------------- */
+  function drawStep2() {
+    const W = rowWidth('row2', 2);
+
+    const LEG2 = [[CRIM, 'down and back, perpendicular']];
+    const P2 = panel('c2normal', W, 246, LEG2);
+    const ctx = P2.ctx, R = P2.R;
+    const yMid = drawInterface(ctx, R);
+    const xc = R.x + R.w / 2;
+    ctx.save();
+    ctx.strokeStyle = CRIM; ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.moveTo(xc - 5, R.y); ctx.lineTo(xc - 5, yMid); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xc + 5, yMid); ctx.lineTo(xc + 5, R.y); ctx.stroke();
+    ctx.restore();
+    SEIS.tag(ctx, xc + 12, (R.y + yMid) / 2, '0\u00b0', CRIM);
+    SEIS.tag(ctx, xc - 40, R.y + 10, 'source and receiver together', CRIM);
+    legendRow(ctx, R, LEG2);
+
+    const LEG2b = [[TEAL, 'other receivers'], [CRIM, 'the selected angle']];
+    const P2b = panel('c2fan', W, 246, LEG2b);
+    const ctx2 = P2b.ctx, R2 = P2b.R;
+    const yMid2 = drawInterface(ctx2, R2);
+    const xs = R2.x + R2.w * 0.12;
+    const depth = yMid2 - R2.y;
+    const NRAY = 6;
+    ctx2.save();
+    for (let i = 0; i < NRAY; i++) {
+      const th = (i / (NRAY - 1)) * ANGMAX;
+      const dx = depth * Math.tan(th * DEG);
+      const xb = xs + dx, xr2 = xs + 2 * dx;
+      if (xr2 > R2.x + R2.w) continue;
+      const sel = Math.abs(th - S.ang) < ANGMAX / (2 * (NRAY - 1));
+      ctx2.strokeStyle = sel ? CRIM : TEAL;
+      ctx2.lineWidth = sel ? 2.4 : 1.3;
+      ctx2.beginPath(); ctx2.moveTo(xs, R2.y); ctx2.lineTo(xb, yMid2);
+      ctx2.lineTo(xr2, R2.y); ctx2.stroke();
+    }
+    ctx2.restore();
+    SEIS.tag(ctx2, xs - 4, R2.y + 10, 'source', CRIM);
+    // the selected angle, drawn heavier over the fan
+    const dxA = depth * Math.tan(S.ang * DEG);
+    if (xs + 2 * dxA <= R2.x + R2.w) {
+      ctx2.save();
+      ctx2.strokeStyle = CRIM; ctx2.lineWidth = 2.6;
+      ctx2.beginPath(); ctx2.moveTo(xs, R2.y); ctx2.lineTo(xs + dxA, yMid2);
+      ctx2.lineTo(xs + 2 * dxA, R2.y); ctx2.stroke();
+      ctx2.restore();
+      SEIS.tag(ctx2, xs + dxA + 6, yMid2 - 12, S.ang + '\u00b0', CRIM);
+    }
+    SEIS.frame(ctx2, R2);
+    legendRow(ctx2, R2, LEG2b);
+
+    set('s2a', '0\u00b0 — normal incidence');
+    set('s2b', S.ang + '\u00b0');
+    set('s2c', String(NRAY));
+    set('s2d', '0\u00b0 to ' + ANGMAX + '\u00b0');
+    set('s2e', D.rc.toFixed(4));
+    set('s2f', 'the leftmost point of a curve, treated until now as the whole of it');
+  }
+
+  /* --------------------------------- step 3 --------------------------- */
+  function drawStep3() {
+    const W = rowWidth('row3', 2);
+    const xr = [0, ANGMAX];
+
+    const LEG3 = [[TEAL, 'brine sand'], [CRIM, 'gas sand'],
+      [SLATE, 'the selected angle', 'dash']];
+    const P3 = panel('c3curve', W, 246, LEG3);
+    const ctx = P3.ctx, R = P3.R;
+    let lo = 0, hi = 0;
+    for (let i = 0; i < NANG; i++) {
+      lo = Math.min(lo, D.rB[i], D.rG[i]);
+      hi = Math.max(hi, D.rB[i], D.rG[i]);
+    }
+    const pad = Math.max(0.02, (hi - lo) * 0.15);
+    const yr = [lo - pad, hi + pad];
+    ctx.save(); ctx.fillStyle = '#FBFAF7'; ctx.fillRect(R.x, R.y, R.w, R.h); ctx.restore();
+    SEIS.axisLeft(ctx, R, yr[0], yr[1], 'reflection coefficient',
+      (v) => v.toFixed(2), { flip: true, grid: true });
+    SEIS.axisBottom(ctx, R, xr[0], xr[1], 'incidence angle (degrees)',
+      (v) => String(Math.round(v)));
+    // zero line
+    if (yr[0] < 0 && yr[1] > 0) {
+      const y0 = R.y + R.h - ((0 - yr[0]) / (yr[1] - yr[0])) * R.h;
+      SEIS.dashedLine(ctx, R.x, y0, R.x + R.w, y0, 'rgba(22,25,28,0.35)', [3, 3], 1);
+    }
+    curve(ctx, R, D.ang, D.rB, xr, yr, TEAL, 2.4);
+    curve(ctx, R, D.ang, D.rG, xr, yr, CRIM, 2.4);
+    const xA = R.x + (S.ang / ANGMAX) * R.w;
+    SEIS.dashedLine(ctx, xA, R.y, xA, R.y + R.h, SLATE, [5, 4], 1.3);
+    SEIS.frame(ctx, R);
+    legendRow(ctx, R, LEG3);
+
+    const LEG3b = [[ORANGE, 'gap between the two curves'],
+      [SLATE, 'the selected angle', 'dash']];
+    const P3b = panel('c3gap', W, 246, LEG3b);
+    const ctx2 = P3b.ctx, R2 = P3b.R;
+    let gHi = 0;
+    for (let i = 0; i < NANG; i++) gHi = Math.max(gHi, D.gap[i]);
+    const yr2 = [0, Math.max(0.05, gHi * 1.2)];
+    ctx2.save(); ctx2.fillStyle = '#FBFAF7'; ctx2.fillRect(R2.x, R2.y, R2.w, R2.h); ctx2.restore();
+    SEIS.axisLeft(ctx2, R2, yr2[0], yr2[1], 'difference in reflection coefficient',
+      (v) => v.toFixed(2), { flip: true, grid: true });
+    SEIS.axisBottom(ctx2, R2, xr[0], xr[1], 'incidence angle (degrees)',
+      (v) => String(Math.round(v)));
+    curve(ctx2, R2, D.ang, D.gap, xr, yr2, ORANGE, 2.6);
+    const xA2 = R2.x + (S.ang / ANGMAX) * R2.w;
+    SEIS.dashedLine(ctx2, xA2, R2.y, xA2, R2.y + R2.h, SLATE, [5, 4], 1.3);
+    SEIS.frame(ctx2, R2);
+    legendRow(ctx2, R2, LEG3b);
+
+    set('s3a', D.bAt0.toFixed(3));
+    set('s3b', D.gAt0.toFixed(3));
+    set('s3c', D.bAtA.toFixed(3));
+    set('s3d', D.gAtA.toFixed(3));
+    set('s3e', D.gap0.toFixed(3) + '  \u2192  ' + D.gapA.toFixed(3));
+    set('s3f', D.gapA > D.gap0
+      ? 'a difference ' + (D.gapA / D.gap0).toFixed(2) + ' times the one at normal incidence'
+      : 'no gain over normal incidence at this angle and porosity');
+  }
+
+  /* =====================================================================
+     LABELS, TABS, EVENTS
+     ===================================================================== */
+
+  function set(id, v) { const el = $(id); if (el) el.textContent = v; }
+
+  function syncLabels() {
+    set('vp1V', S.vp1 + ' m/s');
+    set('rho1V', (S.rho1 / 100).toFixed(2) + ' g/cm\u00b3');
+    set('vp2V', S.vp2 + ' m/s');
+    set('rho2V', (S.rho2 / 100).toFixed(2) + ' g/cm\u00b3');
+    set('phiV', S.phi + '%');
+    set('angV', S.ang + '\u00b0');
+    ['vp1', 'rho1', 'vp2', 'rho2', 'phi', 'ang'].forEach((k) => {
+      const el = $(k); if (el && String(el.value) !== String(S[k])) el.value = S[k];
+    });
+  }
+
+  function drawAll() {
+    syncLabels();
+    if (visible('p1') || visible('p2') || visible('p3')) drawHeader();
+    if (visible('p1')) drawStep1();
+    if (visible('p2')) drawStep2();
+    if (visible('p3')) drawStep3();
+  }
+
+  const PANES = ['p1', 'p2', 'p3', 'pw', 'pe', 'pk', 'pm'];
+  const STEPNAMES = {
+    p1: 'The chain', p2: 'Straight down', p3: 'Not at every angle',
+    pw: 'Why it matters', pe: 'Exercises', pk: 'Key points', pm: 'Method',
+  };
+
+  function buildStepNav() {
+    PANES.forEach((id, i) => {
+      const pane = $(id);
+      if (!pane || pane.querySelector('.stepnav')) return;
+      const prev = PANES[i - 1], next = PANES[i + 1];
+      const nav = document.createElement('div');
+      nav.className = 'stepnav';
+      const mk = (target, text, ghost) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn' + (ghost ? ' ghost' : '') + ' small';
+        b.textContent = text;
+        b.addEventListener('click', () => {
+          showTab(target);
+          const t = document.querySelector('.tabhint');
+          if (t && t.scrollIntoView) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        return b;
+      };
+      nav.appendChild(prev ? mk(prev, '\u2190 ' + STEPNAMES[prev], true)
+                           : document.createElement('span'));
+      const where = document.createElement('span');
+      where.className = 'where';
+      where.textContent = i < 3 ? 'step ' + (i + 1) + ' of 3' : STEPNAMES[id];
+      nav.appendChild(where);
+      nav.appendChild(next ? mk(next, STEPNAMES[next] + ' \u2192')
+                           : document.createElement('span'));
+      pane.appendChild(nav);
+    });
+  }
+
+  function showTab(id) {
+    PANES.forEach((q) => { const el = $(q); if (el) el.hidden = q !== id; });
+    document.querySelectorAll('#tabs button').forEach((b) => {
+      b.setAttribute('aria-selected', b.dataset.tab === id);
+    });
+    const lab = document.querySelector('.labhead');
+    if (lab) lab.hidden = (id === 'pw' || id === 'pk' || id === 'pm');
+    const last = (id === 'pk' || id === 'pm');
+    if ($('nextup')) $('nextup').hidden = !last;
+    if ($('pager')) $('pager').hidden = !last;
+    S.tab = id;
+    drawAll();
+    saveState();
+  }
+  document.querySelectorAll('#tabs button').forEach((b) => {
+    b.addEventListener('click', () => showTab(b.dataset.tab));
+  });
+
+  document.addEventListener('input', (ev) => {
+    const key = ev.target && ev.target.dataset && ev.target.dataset.key;
+    if (!key) return;
+    S[key] = parseFloat(ev.target.value);
+    recompute(); drawAll(); saveState();
+  });
+
+  const popBtn = $('popEx');
+  if (popBtn) {
+    popBtn.addEventListener('click', () => {
+      const list = $('exList');
+      if (!list) return;
+      const w = window.open('', 'avo-m00-exercises',
+        'width=560,height=760,scrollbars=yes,resizable=yes');
+      if (!w) { popBtn.textContent = 'the browser blocked the pop-up'; return; }
+      w.document.open();
+      w.document.write('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
+        '<title>Exercises \u2014 module 00</title><style>' +
+        'body{font:15px/1.62 "IBM Plex Sans",system-ui,sans-serif;color:#16191C;' +
+        'margin:0;padding:24px 26px;background:#FBFAF7}' +
+        'h1{font:700 17px/1.3 Archivo,sans-serif;margin:0 0 4px}' +
+        'p.src{font-size:12px;color:#5C6670;margin:0 0 18px}' +
+        'ol{padding-left:20px;margin:0} li{margin-bottom:18px}' +
+        'summary{cursor:pointer;color:#841617;font-size:13px;font-weight:600;' +
+        'margin-top:6px} .ans{display:block;margin-top:6px;padding:10px 12px;' +
+        'background:#F4F6F7;border-left:3px solid #841617;font-size:14px}' +
+        '</style></head><body><h1>Module 00 \u2014 Beyond normal incidence</h1>' +
+        '<p class="src">Exercises. Keep the module window open beside this one; every ' +
+        'answer is a number read off the running page.</p><ol>' +
+        list.innerHTML + '</ol></body></html>');
+      w.document.close();
+      w.focus();
+    });
+  }
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawAll, 140); });
+
+  recompute();
+  buildStepNav();
+  showTab(PANES.indexOf(S.tab) >= 0 ? S.tab : 'p1');
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawAll);
+
+  window.__MOD = { S, get D() { return D; }, recompute, drawAll, showTab };
+})();
+</script>
+</body>
+</html>
