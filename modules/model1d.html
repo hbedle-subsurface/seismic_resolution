@@ -34,29 +34,28 @@
   <div class="teach" style="padding-top:6px">
     <div class="tryit">
       <h3>A seismic section is not a photograph</h3>
-      <p style="margin-top:0;font-size:14.5px">It is tempting to read a seismic line the way you would read
-        a photograph of a cliff face — as a picture of the rock, only blurrier. It is not one, and almost
-        every mistake in interpretation starts with treating it as one.</p>
+      <p style="margin-top:0;font-size:14.5px">A seismic line resembles a photograph of a cliff face, only
+        blurrier, and it is often read that way. What a trace actually records is different.</p>
       <p style="font-size:14.5px">A seismic trace is a <b>sum</b>. Every sample on it is the total of
-        everything that happened to arrive at that instant. It responds only to the <em>boundaries</em>
-        between rocks, never to the rocks themselves, and only then when those rocks differ in a particular
-        way.</p>
-      <p style="font-size:14.5px;margin-bottom:0">This module builds one from scratch so you can watch that
-        happen. Three steps, and each is a single line of arithmetic you could do on paper.</p>
+        everything arriving at that instant. It responds to the <em>boundaries</em> between rocks rather
+        than to the rocks themselves, and only where the rocks on either side differ in a particular
+        property.</p>
+      <p style="font-size:14.5px;margin-bottom:0">This module builds a trace from a rock column in three
+        steps. Each step is a single line of arithmetic.</p>
     </div>
     <div class="takeaway">
       <h3>The whole chain, in three steps</h3>
-      <p style="margin-top:0;font-size:14.5px"><b>1 · Velocity × density = impedance.</b> How hard the rock
-        pushes back on a passing wave. It is one number per layer, and it is the only rock property seismic
-        responds to.</p>
+      <p style="margin-top:0;font-size:14.5px"><b>1 · Velocity × density = impedance.</b> The resistance the
+        rock offers to being set in motion by a passing wave. It is one number per layer, and it is the only
+        rock property seismic responds to.</p>
       <p style="font-size:14.5px"><b>2 · A change in impedance = a reflection.</b> Where two layers meet, the
         contrast between them sets how much energy bounces back. Same impedance either side, no echo, no
         matter how different the rocks look in core.</p>
       <p style="font-size:14.5px"><b>3 · Each reflection ⊛ the wavelet, added up = the trace.</b> Every
         boundary sends back a copy of the same pulse, scaled and delayed. They overlap, they add, and what
         you interpret is the total.</p>
-      <p style="font-size:14.5px;margin-bottom:0">Panels 1 to 5 below are those three steps, in order. Get
-        this chain and the rest of the site is detail.</p>
+      <p style="font-size:14.5px;margin-bottom:0">Panels 1 to 5 below are those three steps, in order. Every
+        later module builds on this chain.</p>
     </div>
   </div>
 
@@ -206,20 +205,20 @@
       <ol>
         <li><b>Make a reflection vanish.</b> Pick any interface and nudge the velocity and density of the
           layer below until its impedance matches the layer above — watch the RC column hit zero.
-          <em>Why bother:</em> it is the fastest way to see that seismic responds to contrast, not to rock
+          <em>The point:</em> it is the fastest way to see that seismic responds to contrast, not to rock
           type.
           <span class="ans">The reflection coefficient goes to zero and the event vanishes, even though the
             rock type still changes. Seismic sees impedance contrast, not geology. A sand and a shale with the
             same impedance are invisible to each other, and that is why some perfectly real formation tops
             have no reflector to pick.</span></li>
         <li><b>Separate velocity from density.</b> Raise one layer's velocity by 20%, put it back, then
-          raise its density by 20% instead. <em>Why bother:</em> it shows why seismic alone cannot tell you
+          raise its density by 20% instead. <em>The point:</em> it shows why seismic alone cannot tell you
           which rock property changed.
           <span class="ans">Both change impedance and both change the reflection. Seismic cannot tell you
             which one did it — that ambiguity is the reason we need well logs, and the reason inversion is
             harder than it looks.</span></li>
         <li><b>Flip a reflection over.</b> Make one layer slower and lighter than the one above it, so its
-          impedance drops. <em>Why bother:</em> soft-over-hard and hard-over-soft look opposite on a section,
+          impedance drops. <em>The point:</em> soft-over-hard and hard-over-soft look opposite on a section,
           and mixing them up is the classic well-tie error.
           <span class="ans">The reflection coefficient goes negative and the event changes color. A soft
             layer over a hard one and a hard layer over a soft one produce opposite events. Getting this
@@ -243,7 +242,7 @@
             Thin enough and they nearly erase each other, which is why a very thin bed with strong contrasts
             can be almost invisible. Beds whose coefficients share a sign do the opposite and reinforce.</span></li>
         <li><b>Change the wavelet, not the rock.</b> Leave the table alone and sweep frequency from 15 Hz to
-          70 Hz. <em>Why bother:</em> it separates what the earth did from what your data did to it.
+          70 Hz. <em>The point:</em> it separates what the earth did from what your data did to it.
           <span class="ans">Panels 1 to 3 never move, because the earth has not changed. Only the wavelets in
             panel 4 get narrower or broader, and the trace follows them. Every argument about what is or is
             not resolvable is an argument about the shape in panel 4.</span></li>
@@ -296,10 +295,9 @@
   <section class="nextup">
     <p class="eyebrow">Next up</p>
     <h3><a href="wedge.html">02 · The wedge model and tuning</a></h3>
-    <p>You have just watched two reflections from a single bed sit neatly apart. Now take that bed and thin
-      it sideways until they collide. The next module is where the trace stops telling you the truth about
-      how thick the rock is — and it is the single most useful thing on this site for anyone mapping
-      amplitudes.</p>
+    <p>The two reflections from a single bed have stayed well separated here. The next module thins that bed
+      sideways until they overlap, which is the point where the thickness read from the trace stops
+      matching the thickness in the model.</p>
     <a class="btn" href="wedge.html">Open module 02 →</a>
     <a class="btn ghost" href="../index.html">All modules</a>
   </section>
@@ -433,7 +431,7 @@
   }
 
   // The four corners have to stay in order, so a slider that would cross its
-  // neighbour is pushed past it. The labels read from here too, otherwise the
+  // neighbor is pushed past it. The labels read from here too, otherwise the
   // numbers on screen can differ from the wavelet being drawn.
   function ormsbyCorners() {
     const f1 = S.f1;
@@ -655,7 +653,7 @@
       ctx.strokeStyle = 'rgba(92,102,112,.25)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(cx, rect.y); ctx.lineTo(cx, rect.y + rect.h); ctx.stroke();
 
-      // the wavelet, centerd on this interface
+      // the wavelet, centered on this interface
       ctx.strokeStyle = col; ctx.lineWidth = 1.8;
       ctx.beginPath();
       for (let k = 0; k <= 180; k++) {

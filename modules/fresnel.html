@@ -25,42 +25,38 @@
     <p class="eyebrow">Module 04 &nbsp;·&nbsp; Horizontal resolution</p>
     <h1>How small a feature can I map in plan view?</h1>
     <p class="sub">Modules 01 to 03 asked how thin a bed you can see. This one asks how <em>small</em> a
-      feature you can see, looking down on a map. The answer is set by the same wavelength, and by one
-      processing step that most interpreters inherit without ever watching it work.</p>
+      feature you can see, looking down on a map. The answer is set by the same wavelength and by one
+      processing step, migration.</p>
   </div>
 
   <!-- ============================ THE IDEA FIRST =========================== -->
   <div class="teach" style="padding-top:6px">
     <div class="tryit">
       <h3>One trace does not see one point</h3>
-      <p style="margin-top:0;font-size:14.5px">Picture the sound pulse leaving the surface and spreading out
-        as it goes down, like the beam of a torch widening. When it strikes the reflector it does not touch
-        a single spot. It lights up a circular patch, and the echo you record is <b>everything in that patch
-        added together</b>.</p>
+      <p style="margin-top:0;font-size:14.5px">The pulse spreads laterally as it travels down. When it reaches
+        the reflector it illuminates a circular patch rather than a single spot, and the recorded echo is
+        <b>the sum of the returns from that whole patch</b>.</p>
       <p style="font-size:14.5px">The patch is as wide as it is because echoes from slightly off to the side
         travel only slightly further, arrive at nearly the same moment, and pile onto the same part of the
         trace. The patch has a name — the <b>Fresnel zone</b> — and at ordinary depths it is
         <b>hundreds of meters across</b>, usually bigger than whatever you are trying to map.</p>
-      <p style="font-size:14.5px;margin-bottom:0">So a single unmigrated trace is a very blunt instrument. It
-        reports one number for an area the size of several football fields.</p>
+      <p style="font-size:14.5px;margin-bottom:0">A single unmigrated trace therefore reports one number for an
+        area the size of several football fields.</p>
     </div>
     <div class="takeaway">
-      <h3>What migration does about it</h3>
-      <p style="margin-top:0;font-size:14.5px">Think of a camera pointed at a distant streetlight, with the
-        lens out of focus. The single lamp spreads into a big soft disc. Nothing is wrong with the light and
-        nothing is missing from the picture — the energy has simply been spread out, and it can be gathered
-        back.</p>
-      <p style="font-size:14.5px">Turning the focus ring collapses that disc back to a small bright dot.
-        <b>Migration is the focus ring</b> — it is the name of the processing step that does exactly this,
-        taking the energy smeared across the Fresnel zone and putting it back where it came from. When
-        someone says data is "migrated", this is what they mean has been done to it.</p>
-      <p style="font-size:14.5px">Panels 3 and 4 below show it happening on the section. Unmigrated, each
-        feature draws a curved <b>frown</b> across many traces, and the frowns from neighbouring features
-        overlap. Migration collapses each frown back to a point.</p>
-      <p style="font-size:14.5px;margin-bottom:0">And exactly like a camera, there is a limit. However
-        perfectly you focus, a lens cannot make a point smaller than its own diffraction limit, and migration
-        cannot shrink a feature below about <b>a quarter of a wavelength</b>. That number should look
-        familiar — it is the same λ/4 that limited bed thickness in module 02.</p>
+      <h3>What migration does</h3>
+      <p style="margin-top:0;font-size:14.5px"><b>Migration</b> is the processing step that undoes the
+        spreading. It takes the energy recorded across the Fresnel zone and returns it to the position it
+        came from. When data is described as migrated, this is what has been done to it.</p>
+      <p style="font-size:14.5px">The optical comparison is a defocused lens. A point source images as a
+        broad disc, no energy has been lost, and focusing gathers it back into a small spot. Migration does
+        the same with recorded seismic energy.</p>
+      <p style="font-size:14.5px">Panels 3 and 4 below show it on the section. Unmigrated, each
+        feature draws a curved <b>diffraction arc</b> across many traces, and arcs from neighboring features
+        overlap. Migration collapses each arc back to a point.</p>
+      <p style="font-size:14.5px;margin-bottom:0">The comparison holds at the limit as well. A lens cannot
+        focus a point below its own diffraction limit, and migration cannot shrink a feature below about
+        <b>a quarter of a wavelength</b> — the same λ/4 that limited bed thickness in module 02.</p>
     </div>
   </div>
 
@@ -158,19 +154,19 @@
       <h3>Where the blur comes from, on the section</h3>
     </div>
     <p class="hint-line">A single small feature does not put its echo on one trace. It puts a little energy on
-      every trace that can see it, which draws the curved frown you see on the left. Notice that the two
-      frowns cross each other: energy from both features arrives on the same traces, mixed together. That
-      overlap is the Fresnel zone seen side-on, and it is why the unmigrated map is a smear. Migration is the
-      processing step that gathers each frown back to the point that made it.</p>
+      every trace that can see it, which draws the curved arc on the left. The two arcs cross each other:
+      energy from both features arrives on the same traces, mixed together. That overlap is the Fresnel zone
+      seen in section, and it is why the unmigrated map is a smear. Migration gathers each arc back to the
+      point that produced it.</p>
     <div class="sec-row" id="secRow">
       <div class="panel-col">
         <p class="sublabel"><b>3</b> Unmigrated
-          <span class="note">each feature spreads into a frown</span></p>
+          <span class="note">each feature spreads into an arc</span></p>
         <canvas id="rawCanvas" aria-label="Unmigrated section"></canvas>
       </div>
       <div class="panel-col">
         <p class="sublabel"><b>4</b> Migrated
-          <span class="note">each frown collapses to a point</span></p>
+          <span class="note">each arc collapses to a point</span></p>
         <canvas id="migCanvas" aria-label="Migrated section"></canvas>
       </div>
     </div>
@@ -205,31 +201,30 @@
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
-        <li><b>Turn the focus ring.</b> <em>Why bother: it is the single biggest improvement anything in processing makes to a map.</em> The page opens unmigrated, the way the data comes off the boat.
+        <li><b>Migrate the data.</b> <em>The point: it is the largest single improvement processing makes to a map in plan view.</em> The page opens unmigrated.
           Click <em>3D</em> and watch panels 1 and 4.
           <span class="ans">The blur drops from a few hundred meters across to a few tens. Everything you
             believe about the shape of a feature in map view — a channel edge, the limit of a sand, the trace
             of a fault — depends on that one step having worked.</span></li>
-        <li><b>Slide them together.</b> <em>Why bother: it is the same λ/4 you met vertically, now acting sideways.</em> Press the button and watch panel 2 and the slice below it.
+        <li><b>Slide them together.</b> <em>The point: it is the same λ/4 you met vertically, now acting sideways.</em> Press the button and watch panel 2 and the slice below it.
           <span class="ans">They stay two until the gap closes to about a quarter of a wavelength, then merge
             into one blob that gets brighter rather than wider. Two gas pockets become one. Two channels
             become one channel. Nothing in the map tells you which it was.</span></li>
-        <li><b>Ask what the unfocused panel could ever tell you.</b> <em>Why bother: it shows what migration
+        <li><b>Ask what the unfocused panel could ever tell you.</b> <em>The point: it shows what migration
           is actually for.</em> Back on <em>Unmigrated</em>, separate the two features by 300 m and try to
           convince yourself there are two.
-          <span class="ans">You cannot. They sit inside the same Fresnel patch and no amount of staring, or
-            gain, or color will separate them. Migration is not a tidying-up step at the end. It is the step
-            that makes lateral interpretation possible at all.</span></li>
-        <li><b>Go deeper.</b> <em>Why bother: feature sizes are not comparable between a shallow field and a deep one.</em> Take the horizon from 1.2 s down to 3 s.
+          <span class="ans">They cannot be separated. Both sit inside the same Fresnel patch, and no amount of
+            gain or color choice will resolve them. Lateral interpretation depends on migration having been
+            done.</span></li>
+        <li><b>Go deeper.</b> <em>The point: feature sizes are not comparable between a shallow field and a deep one.</em> Take the horizon from 1.2 s down to 3 s.
           <span class="ans">The unfocused patch grows and the focused limit worsens too, though more slowly.
             The deeper the target, the more you are relying on migration having done its job.</span></li>
-        <li><b>Shrink the survey.</b> <em>Why bother: it is why surveys are shot larger than the prospect, and why the edges of one are less trustworthy.</em> Pull the survey width down to 600 m.
-          <span class="ans">The focus goes soft. A camera lens gathers light across its whole opening, and a
-            narrow opening cannot focus sharply. Migration works the same way, which is why surveys are shot
-            larger than the prospect, and why features near the edge of a survey are less trustworthy than
-            the ones in the middle.</span></li>
-        <li><b>Switch to 2D.</b> <em>Why bother: on a 2D grid, the shape of what you map is set partly by the direction you shot it.</em> Look at the shape of the blur in panel 1.
-          <span class="ans">It becomes a cigar rather than a circle — sharp along the line, still smeared
+        <li><b>Shrink the survey.</b> <em>The point: it is why surveys are shot larger than the prospect, and why the edges of one are less trustworthy.</em> Pull the survey width down to 600 m.
+          <span class="ans">The image degrades. Migration gathers energy across the recorded aperture, so a
+            narrow aperture focuses poorly. This is why surveys are shot larger than the prospect, and why
+            features near the edge of a survey are less reliable than those in the middle.</span></li>
+        <li><b>Switch to 2D.</b> <em>The point: on a 2D grid, the shape of what you map is set partly by the direction you shot it.</em> Look at the shape of the blur in panel 1.
+          <span class="ans">It becomes an elongated ellipse rather than a circle — sharp along the line, still smeared
             across it. Whether you can separate two features now depends on which way they happen to lie
             relative to your line. That is a geological conclusion being decided by the survey
             direction.</span></li>
@@ -241,8 +236,8 @@
       <ul>
         <li><b>Unmigrated, a trace reports one number for a patch hundreds of meters across.</b> The Fresnel
           zone is <span class="k">(V/2)·√(t/f)</span> in radius.</li>
-        <li><b>Migration is the focusing step, and it does most of the work</b> — often a tenfold
-          improvement. Almost all modern data is migrated; older vintages may not be, and it is worth
+        <li><b>Migration does most of the work</b>, often a tenfold improvement in the horizontal
+          resolution length. Almost all modern data is migrated; older vintages may not be, and it is worth
           checking rather than assuming.</li>
         <li><b>λ/4 is the floor, not a promise.</b> A narrow survey or a poor velocity model leaves you well
           short of it.</li>
@@ -291,8 +286,8 @@
     <p class="eyebrow">Next up</p>
     <h3><a href="depth.html">05 · Resolution with depth</a></h3>
     <p>You have now met the λ/4 limit twice, downward and sideways. The next module asks what happens to it
-      as you go deeper — where velocity climbs, the earth strips out your high frequencies, and the thinnest
-      bed you can see quietly grows by a factor of five between the shallow section and the deep one.</p>
+      as you go deeper, where velocity climbs, the earth removes the high frequencies, and the thinnest
+      bed you can see grows by about a factor of five between the shallow section and the deep one.</p>
     <a class="btn" href="depth.html">Open module 05 →</a>
     <a class="btn ghost" href="../index.html">All modules</a>
   </section>

@@ -28,11 +28,11 @@
       <div>
         <p class="eyebrow">Seismic interpretation, from the ground up</p>
         <h1 class="title">What can you <em>really</em> see in seismic?</h1>
-        <p class="lede">Seismic data does not show you the earth. It shows you the earth
-          <strong>convolved with a wavelet</strong> — and that wavelet is key in determining which subsurface features you get to
-          resolve, which faults you get to map, and which bright spots are rock rather than arithmetic.</p>
-        <p class="lede">These are experiments, not lectures. Move a slider, watch a rock layer or a fault disappear,
-          and find out where your data stops telling the truth and starts to trick you!</p>
+        <p class="lede">Seismic data does not show the earth directly. It shows the earth
+          <strong>convolved with a wavelet</strong>, and that wavelet sets which features can be
+          resolved, which faults can be mapped, and whether a bright event means rock or interference.</p>
+        <p class="lede">Each module is built around one experiment. Move a slider, watch a bed or a fault drop
+          below the resolution limit, and find where that limit sits.</p>
         <p>
           <a class="btn" href="modules/wedge.html">Open the wedge model</a>
           <a class="btn ghost" href="modules/faults.html" style="margin-left:8px">Can you see the fault?</a>
@@ -61,14 +61,14 @@
       <div>
         <h3>The rule of thumb</h3>
         <span class="eq">λ / 4</span>
-        <p>Beds thinner than about a quarter of a wavelength stop showing you a separate top and base.
-          Twenty-five meters, in that example. The modules show you how optimistic even this is.</p>
+        <p>Beds thinner than about a quarter of a wavelength stop showing a separate top and base.
+          Twenty-five meters, in that example. The modules measure the limit directly rather than assuming it.</p>
       </div>
       <div>
         <h3>The thing people miss</h3>
         <span class="eq">detect ≠ resolve</span>
-        <p>You can often tell that a thin bed is <em>there</em> long after you have lost the ability to say how
-          thick it really is. Confusing the two is how thickness maps can often go wrong.</p>
+        <p>A thin bed can often be detected long after its thickness has stopped being measurable.
+          Confusing the two is a common source of error in thickness maps.</p>
       </div>
     </div>
   </section>
@@ -106,8 +106,8 @@
         <div class="card-body">
           <div class="card-no">02</div>
           <h3>The wedge model &amp; tuning</h3>
-          <p>Thin a bed to nothing and watch the reflections merge, brighten, then fade — while the seismic
-            tricks you into thinking your bed is thicker.</p>
+          <p>Thin a bed to nothing and watch the reflections merge, brighten, then fade, while the thickness
+            picked off the section stops matching the bed.</p>
           <div class="q">Why is the thin edge of my channel the brightest part?</div>
         </div>
       </a>
@@ -128,8 +128,8 @@
         <div class="card-body">
           <div class="card-no">04</div>
           <h3>Horizontal resolution</h3>
-          <p>One trace does not see one point — it sees a patch the size of several football fields.
-            Migration is the focus ring. Watch two features merge as they close.</p>
+          <p>One unmigrated trace samples a patch the size of several football fields, not a point.
+            Migration collapses that patch. Watch two features merge as they close.</p>
           <div class="q">How small a feature can I map in plan view?</div>
         </div>
       </a>
@@ -139,7 +139,7 @@
         <div class="card-body">
           <div class="card-no">05</div>
           <h3>Resolution with depth</h3>
-          <p>Velocity climbs, the earth attenuates your high frequencies, and λ/4 in meters grows the deeper you dive into the subsurface.</p>
+          <p>Velocity climbs, the earth attenuates the high frequencies, and λ/4 in meters grows with depth.</p>
           <div class="q">Why does my deep interpretation feel so much vaguer?</div>
         </div>
       </a>
@@ -171,8 +171,8 @@
         <div class="card-body">
           <div class="card-no">08</div>
           <h3>Phase, polarity &amp; well ties</h3>
-          <p>Rotate the wavelet and watch the apparent bed boundary move. Demonstrates why well ties and
-            picked horizons often disagree.</p>
+          <p>Rotate the wavelet and watch the apparent bed boundary move. This is why well ties and picked
+            horizons often disagree.</p>
           <div class="q">Am I picking the top of the sand, or near it?</div>
         </div>
       </a>

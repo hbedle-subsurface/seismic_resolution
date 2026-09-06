@@ -24,9 +24,9 @@
   <div class="mod-head">
     <p class="eyebrow">Module 02 &nbsp;·&nbsp; Vertical resolution</p>
     <h1>The wedge model and tuning thickness</h1>
-    <p class="sub">Take the middle layer from module 01 and thin it sideways to nothing. Watch what the
-      seismic does as the top and base reflections close in on each other — because what it does is not what
-      you would guess, and it is behind more misread amplitude maps than anything else in this subject.</p>
+    <p class="sub">Take the middle layer from module 01 and thin it sideways to nothing. Watch what happens
+      as the top and base reflections close in on each other. The amplitude behavior over that interval is
+      the origin of many misread amplitude maps.</p>
   </div>
 
   <!-- ============================ THE IDEA FIRST =========================== -->
@@ -36,23 +36,22 @@
       <p style="margin-top:0;font-size:14.5px">You are handed a section with a sand in it. How thin can that
         sand get before you can no longer see its top and base as two separate things — and once you cannot,
         what does the seismic show you instead?</p>
-      <p style="font-size:14.5px">The setup is called a <b>wedge model</b> and it is the oldest trick in the
-        book: one bed, thick at one end, thinning to zero at the other. Read left to right and you are
-        watching the same rock get thinner. Nothing else changes — same rocks, same wavelet, same everything.</p>
-      <p style="font-size:14.5px;margin-bottom:0">Two things happen, and only one of them is intuitive.</p>
+      <p style="font-size:14.5px">The setup is called a <b>wedge model</b>: one bed, thick at one end,
+        thinning to zero at the other. Read left to right, the same rock gets thinner. Nothing else changes
+        — same rocks, same wavelet, same everything.</p>
+      <p style="font-size:14.5px;margin-bottom:0">Two things happen as the bed thins.</p>
     </div>
     <div class="takeaway">
-      <h3>What to expect, and what surprises people</h3>
-      <p style="margin-top:0;font-size:14.5px"><b>The expected part.</b> Below some thickness the two
-        reflections merge into a single event. You can no longer measure the bed. Fine — everybody expects
-        resolution to run out somewhere.</p>
-      <p style="font-size:14.5px"><b>The surprising part.</b> Just before they merge, the bed gets
-        <em>brighter</em> than it ever was when it was thick. The top and base reflections line up and
-        reinforce each other. That peak is called <b>tuning</b>, and it means a bright event can be a
-        thin bed rather than a good one.</p>
-      <p style="font-size:14.5px;margin-bottom:0">Keep an eye on the lower two plots. One shows the
-        brightening; the other shows the thickness you would pick off the section quietly parting company
-        with the truth.</p>
+      <h3>What happens as the bed thins</h3>
+      <p style="margin-top:0;font-size:14.5px"><b>Merging.</b> Below some thickness the two
+        reflections combine into a single event, and the bed can no longer be measured from the section.</p>
+      <p style="font-size:14.5px"><b>Tuning.</b> Just before they merge, the bed becomes
+        <em>brighter</em> than it was at any greater thickness, because the top and base reflections line up
+        and reinforce each other. That peak is called <b>tuning</b>. A bright event can therefore be a thin
+        bed rather than a thicker or higher-contrast one.</p>
+      <p style="font-size:14.5px;margin-bottom:0">The lower two plots show both effects: one the
+        brightening, the other the thickness picked from the section departing from the thickness in the
+        model.</p>
     </div>
   </div>
 
@@ -215,33 +214,33 @@
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
-        <li><b>Find the brightest part of the wedge.</b> <em>Why bother: this one fact is what makes bright spots ambiguous.</em> Drag the marker to the brightest column. Is it at the
+        <li><b>Find the brightest part of the wedge.</b> <em>The point: this one fact is what makes bright spots ambiguous.</em> Drag the marker to the brightest column. Is it at the
           thick end? Compare the measured tuning thickness with λ/4.
-          <span class="ans">The peak sits near λ/5, not λ/4 — the familiar rule of thumb is about 25%
-            optimistic for a Ricker wavelet. Below that thickness the bed keeps thinning but the seismic gets
+          <span class="ans">The peak sits near λ/5 rather than λ/4: for a Ricker wavelet the measured tuning
+            thickness is about 20% thinner than the rule of thumb. Below that thickness the bed keeps thinning but the seismic gets
             dimmer, not thinner.</span></li>
-        <li><b>Watch a thickness map break.</b> <em>Why bother: if you ever turn an isochron into a thickness map, this plot is why it can be wrong.</em> Watch the lower plot as you drag left from the thick end. Where
+        <li><b>Watch a thickness map break.</b> <em>The point: if you ever turn an isochron into a thickness map, this plot is why it can be wrong.</em> Watch the lower plot as you drag left from the thick end. Where
           does the red curve peel away from the dashed 1:1 line?
           <span class="ans">Right around tuning. Left of that point the reported thickness is essentially
             constant — it has become a property of your wavelet, not of the rock. Isochron thickness maps are
             meaningless below this value.</span></li>
-        <li><b>Buy resolution with frequency.</b> <em>Why bother: this is what you are paying for when somebody proposes broadband reprocessing.</em> Push peak frequency from 20 Hz to 60 Hz and watch the tuning
+        <li><b>Buy resolution with frequency.</b> <em>The point: this is what you are paying for when somebody proposes broadband reprocessing.</em> Push peak frequency from 20 Hz to 60 Hz and watch the tuning
           thickness.
           <span class="ans">It scales as 1/f. Tripling frequency thins the resolvable bed threefold, which is
             why broadband processing is worth paying for and why deep targets are so much harder.</span></li>
-        <li><b>Change the rock, not the geometry.</b> <em>Why bother: it separates two things beginners merge — how loud an event is, and how well resolved it is.</em> Switch from the encased sand to the gas sand and watch
+        <li><b>Change the rock, not the geometry.</b> <em>The point: it separates two things beginners merge — how loud an event is, and how well resolved it is.</em> Switch from the encased sand to the gas sand and watch
           the reflection coefficients in the table.
           <span class="ans">The wedge is the same shape and the tuning thickness barely moves, because tuning
             depends on wavelength, not on contrast. What changes is how loud the whole thing is. Brightness
             and resolution are separate questions, and confusing them is how a strong reflector gets mistaken
             for a well-resolved one.</span></li>
-        <li><b>Turn the behavior upside down.</b> <em>Why bother: the tuning curve is not a fixed law — its shape depends on the rocks you happen to have.</em> Edit the middle layer until its impedance sits between the layers
+        <li><b>Reverse the amplitude behavior.</b> <em>The point: the shape of the tuning curve depends on the rocks either side of the wedge, not on the wedge alone.</em> Edit the middle layer until its impedance sits between the layers
           above and below — try the "hardening downward" preset.
           <span class="ans">Now both reflection coefficients have the same sign, and the wedge behaves in
             reverse: the two reflections cancel near λ/5 and reinforce as the bed vanishes. Same geometry,
             opposite amplitude behavior. Nothing about the wedge changed except the rocks on either side,
             which is why you cannot read a tuning curve without knowing your impedance profile.</span></li>
-        <li><b>Add some honesty.</b> <em>Why bother: every limit quoted in a textbook assumes clean data, and yours is not.</em> Set signal-to-noise to about 4 and look for the thin end.
+        <li><b>Add noise.</b> <em>The point: published resolution limits assume noise-free data.</em> Set signal-to-noise to about 4 and look for the thin end.
           <span class="ans">The λ/8 detection limit assumes noiseless data. With real noise you lose the thin
             end well before λ/8. Detectability depends on data quality as much as on physics.</span></li>
       </ol>
@@ -250,7 +249,7 @@
     <div class="takeaway">
       <h3>If you remember nothing else</h3>
       <ul>
-        <li><b>Resolving and detecting are different jobs.</b> Around λ/4 you stop being able to separate top
+        <li><b>Resolving and detecting are different questions.</b> Around λ/4 you stop being able to separate top
           from base. Down to roughly λ/8 you can still tell that something is there, if the data are clean.</li>
         <li><b>Below tuning, amplitude works as a thickness proxy, but only just.</b> Amplitude falls roughly
           linearly with thickness there, so bright can mean thick. Above tuning that relationship inverts and
@@ -259,8 +258,8 @@
           itself. Channels routinely look brightest along their thin edges.</li>
         <li><b>Tuning thickness is set by the wavelet; loudness is set by the rocks.</b> The two are
           independent, and only one of them is under the processor's control.</li>
-        <li><b>Because λ = V/f, resolution is worst where you usually need it most:</b> deep, where velocity is
-          high and attenuation has already removed the high frequencies.</li>
+        <li><b>Because λ = V/f, resolution is poorest at depth,</b> where velocity is high and attenuation
+          has already removed the high frequencies.</li>
       </ul>
     </div>
   </div>
@@ -301,9 +300,9 @@
   <section class="nextup">
     <p class="eyebrow">Next up</p>
     <h3><a href="faults.html">03 · Can you see the fault?</a></h3>
-    <p>Fault throw runs into the same λ/4 limit you have just met, only now it is vertical offset rather than
-      bed thickness. The next module hands you the same physics as a test: it hides the answer, randomises the
-      case, and asks whether you can see a fault at all — and about a third of the time there is not one.</p>
+    <p>Fault throw runs into the same λ/4 limit, with vertical offset in place of bed thickness. The next
+      module presents the same physics as a test: it hides the answer, randomizes the case, and asks whether
+      a fault is visible at all. About a third of the cases contain no fault.</p>
     <a class="btn" href="faults.html">Open module 03 →</a>
     <a class="btn ghost" href="../index.html">All modules</a>
   </section>
@@ -426,7 +425,7 @@
   }
 
   // The four corners have to stay in order, so a slider that would cross its
-  // neighbour is pushed past it. The labels read from here too, otherwise the
+  // neighbor is pushed past it. The labels read from here too, otherwise the
   // numbers on screen can differ from the wavelet being drawn.
   function ormsbyCorners() {
     const f1 = S.f1;

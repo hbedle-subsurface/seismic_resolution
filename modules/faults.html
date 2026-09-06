@@ -24,34 +24,31 @@
   <div class="mod-head">
     <p class="eyebrow">Module 03 &nbsp;·&nbsp; Vertical resolution in practice</p>
     <h1>Can you see the fault?</h1>
-    <p class="sub">You have just watched a bed get too thin to resolve. A fault runs into exactly the same
-      limit — only now it is vertical offset rather than bed thickness. Push the throw down and at some point
-      the reflectors stop showing a step. The fault is still there. You just cannot see it any more. There is
-      a quiz that hides the answer, and it is worth taking honestly.</p>
+    <p class="sub">A fault runs into the same limit as a thinning bed, with vertical offset in place of bed
+      thickness. Push the throw down and at some point the reflectors stop showing a step, while the fault
+      remains in the model. A quiz mode hides the answer and randomizes the case.</p>
   </div>
 
   <!-- ============================ THE IDEA FIRST =========================== -->
   <div class="teach" style="padding-top:6px">
     <div class="tryit">
-      <h3>Why a fault is a thin bed in disguise</h3>
-      <p style="margin-top:0;font-size:14.5px">A reflector cut by a fault gives you two copies of the same
+      <h3>Why throw runs into the bed-thickness limit</h3>
+      <p style="margin-top:0;font-size:14.5px">A reflector cut by a fault gives two copies of the same
         event, one on each side, offset in time by the throw. That is the same geometry as the wedge in
-        module 02 — two reflections a short time apart — so it fails in the same way and at the same number:
+        module 02 — two reflections a short time apart — so it fails at the same point:
         somewhere around <b>a quarter of a wavelength</b>.</p>
-      <p style="font-size:14.5px;margin-bottom:0">Which means whether you can see a fault is not purely a
-        question about the geology. It depends just as much on the velocity, the frequency, and how noisy
-        the data is.</p>
+      <p style="font-size:14.5px;margin-bottom:0">Whether a fault is visible therefore depends on velocity,
+        frequency and noise as much as on the size of the offset.</p>
     </div>
     <div class="takeaway">
-      <h3>The part that catches people out</h3>
-      <p style="margin-top:0;font-size:14.5px">Below the limit the data does not go quiet or look uncertain.
-        The reflectors simply run through, looking continuous and convincing, and the fault leaves no step at
-        all.</p>
-      <p style="font-size:14.5px">It does leave something, though: the reflections either side interfere and
-        distort the <em>shape</em> of the wiggle. Your eye misses that; a computer does not. Chasing that
-        residual is the entire reason coherence and similarity attributes exist.</p>
-      <p style="font-size:14.5px;margin-bottom:0">So there are two questions here, not one. Can you see the
-        fault — and if you cannot, is it absent, or merely invisible?</p>
+      <h3>What happens below the limit</h3>
+      <p style="margin-top:0;font-size:14.5px">Below the limit the section gives no indication that anything
+        is missing. The reflectors run through continuously and the fault leaves no visible step.</p>
+      <p style="font-size:14.5px">The reflections either side of the fault do still interfere, and that
+        distorts the <em>shape</em> of the waveform. The distortion is small and hard to see by eye, and it
+        is what coherence and similarity attributes are computed to detect.</p>
+      <p style="font-size:14.5px;margin-bottom:0">Two questions follow: whether the fault is visible, and if
+        it is not, whether it is absent or below the resolution limit.</p>
     </div>
   </div>
 
@@ -222,44 +219,44 @@
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
-        <li><b>Walk the throw down.</b> <em>Why bother: it puts a number on where your eye gives up.</em> Start at 40 m and reduce it. Where does the offset stop reading as a
+        <li><b>Walk the throw down.</b> <em>The point: it puts a number on where your eye gives up.</em> Start at 40 m and reduce it. Where does the offset stop reading as a
           clean step in the reflectors?
           <span class="ans">Somewhere close to λ/4. Above that you can measure the throw off the section.
             Below it you can only say that something happened.</span></li>
-        <li><b>Keep going, and watch the trace panel.</b> <em>Why bother: this is what an attribute sees that you do not.</em> Take the throw down to 5 m and compare the two traces.
+        <li><b>Keep going, and watch the trace panel.</b> <em>The point: this is what an attribute sees that you do not.</em> Take the throw down to 5 m and compare the two traces.
           <span class="ans">The step has gone from the section, but the traces still differ. Reflections
             interfering across the fault distort the waveform. Coherence and similarity attributes are built to
             find that residual, which is why an attribute can flag a fault that looks like nothing on the
             amplitude display.</span></li>
-        <li><b>Trade frequency against throw.</b> <em>Why bother: the same fault can be present or absent depending on the vintage of the data.</em> Fix the throw at 12 m and sweep frequency from 15 Hz to 70 Hz.
+        <li><b>Trade frequency against throw.</b> <em>The point: the same fault can be present or absent depending on the vintage of the data.</em> Fix the throw at 12 m and sweep frequency from 15 Hz to 70 Hz.
           <span class="ans">The geology never changes, and the fault goes from invisible to obvious. Whether
             you can see a fault depends on your bandwidth as much as on the rocks.</span></li>
-        <li><b>Make it deep.</b> <em>Why bother: it explains why deep fault maps are always simpler than shallow ones.</em> Raise velocity to 5000 m/s and drop frequency to 15 Hz, roughly the change from
+        <li><b>Make it deep.</b> <em>The point: it explains why deep fault maps are always simpler than shallow ones.</em> Raise velocity to 5000 m/s and drop frequency to 15 Hz, roughly the change from
           1 s to 4 s two-way time.
           <span class="ans">λ goes past 300 m, and a 40 m throw that was obvious at shallow depth becomes
             marginal. Deep fault maps are less complete than shallow ones for reasons that have nothing to do
             with the interpreter.</span></li>
-        <li><b>Coarsen the acquisition.</b> <em>Why bother: resolution is limited sideways as well as vertically.</em> Push trace spacing to 50 m with a shallow fault dip.
+        <li><b>Coarsen the acquisition.</b> <em>The point: resolution is limited sideways as well as vertically.</em> Push trace spacing to 50 m with a shallow fault dip.
           <span class="ans">The fault plane turns into a staircase. Trace spacing limits lateral detail the
             same way bandwidth limits vertical detail.</span></li>
-        <li><b>Push the dip past 90°.</b> <em>Why bother: normal and reverse faults look alike on seismic; the sense of slip is your interpretation, not the data's.</em> Take it from 65° to 115° and watch the layer model.
+        <li><b>Push the dip past 90°.</b> <em>The point: normal and reverse faults look alike on seismic; the sense of slip is your interpretation, not the data's.</em> Take it from 65° to 115° and watch the layer model.
           <span class="ans">The plane now leans the other way, so the block that drops is the footwall
             rather than the hanging wall and the fault becomes reverse. A normal fault cuts section out at
             the fault; a reverse fault repeats it, and you can count the doubled beds in the model. On the
             seismic both look like an offset, which is the problem: sense of slip is a geological
             interpretation laid on top of what the data actually shows.</span></li>
-        <li><b>Thin the beds.</b> <em>Why bother: most reservoir intervals are tuned, and tracking a fault through tuned reflections is far harder.</em> Set the thinnest bed to 8 m and the thickest to 20 m, with frequency at 25 Hz.
+        <li><b>Thin the beds.</b> <em>The point: most reservoir intervals are tuned, and tracking a fault through tuned reflections is far harder.</em> Set the thinnest bed to 8 m and the thickest to 20 m, with frequency at 25 Hz.
           <span class="ans">Count the beds in the layer model, then count the reflectors in the seismic below
             it. They no longer match. The beds are below tuning, so the reflectors merge and interfere.
             Tracking a fault through tuned reflections is much harder than tracking one through clean,
             well-separated ones, and most reservoir intervals look like the former.</span></li>
-        <li><b>Run ten quiz cases on Mixed, then ten on Hard.</b> <em>Why bother: it is the only part of this site that tells you something about yourself rather than about the data.</em> Keep score honestly.
+        <li><b>Run ten quiz cases on Mixed, then ten on Hard.</b> <em>The point: it tests the limit against your own judgement, without the answer visible.</em> Keep score honestly.
           <span class="ans">Roughly a third contain no fault at all, and throws are drawn as a fraction of
             the wavelength rather than in meters, so most of them sit near the limit instead of being
             comfortably above it. On Hard, only about one case in twenty is a clean resolved offset.
             Calling "no fault" on a throw below λ/16 is scored as correct, because past the detection limit
-            that is the defensible answer. Expect a lower score than you think you deserve, and notice how
-            often correlated noise talks you into a fault that isn't there.</span></li>
+            that is the defensible answer. Scores are typically lower than expected, and correlated noise
+            accounts for many of the false picks.</span></li>
       </ol>
     </div>
 
@@ -296,7 +293,7 @@
       amplitude changes from juxtaposition, and the smearing that imperfect migration puts on every real fault.
       Those effects make faults easier to see in some settings and harder in others, but none of them removes
       the resolution floor, which is what this module is about.</p>
-    <p>The two panels show different quantities, which is worth saying out loud to students. The layer model
+    <p>The two panels show different quantities. The layer model
       is shaded by acoustic impedance, a property of the rock: pale for low, dark for high. The seismic is
       colored by reflection coefficient, a property of the boundary between two rocks, so color appears only
       where impedance changes and a thick uniform bed is blank in the middle.</p>

@@ -25,34 +25,33 @@
     <p class="eyebrow">Module 08 &nbsp;·&nbsp; Phase and polarity</p>
     <h1>Am I picking the top of the sand, or near it?</h1>
     <p class="sub">Every other module has assumed a zero-phase wavelet, where the peak sits exactly on the
-      boundary that made it. Real data is rarely quite zero phase. Rotate the wavelet here and watch the
-      event slide away from the rock that produced it, while looking every bit as crisp and confident as
-      before. Nothing warns you. The horizon is simply in the wrong place.</p>
+      boundary that produced it. Real data is rarely quite zero phase. Rotate the wavelet here and watch
+      the event move away from the boundary that produced it while its shape and amplitude stay the same.
+      Nothing on the section marks the shift.</p>
   </div>
 
   <!-- ============================ THE IDEA FIRST =========================== -->
   <div class="teach" style="padding-top:6px">
     <div class="tryit">
-      <h3>The assumption everything else has been making</h3>
+      <h3>The zero-phase assumption</h3>
       <p style="margin-top:0;font-size:14.5px">Every module before this one used a <b>zero-phase</b> wavelet.
         That means its biggest peak sits exactly on the boundary that produced it, so picking the peak is the
         same thing as picking the top of the sand.</p>
-      <p style="font-size:14.5px">That is what processing aims for, and it is worth aiming for. It is also an
-        assumption, and one you inherit rather than check.</p>
-      <p style="font-size:14.5px;margin-bottom:0">Rotating the <b>phase</b> slides the pulse sideways in time
-        while leaving its frequency content alone. The event stays just as sharp and just as loud. It simply
-        stops being in the right place.</p>
+      <p style="font-size:14.5px">Zero phase is what processing aims for. It remains an assumption about the
+        data in hand.</p>
+      <p style="font-size:14.5px;margin-bottom:0">Rotating the <b>phase</b> shifts the pulse in time while
+        leaving its frequency content unchanged. The event keeps the same sharpness and the same amplitude,
+        and moves off the boundary.</p>
     </div>
     <div class="takeaway">
-      <h3>Why this is the one that costs money</h3>
+      <h3>Why a phase error matters</h3>
       <p style="margin-top:0;font-size:14.5px">A phase error becomes a <b>depth error</b>, in the same
-        direction, on every horizon you pick, across the whole survey. It does not average out. At 30 Hz a
-        90° rotation puts your pick about 6 ms — eight or nine meters — off the rock.</p>
-      <p style="font-size:14.5px">And nothing on the section warns you. There is no fuzziness and no
-        artifact. The horizon looks clean and it is wrong.</p>
-      <p style="font-size:14.5px;margin-bottom:0">Which is what a <b>well tie</b> is actually for. It is not
-        a formality — it is the measurement that tells you how much your data has been rotated. There is a
-        matching game below; it is the closest thing here to the real job.</p>
+        direction, on every horizon picked across the whole survey, so it does not average out. At 30 Hz a
+        90° rotation puts the pick about 6 ms — eight or nine meters — off the boundary.</p>
+      <p style="font-size:14.5px">The section carries no sign of it. There is no loss of sharpness and no
+        artifact: the horizon looks clean and sits in the wrong place.</p>
+      <p style="font-size:14.5px;margin-bottom:0">A <b>well tie</b> is the measurement of that rotation.
+        The matching exercise below is the same procedure.</p>
     </div>
   </div>
 
@@ -109,7 +108,7 @@
       <div id="tieBox" hidden>
         <p style="font-size:12.5px;color:var(--ink-soft);margin:2px 0 10px">
           The grey trace is the field seismic, recorded at a phase you cannot see. Rotate your wavelet until
-          the red line sits centerd along the middle of the grey band. Use <b>Trace size</b> if the wiggles
+          the red line sits centered along the middle of the grey band. Use <b>Trace size</b> if the wiggles
           are too small to judge.</p>
         <button class="btn small" id="newCase" type="button">New field trace</button>
         <button class="btn ghost small" id="reveal" type="button">How did I do?</button>
@@ -189,30 +188,30 @@
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
-        <li><b>Start at zero phase and look at panel 2.</b> <em>Why bother: it is the case everybody draws on the whiteboard, and the one you should confirm rather than assume.</em> Where is the peak relative to the teal line?
+        <li><b>Start at zero phase and look at panel 2.</b> <em>The point: it is the case everybody draws on the whiteboard, and the one you should confirm rather than assume.</em> Where is the peak relative to the teal line?
           <span class="ans">Exactly on it. This is the case everyone draws on the whiteboard, and it is the
             reason zero phase is what processing aims for: the event and the rock are in the same place, so
             picking the peak means picking the top of the sand.</span></li>
-        <li><b>Rotate to 30°, then 60°, then 90°</b>, <em>why bother: to see the error grow smoothly with nothing on the display flagging it.</em> Watch the readout for how far the peak has moved.
-          <span class="ans">The event slides steadily away from the boundary — around 6 ms by 90°, which is
-            eight or nine meters of depth at normal velocities. The event never looks wrong. It stays sharp
-            and confident, just in the wrong place, and a horizon picked on it inherits the whole error.</span></li>
-        <li><b>Stop at exactly 90° and look at the true boundary.</b> <em>Why bother: 90° data is common, and it is the worst possible case for tying a well.</em>
+        <li><b>Rotate to 30°, then 60°, then 90°.</b> <em>The point: the error grows steadily and nothing on the display marks it.</em> Watch the readout for how far the peak has moved.
+          <span class="ans">The event moves steadily away from the boundary, reaching about 6 ms by 90°,
+            which is eight or nine meters of depth at normal velocities. Its shape and amplitude do not
+            change, and a horizon picked on it carries the whole error.</span></li>
+        <li><b>Stop at exactly 90° and look at the true boundary.</b> <em>The point: 90° data is common, and it is the worst possible case for tying a well.</em>
           <span class="ans">The amplitude there is zero. The boundary sits on a zero crossing with a peak on
             one side and a trough on the other, and the two are mirror images, so there is nothing in the
             data to tell you which one to pick. Ninety-degree data is the worst case for tying a well, and it
             is common, because that is what you get from minimum-phase data that has not been fully
             converted.</span></li>
-        <li><b>Go to 180° and compare with the reverse polarity button.</b> <em>Why bother: these two get confused constantly, and here you can see they are the same operation.</em>
+        <li><b>Go to 180° and compare with the reverse polarity button.</b> <em>The point: these two get confused constantly, and here you can see they are the same operation.</em>
           <span class="ans">They are the same thing. A 180° rotation is a polarity flip, which is why the two
             get confused so often. Anything between 0 and 180 is a partial flip, and there is no name for
             it — only a number.</span></li>
-        <li><b>Switch the well to the thin sand.</b> <em>Why bother: it stacks this module on top of module 02, which is what real reservoirs do to you.</em>
+        <li><b>Switch the well to the thin sand.</b> <em>The point: it stacks this module on top of module 02, which is what real reservoirs do to you.</em>
           <span class="ans">Now two problems compound. Tuning has already merged the top and base into one
             event, and phase then moves that merged event off both boundaries. Working out where the sand
             really is from the seismic alone becomes impossible, which is precisely why thin reservoirs need
             well control.</span></li>
-        <li><b>Then tie a well properly.</b> <em>Why bother: this is the actual job, and the reveal tells you what your error would have cost in meters.</em> Turn on the matching game and rotate until the two traces sit on
+        <li><b>Then tie a well properly.</b> <em>The point: this is the actual job, and the reveal tells you what your error would have cost in meters.</em> Turn on the matching game and rotate until the two traces sit on
           top of each other.
           <span class="ans">This is what a well tie is: finding the rotation that makes the synthetic and the
             seismic agree. Get it right and every horizon you pick is in the right place. Get it wrong by 40°
@@ -271,9 +270,8 @@
       spot means fluid or thickness, and whether your horizon sits on the boundary at all. Every limit you
       have met is some fraction of one wavelength — and the wavelength is <span class="k">V / f</span>, which
       you can work out for your own target in about ten seconds.</p>
-    <p>If you take one habit away, let it be this: before trusting anything you have mapped, work out λ/4
-      <em>at that depth, in that rock, with that data</em>, and ask whether what you are looking at is above
-      or below it.</p>
+    <p>Before relying on anything mapped from a section, work out λ/4 <em>at that depth, in that rock, with
+      that bandwidth</em>, and compare it with the size of the feature in question.</p>
     <a class="btn" href="../index.html#modules">Back to all modules</a>
     <a class="btn ghost" href="depthtrends.html">Start again at module 00</a>
   </section>

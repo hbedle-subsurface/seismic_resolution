@@ -34,24 +34,24 @@
   <div class="teach" style="padding-top:6px">
     <div class="tryit">
       <h3>Two ways a feature goes missing</h3>
-      <p style="margin-top:0;font-size:14.5px">Module 04 slid two dots together until they read as one. That
-        was the idea. This is the same limit applied to something you would actually be asked to map, and it
-        bites in two separate ways.</p>
-      <p style="font-size:14.5px"><b>Too narrow.</b> A channel thinner than the resolution does not go
-        blurry — it goes <em>missing</em>. The map shows it simply stopping.</p>
+      <p style="margin-top:0;font-size:14.5px">Module 04 slid two point features together until they imaged as
+        one. The same limit applies to a mapped body in two separate ways.</p>
+      <p style="font-size:14.5px"><b>Too narrow.</b> A channel narrower than the resolution length does not
+        image as a blurred channel. It <em>disappears</em>, and the map shows it stopping.</p>
       <p style="font-size:14.5px;margin-bottom:0"><b>Too close together.</b> Two branches nearer than the
         resolution image as one channel. The map shows a single channel that forks late, when it actually
         forked much earlier.</p>
     </div>
     <div class="takeaway">
-      <h3>Why this one should worry you</h3>
-      <p style="margin-top:0;font-size:14.5px">Both failures look completely convincing. There is no fuzzy
-        patch, no obvious edge of the data, nothing to warn you. A channel that fades out on your map looks
-        exactly like a channel that ended.</p>
-      <p style="font-size:14.5px">And the boundary you draw is partly a property of the survey, not the
-        rock. Reprocess with more bandwidth or a wider aperture and the same channel gets longer.</p>
-      <p style="font-size:14.5px;margin-bottom:0">The page opens on <b>unmigrated</b> data, because that is
-        where every survey starts. Look at what you can honestly say from it before you press 3D.</p>
+      <h3>Why both failures are hard to spot</h3>
+      <p style="margin-top:0;font-size:14.5px">Neither failure leaves a visible sign on the map. There is no
+        blurred patch and no marked edge of the data. A channel that drops below the resolution length looks
+        the same as a channel that ends.</p>
+      <p style="font-size:14.5px">The boundary drawn is therefore partly a property of the survey rather
+        than of the rock. Reprocess with more bandwidth or a wider aperture and the same channel gets
+        longer.</p>
+      <p style="font-size:14.5px;margin-bottom:0">The page opens on <b>unmigrated</b> data, which is where
+        every survey starts. Read what can be said from it before pressing 3D.</p>
     </div>
   </div>
 
@@ -169,36 +169,33 @@
     <div class="tryit">
       <h3>Try this — and what to watch for</h3>
       <ol>
-        <li><b>Look at what you are given before touching anything.</b> <em>Why bother: it is what every survey looks like before somebody processes it for you.</em> The page opens on unmigrated data,
-          which is where every survey starts.
-          <span class="ans">The channel is a broad smudge. You could tell somebody a channel runs through
-            here and roughly which way, and almost nothing else — not where it ends, not that it forks at
-            all. Now press <b>3D</b>. That one step is the difference between a smudge and a map, and it is
-            worth remembering that this is what the data looked like before somebody did it for you.</span></li>
-        <li><b>With 3D on, compare the two maps.</b> <em>Why bother: the gap between them is reservoir you would never post.</em> Where does the channel stop in each?
+        <li><b>Look at the map before changing anything.</b> <em>The point: it is the starting point for every survey, before processing.</em> The page opens on unmigrated data.
+          <span class="ans">The channel is a broad smudge. It supports a statement that a channel runs
+            through here, and roughly which way, and little else — not where it ends, and not that it forks
+            at all. Press <b>3D</b> and compare.</span></li>
+        <li><b>With 3D on, compare the two maps.</b> <em>The point: the gap between them is reservoir you would never post.</em> Where does the channel stop in each?
           <span class="ans">The imaged channel fades out well before the real one does. Everything downstream
             of that point is still sand, still the same thickness, and completely absent from your map. If
             you were mapping the extent of a reservoir from this, you would draw the boundary in the wrong
             place and never know.</span></li>
-        <li><b>Find where the branches become two.</b> <em>Why bother: it is how a distributary system gets mapped as a single channel.</em> Drag the section line upstream from the far end and
+        <li><b>Find where the branches become two.</b> <em>The point: it is how a distributary system gets mapped as a single channel.</em> Drag the section line upstream from the far end and
           watch the profile.
           <span class="ans">Far downstream the two branches sit well apart and read as two. Move upstream and
             they close until the trough between them fills in, and from there back to the split they image as
             one wide channel. The map shows a single channel that forks once, when in fact it forks much
             earlier.</span></li>
-        <li><b>Take it deeper.</b> <em>Why bother: the same body gets shorter on the map purely by being deeper.</em> Move the channel from 1.2 s to 3 s.
+        <li><b>Take it deeper.</b> <em>The point: the same body gets shorter on the map purely by being deeper.</em> Move the channel from 1.2 s to 3 s.
           <span class="ans">Resolution worsens and the apparent end of the channel marches upstream. The same
             body, unchanged, gets shorter on the map as it gets deeper. Comparing feature sizes between a
             shallow field and a deep one is not comparing like with like.</span></li>
-        <li><b>Try to fix it with frequency.</b> <em>Why bother: it is the only lever here that genuinely helps, and it helps less than you would hope.</em> Push the peak frequency up and watch the apparent end move.
-          <span class="ans">It helps, and it is the only thing here that helps, but the improvement is
-            proportional to frequency while the Fresnel zone shrinks only as its square root. Bandwidth is
-            expensive and the returns are steady rather than dramatic.</span></li>
-        <li><b>Starve the aperture.</b> <em>Why bother: features near the edge of a survey are quietly less trustworthy than those in the middle.</em> Pull the aperture down to 500 m.
-          <span class="ans">The image degrades toward the unmigrated case. If your target sits near the edge
-            of the survey, the migration has only one side to gather from, and features that are perfectly
-            resolved in the middle of the survey quietly disappear at the margin.</span></li>
-        <li><b>Switch to 2D.</b> <em>Why bother: on a 2D grid the shape you map depends on which way the boat sailed.</em>
+        <li><b>Raise the frequency.</b> <em>The point: bandwidth is the only control here that improves the imaged extent.</em> Push the peak frequency up and watch the apparent end move.
+          <span class="ans">The apparent end moves downstream. The migrated resolution length improves in
+            proportion to frequency, while the unmigrated Fresnel zone shrinks only as its square root.</span></li>
+        <li><b>Reduce the aperture.</b> <em>The point: features near the edge of a survey are imaged less reliably than those in the middle.</em> Pull the aperture down to 500 m.
+          <span class="ans">The image degrades toward the unmigrated case. Near the edge of a survey the
+            migration has energy from only one side to gather, so features that are well resolved in the
+            middle of the survey are lost at the margin.</span></li>
+        <li><b>Switch to 2D.</b> <em>The point: on a 2D grid the shape you map depends on which way the boat sailed.</em>
           <span class="ans">Resolution is good along the line and poor across it, so the channel smears in
             one direction only. Whether you can see the branches now depends on which way they happen to
             trend relative to your line — a geological conclusion decided by the survey orientation.</span></li>

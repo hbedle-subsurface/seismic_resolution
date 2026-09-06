@@ -24,10 +24,10 @@
   <div class="mod-head">
     <p class="eyebrow">Module 00 &nbsp;·&nbsp; Start here</p>
     <h1>How the earth changes as you go down</h1>
-    <p class="sub">If you are new to seismic, start here. Before any question about what you can and cannot
-      see makes sense, you need a feel for the earth the sound is travelling through. Build a column below,
-      from the sea surface down to five kilometers, and three things happen at once — all of which shape
-      everything you will interpret later.</p>
+    <p class="sub">Start here if you are new to seismic. Questions about what can and cannot be
+      resolved depend on the properties of the earth the wave travels through. Build a column below,
+      from the sea surface down to five kilometers, and three things change together as depth
+      increases.</p>
   </div>
 
   <!-- ============================ THE IDEA FIRST =========================== -->
@@ -44,22 +44,21 @@
         velocity that is itself changing.</p>
       <p style="font-size:14.5px;margin-bottom:0"><b>The earth absorbs energy.</b> It takes the high
         frequencies first, so the pulse that started sharp arrives at depth long and smooth. This is
-        attenuation, measured by a number called Q, and it is the reason deep data always looks softer than
+        attenuation, measured by a number called Q, and it is why deep data usually looks softer than
         shallow data.</p>
     </div>
     <div class="takeaway">
-      <h3>Why you should care</h3>
-      <p style="margin-top:0;font-size:14.5px">Those three trends gang up on you. How much detail seismic
-        can show depends on its <b>wavelength</b>, and wavelength is just velocity divided by frequency:
+      <h3>What that does to resolution</h3>
+      <p style="margin-top:0;font-size:14.5px">All three trends act on the same quantity. How much detail seismic
+        can show depends on its <b>wavelength</b>, and wavelength is velocity divided by frequency:
         <span class="k">λ = V / f</span>. Going down, the velocity on top of that fraction gets
         <em>bigger</em> and the frequency underneath it gets <em>smaller</em>. Both push the wavelength up,
         and a longer wavelength means less detail.</p>
-      <p style="font-size:14.5px">So the thinnest bed you can resolve grows steadily with depth — often from
-        ten meters near the surface to fifty or more at four kilometers. That is not a failure of processing
-        or of the interpreter. It is the earth.</p>
-      <p style="font-size:14.5px;margin-bottom:0">Drag the depth marker down and watch the last panel. It is
-        the most useful plot on this page: it tells you the thinnest bed you could hope to see, at any depth,
-        for the data you have. The λ/4 it uses is the standard rule of thumb; module 02 measures the number
+      <p style="font-size:14.5px">The thinnest bed you can resolve therefore grows steadily with depth, often from
+        ten meters near the surface to fifty or more at four kilometers. The cause is the earth itself rather
+        than the processing or the interpretation.</p>
+      <p style="font-size:14.5px;margin-bottom:0">Drag the depth marker down and watch the last panel. It gives
+        the thinnest bed that could be resolved at any depth, for the data you have. The λ/4 it uses is the standard rule of thumb; module 02 measures the number
         directly for a specific wavelet and gets something closer to λ/5. The trend with depth is the same
         either way.</p>
     </div>
@@ -225,19 +224,18 @@
       <h3>Try this — and what to watch for</h3>
       <ol>
         <li><b>Drag the depth marker from top to bottom</b> and watch the last stat cell — the thinnest bed
-          you could resolve. <em>Why bother:</em> it is the one number that explains why a prospect that
-          looked crisp shallow turns to mush deep.
+          you could resolve. <em>The point:</em> it is a single number you can look up for any target
+          depth.
           <span class="ans">The thinnest resolvable bed grows several times over between the shallow section
-            and the deep one. Nothing about the equipment changed. This single number explains why a
-            prospect that looked crisp at 1.5 s is a smear at 4 s.</span></li>
+            and the deep one, with no change in the acquisition. A target that gives a clean pair of
+            reflections at 1.5 s can be a single merged event at 4 s.</span></li>
         <li><b>Find the overpressured zone in panel 2.</b> It is the kick to the left in the velocity curve,
-          where the rock stops getting faster. <em>Why bother:</em> spotting this early is one of the
-          genuinely high-value things an interpreter does, and it is a drilling-safety issue.
-          <span class="ans">Compaction reverses because the pore fluid is carrying some of the weight the
-            grains should be carrying, so the rock stays looser than its depth suggests. Velocity drops,
-            density drops with it, and drilling into it without knowing is how wells get into
-            trouble. On seismic it appears as a velocity inversion, and picking it early is one of the
-            genuinely high-value things an interpreter does.</span></li>
+          where the rock stops getting faster. <em>The point:</em> overpressure is a drilling-safety
+          problem, and seismic velocity is one of the few ways to see it ahead of the bit.
+          <span class="ans">Compaction reverses because the pore fluid carries some of the load the
+            grain framework would otherwise carry, so the rock stays less compacted than its depth
+            suggests. Velocity drops and density drops with it. On seismic the zone appears as a
+            velocity inversion.</span></li>
         <li><b>Watch what it does to impedance in panel 4.</b>
           <span class="ans">There is a strong negative reflection at the top of the zone and a positive one
             at its base, because impedance falls and then recovers. That pair is often the clearest thing on
@@ -246,12 +244,11 @@
           <span class="ans">The whole time axis shifts up by the two-way time through the water, and the
             shear velocity curve now starts at the surface instead of at the seabed. Water carries no shear
             wave at all, which is why marine streamer data records only P waves.</span></li>
-        <li><b>Take Q from 300 down to 50</b> and watch panels 6, 7 and 8 together. <em>Why bother:</em>
-          it shows that a bad shallow section damages everything beneath it, which no processing fully
-          undoes.
-          <span class="ans">The pulse visibly fattens and the resolvable bed thickness grows. Gassy or very
-            soft shallow sediment can do this, and everything beneath it is degraded — the damage is done on
-            the way through and no processing fully undoes it.</span></li>
+        <li><b>Take Q from 300 down to 50</b> and watch panels 6, 7 and 8 together. <em>The point:</em>
+          bandwidth lost on the way down cannot be fully recovered later.
+          <span class="ans">The pulse broadens and the resolvable bed thickness grows. Gassy or very soft
+            shallow sediment absorbs strongly, and everything imaged beneath it is degraded, because the
+            loss happens during propagation rather than in the recording.</span></li>
         <li><b>Push the velocity gradient from 0.3 up to 1.0.</b>
           <span class="ans">A fast-compacting section reaches high velocity sooner, so it runs out of
             resolution sooner. Slow, undercompacted sections keep their resolution deeper. Two basins at the
@@ -286,7 +283,7 @@
       All three are rules of thumb that hold for clastic sections and fail for carbonates, evaporites and
       anything unusual — they are here to give the right shape, not the right number for your field.</p>
     <p>The overpressured zone multiplies the velocity trend by a smooth raised-cosine trough. Density falls
-      with it through Gardner, which gives a drop of a few per cent for a substantial velocity reversal, and
+      with it through Gardner, which gives a drop of a few percent for a substantial velocity reversal, and
       that is about what is observed.</p>
     <p>Two-way time is integrated down the column as <span class="k">Σ 2·dz/V</span>. Attenuation is
       constant-Q: the amplitude spectrum is multiplied by <span class="k">exp(−π f t*)</span> where

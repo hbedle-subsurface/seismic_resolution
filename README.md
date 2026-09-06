@@ -13,29 +13,29 @@ Dr. Heather Bedle and Dr. April Moreno-Ward, University of Oklahoma, with the
 
 ## Why this exists
 
-Seismic data does not show you the earth. It shows you the earth blurred by a
-wavelet, and the blur is not a small correction — it decides which beds you can
-see at all, how thick they appear, where their tops seem to be, and whether a
-fault exists as far as your data is concerned.
+Seismic data does not show the earth directly. It shows the earth convolved with
+a wavelet, and that convolution sets which beds can be separated at all, how
+thick they appear, where their tops appear to be, and whether a fault is visible.
 
-Most people meet that as a rule: λ/4, quarter of a wavelength, resolution limit.
-A rule that has been read is fragile. It gets applied where it is remembered and
-forgotten everywhere else. What is much harder to forget is having *watched* a
-bed thin until it disappeared while the seismic went on confidently reporting a
-thickness that stopped being real thirty meters ago.
+Most people meet this as a rule: λ/4, a quarter of a wavelength, the resolution
+limit. Stated as a rule it is easy to quote and easy to forget where it applies.
+It is harder to forget having watched a bed thin until its top and base merged,
+while the section carried on reporting a thickness that no longer matched the
+model that produced it.
 
-These are experiments, not lectures. Move a slider and watch something break.
+Each module is built around one experiment. Move a slider and watch a limit
+take effect.
 
 ## Who it is for
 
-Three groups who mostly get skipped:
+Three groups that most seismic courses pass over:
 
 - **Undergraduates** meeting seismic for the first time, who need the pictures
   before the equations.
 - **Graduate students** who *use* seismic data in their research without having
   been taught how it is made.
-- **People who went straight to industry** and are now expected to map horizons
-  on it. That is how I got started.
+- **People who went straight into industry** and are now expected to map
+  horizons on seismic data.
 
 No install, no account, and no mathematics beyond `λ = V / f`.
 
@@ -57,30 +57,30 @@ In the order they build on each other.
 
 ## Using these in a class
 
-**Hand out a link, not instructions.** Every module writes its full state into
+**Hand out a link.** Every module writes its full state into
 the URL and has a *Copy link to this setup* button, so you can set up a specific
 scenario and give students the link. Everyone starts on the identical
 configuration, which makes these straightforward to assign as problem sets.
 
 **Every module ends with guided experiments** — *Try this*, with the answer
-written out — and a short *what to carry away*. The questions can be assigned
-directly as homework.
+written out — and a short summary. The questions can be assigned directly as
+homework.
 
 **Save as PNG** exports the current panel for slides and reports. **Units**
 toggle between meters and feet throughout.
 
 ## One number worth knowing
 
-The wedge module measures a tuning thickness of **λ/5.1** for a Ricker wavelet,
-not the λ/4 of the usual rule of thumb. That is not a mistake. It is Kallweit and
-Wood's 1/(2.6·f), and the gap between the two numbers is one of the things the
-module is for.
+The wedge module measures a tuning thickness of **λ/5.1** for a Ricker wavelet
+rather than the λ/4 of the usual rule of thumb. The measured value is Kallweit
+and Wood's 1/(2.6·f). The difference between the two numbers is one of the things
+the module is built to show.
 
 ## What this is not
 
-These are teaching models, built to make ideas visible. The traces are
-one-dimensional convolutional models on small synthetics, and each module says
-what it leaves out. For real work on real volumes use
+These are teaching models. The traces are one-dimensional convolutional models
+on small synthetics, and each module lists what it leaves out. For work on real
+volumes use
 [AASPI](https://www.ou.edu/mcee/labs/aaspi) or your interpretation package: the
 numbers here describe the model on the screen, not your survey.
 
