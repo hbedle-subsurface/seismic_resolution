@@ -374,6 +374,13 @@
     if (own) { own.style.display = 'none'; own.disabled = true; }
     win.document.getElementById('poWrap').appendChild(clone);
 
+    /* The button's own state is set before the first mirror rather than after
+       it. The mirror copies the disabled state of every control from the panel
+       onto its copy, so a button still marked as available here would be
+       copied over the copy that was just switched off. */
+    openBtn.textContent = 'Controls are in the other window';
+    openBtn.disabled = true;
+
     wire();
     mirror();
 
@@ -393,8 +400,6 @@
        goes with the panel. Leaving it up would put a dead button directly
        above the line that already says the same thing. */
     if (ownRow) ownRow.style.display = 'none';
-    openBtn.textContent = 'Controls are in the other window';
-    openBtn.disabled = true;
 
     timer = setInterval(mirror, TICK_MS);
     win.addEventListener('unload', function () { setTimeout(restore, 60); });
