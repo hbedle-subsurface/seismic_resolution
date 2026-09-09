@@ -11,6 +11,7 @@ assets/
   seismic.js            all the physics and plotting, commented
   style.css             one stylesheet, OU crimson and cream
   count.js              page-view counting; see the file's own notes
+  panelout.js           opens the control band in a live second window
 modules/                one self-contained page per module
 docs/                   this file
 ```
@@ -25,6 +26,18 @@ teaching block and a `#popBtn` button beside it, both of which come along when
 an existing module is copied; `seismic.js` finds them on DOMContentLoaded. A
 browser that blocks the window is reported in `#popNote` rather than leaving the
 click to do nothing.
+
+The control pop-out wires itself as well, and needs one script tag per module:
+`<script src="../assets/panelout.js"></script>` after the module's own script.
+It finds `section.controls`, puts a button in a row above it, and on a click
+moves a working copy of the band into a second window. The copy is live in both
+directions: moving a slider there sets the value on the real control and fires
+an ordinary `input` event, so the module cannot tell which window the move came
+from, and a timer copies readouts, canvas bitmaps and hidden and selected state
+back the other way. Nothing else is needed from a module, and a module that has
+no control band is left alone. The same file is used by the other teaching
+repositories; where a set keeps its controls in a sticky `.labhead` with a
+`.cap` caption line, the button goes at the end of that line instead.
 
 There is no build step, no bundler and no dependency to install. Everything is
 vanilla JavaScript and one stylesheet.
